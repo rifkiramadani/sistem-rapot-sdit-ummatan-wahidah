@@ -9,4 +9,6 @@ enum RoleEnum: string
     case SUPERADMIN = 'superadmin';
     case ADMIN = 'admin';
     case TEACHER = 'teacher';
+
+    case PRINCIPAL = 'principal';
 }

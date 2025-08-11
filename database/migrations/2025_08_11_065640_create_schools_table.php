@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AcademicYear;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -28,7 +29,11 @@ return new class extends Migration
                 ->constrained()
                 ->onDelete('set null');
 
-            $table->string('current_academic_year', 9)->nullable(); // TODO change with relation
+            $table->foreignIdFor(AcademicYear::class, 'current_academic_year_id')
+                ->nullable()
+                ->constrained()
+                ->onDelete('set null');
+
             $table->string('place_date_raport')->nullable();
             $table->string('place_date_sts')->nullable();
             $table->timestamps();

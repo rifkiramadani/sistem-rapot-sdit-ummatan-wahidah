@@ -2,6 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Models\AcademicYear;
+use App\Models\School;
+use App\Models\SchoolAcademicYear;
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -29,11 +33,39 @@ class SchoolFactory extends Factory
             'website' => $this->faker->unique()->domainName(),
             'email' => $this->faker->unique()->safeEmail(),
 
-            'school_principal_id' => User::factory()->asAdmin(),
+            'school_principal_id' => User::factory()->asPrincipal(),
 
-            'current_academic_year' => '2025/2026',
+            'current_academic_year_id' => AcademicYear::inRandomOrder()->first()?->id,
             'place_date_raport' => $this->faker->city(),
             'place_date_sts' => $this->faker->city(),
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (School $school) {
+            // 1. Get the principal user that was just created.
+            $principal = $school->principal;
+
+            // 2. Find an academic year to link the school and principal to.
+            //    If none exist, create one.
+            $academicYear = AcademicYear::inRandomOrder()->first();
+
+            // 3. Create the link in the pivot table.
+            $schoolAcademicYear = SchoolAcademicYear::create([
+                'school_id' => $school->id,
+                'academic_year_id' => $academicYear->id,
+            ]);
+
+            // 4. Create the teacher record for the principal.
+            //    We use Teacher::create() directly to avoid the TeacherFactory's
+            //    default behavior of creating another new user.
+            Teacher::create([
+                'name' => $principal->name,
+                'niy' => $this->faker->unique()->numerify('##########'),
+                'user_id' => $principal->id,
+                'school_academic_year_id' => $schoolAcademicYear->id,
+            ]);
+        });
     }
 }

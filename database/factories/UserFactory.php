@@ -61,4 +61,11 @@ class UserFactory extends Factory
             'role_id' => Role::where('name', RoleEnum::TEACHER->value)->firstOrFail()->id,
         ]);
     }
+
+    public function asPrincipal(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'role_id' => Role::where('name', RoleEnum::PRINCIPAL->value)->firstOrFail()->id,
+        ]);
+    }
 }
