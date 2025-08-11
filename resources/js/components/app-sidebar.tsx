@@ -13,6 +13,11 @@ const mainNavItems: NavItem[] = [
         href: route('protected.dashboard.index'),
         icon: LayoutGrid,
     },
+    {
+        title: 'Schools',
+        href: route('protected.schools.index'),
+        icon: LayoutGrid,
+    },
 ];
 
 const footerNavItems: NavItem[] = [

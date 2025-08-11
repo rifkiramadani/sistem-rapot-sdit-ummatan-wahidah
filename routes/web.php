@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Protected\SchoolController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -8,10 +9,16 @@ Route::get('/', function () {
     return redirect('/login');
 })->name('home');
 
-Route::prefix('protected')->middleware(['auth'])->group(function () {
+Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(function () {
     Route::get('', function () {
         return Inertia::render('protected/dashboard/index');
-    })->name('protected.dashboard.index');
+    })->name('dashboard.index');
+
+    // Route::get('schools', [SchoolController::class, 'index'])->name('schools.index');
+
+    Route::prefix('schools')->group(function () {
+        Route::get('', [SchoolController::class, 'index'])->name('schools.index');
+    });
 });
 
 require __DIR__ . '/settings.php';
