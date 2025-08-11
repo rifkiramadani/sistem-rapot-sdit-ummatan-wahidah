@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Student extends Model
@@ -48,5 +49,15 @@ class Student extends Model
     public function guardians(): HasOne
     {
         return $this->hasOne(StudentGuardian::class);
+    }
+
+    public function studentClassrooms(): HasMany
+    {
+        return $this->hasMany(StudentClassroom::class);
+    }
+
+    public function studentSummatives(): HasMany
+    {
+        return $this->hasMany(StudentSummative::class);
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Summative extends Model
 {
@@ -33,5 +34,10 @@ class Summative extends Model
     public function summativeType(): BelongsTo
     {
         return $this->belongsTo(SummativeType::class);
+    }
+
+    public function studentSummatives(): HasMany
+    {
+        return $this->hasMany(StudentSummative::class);
     }
 }
