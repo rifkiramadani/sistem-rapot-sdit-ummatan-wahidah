@@ -6,34 +6,30 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Teacher extends Model
+class Classroom extends Model
 {
     use HasFactory, HasUlids;
 
     protected $fillable = [
         'name',
-        'niy',
-        'user_id',
+        'teacher_id',
         'school_academic_year_id',
     ];
 
     /**
-     * Get the user account associated with the teacher.
+     * Get the teacher for this classroom.
      */
-    public function user(): BelongsTo
+    public function teacher(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Teacher::class);
     }
 
+    /**
+     * Get the school academic year this classroom belongs to.
+     */
     public function schoolAcademicYear(): BelongsTo
     {
         return $this->belongsTo(SchoolAcademicYear::class);
-    }
-
-    public function classrooms(): HasMany
-    {
-        return $this->hasMany(Classroom::class);
     }
 }
