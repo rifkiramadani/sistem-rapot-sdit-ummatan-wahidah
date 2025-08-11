@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subject extends Model
 {
@@ -23,5 +24,10 @@ class Subject extends Model
     public function schoolAcademicYear(): BelongsTo
     {
         return $this->belongsTo(SchoolAcademicYear::class);
+    }
+
+    public function summatives(): HasMany
+    {
+        return $this->hasMany(Summative::class);
     }
 }
