@@ -46,4 +46,9 @@ class SchoolAcademicYear extends Model
     {
         return $this->hasMany(Subject::class);
     }
+
+    public function summativeTypes(): HasMany
+    {
+        return $this->hasMany(SummativeType::class);
+    }
 }

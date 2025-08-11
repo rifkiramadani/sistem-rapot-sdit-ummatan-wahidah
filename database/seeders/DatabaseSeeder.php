@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             TeacherSeeder::class,
             ClassroomSeeder::class,
             SubjectSeeder::class,
+            SummativeTypeSeeder::class,
         ]);
     }
 }
