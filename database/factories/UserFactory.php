@@ -54,4 +54,11 @@ class UserFactory extends Factory
             ];
         });
     }
+
+    public function asTeacher(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'role_id' => Role::where('name', RoleEnum::TEACHER->value)->firstOrFail()->id,
+        ]);
+    }
 }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('students', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->string('nisn')->unique();
+            $table->string('nisn')->unique()->comment('Nomor Induk Siswa Nasional');
             $table->string('name');
 
             // Using an enum column is efficient for a fixed set of values
