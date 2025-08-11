@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\ClassSubject;
 use App\Models\SchoolAcademicYear;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -23,6 +24,9 @@ class DatabaseSeeder extends Seeder
             SubjectSeeder::class,
             SummativeTypeSeeder::class,
             SummativeSeeder::class,
+            ClassSubjectSeeder::class,
+            StudentClassroomSeeder::class,
+            StudentSummativeSeeder::class,
         ]);
     }
 }

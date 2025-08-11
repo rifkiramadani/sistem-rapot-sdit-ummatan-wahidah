@@ -30,4 +30,9 @@ class Subject extends Model
     {
         return $this->hasMany(Summative::class);
     }
+
+    public function classSubjects(): HasMany
+    {
+        return $this->hasMany(ClassSubject::class);
+    }
 }

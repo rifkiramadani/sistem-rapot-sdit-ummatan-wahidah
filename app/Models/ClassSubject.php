@@ -26,9 +26,4 @@ class ClassSubject extends Model
     {
         return $this->belongsTo(Subject::class);
     }
-
-    public function classSubjects(): HasMany
-    {
-        return $this->hasMany(ClassSubject::class);
-    }
 }
