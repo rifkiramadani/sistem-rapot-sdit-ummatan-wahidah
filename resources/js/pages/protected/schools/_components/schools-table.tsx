@@ -1,10 +1,32 @@
 import { DataTable } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import InertiaPagination from '@/components/inertia-pagination';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { TableMeta } from '@/types';
 import { School, SchoolsPaginated } from '@/types/models/schools';
+import { router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontal, Pen, Trash } from 'lucide-react';
 import { SchoolsTableFilters } from './schools-table-filters';
 
 export const columns: ColumnDef<School>[] = [
@@ -55,6 +77,62 @@ export const columns: ColumnDef<School>[] = [
         id: 'academicYear',
         header: 'Current Academic Year',
         enableSorting: false,
+    },
+    {
+        id: 'actions',
+        enableHiding: false,
+        // ... (di dalam file columns.tsx Anda)
+
+        cell: ({ row }) => {
+            const school = row.original;
+
+            return (
+                <>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Buka menu</span>
+                                <MoreHorizontal />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onSelect={() => router.get(route('protected.schools.edit', school.id))} className="cursor-pointer">
+                                <span className="flex items-center gap-2">
+                                    <Pen className="h-4 w-4" />
+                                    Edit
+                                </span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600">
+                                <AlertDialog>
+                                    <AlertDialogContent>
+                                        <AlertDialogTrigger asChild>
+                                            <span className="flex items-center gap-2">
+                                                <Trash className="h-4 w-4" />
+                                                Hapus
+                                            </span>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Tindakan ini tidak dapat diurungkan. Ini akan menghapus data sekolah secara permanen dari server.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Batal</AlertDialogCancel>
+                                            <AlertDialogAction></AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Dialog Konfirmasi Hapus */}
+                </>
+            );
+        },
     },
 ];
 
