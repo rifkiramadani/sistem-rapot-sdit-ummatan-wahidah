@@ -1,32 +1,11 @@
 import { DataTable } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import InertiaPagination from '@/components/inertia-pagination';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { TableMeta } from '@/types';
 import { School, SchoolsPaginated } from '@/types/models/schools';
-import { router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, Settings2, Trash2 } from 'lucide-react';
+import { SchoolsTableActions } from './schools-table-actions';
 import { SchoolsTableFilters } from './schools-table-filters';
 
 export const columns: ColumnDef<School>[] = [
@@ -80,61 +59,8 @@ export const columns: ColumnDef<School>[] = [
     },
     {
         id: 'actions',
-        enableHiding: false,
-        // ... (di dalam file columns.tsx Anda)
-
-        cell: ({ row }) => {
-            const school = row.original;
-
-            return (
-                <>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Buka menu</span>
-                                <MoreHorizontal />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                                onClick={() => router.get(route('protected.schools.edit', { school: school.id }))}
-                                className="cursor-pointer"
-                            >
-                                <Settings2 className="mr-2 h-4 w-4" /> Edit
-                            </DropdownMenuItem>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <DropdownMenuItem className="text-red-600" onSelect={(e) => e.preventDefault()}>
-                                        <Trash2 className="mr-2 h-4 w-4" /> Hapus
-                                    </DropdownMenuItem>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data secara permanen.
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                                        <AlertDialogAction
-                                            className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
-                                            onClick={() => router.delete(route('protected.schools.destroy', { school: school.id }))}
-                                        >
-                                            Lanjutkan
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* Dialog Konfirmasi Hapus */}
-                </>
-            );
-        },
+        header: 'Aksi',
+        cell: ({ row }) => <SchoolsTableActions school={row.original} />,
     },
 ];
 

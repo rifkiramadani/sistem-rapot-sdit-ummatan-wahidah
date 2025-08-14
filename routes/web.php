@@ -24,6 +24,8 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
         // Rute untuk menyimpan data baru (Create)
         Route::post('', [SchoolController::class, 'store'])->name('store');
 
+        Route::get('/{school}', [SchoolController::class, 'show'])->name('show');
+
         // Rute untuk menampilkan form edit (Update)
         Route::get('/{school}/edit', [SchoolController::class, 'edit'])->name('edit');
 

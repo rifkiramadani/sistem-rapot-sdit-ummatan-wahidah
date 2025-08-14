@@ -4,21 +4,20 @@ import { School } from '@/types/models/schools';
 import { Head } from '@inertiajs/react';
 import SchoolsForm from './_components/schools-form';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Schools',
-        href: route('protected.schools.index'),
-    },
-    {
-        title: 'Create',
-        href: route('protected.schools.create'),
-    },
-];
-
 interface EditProps {
     school: School;
 }
 export default function Edit({ school }: EditProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'Schools',
+            href: route('protected.schools.index'),
+        },
+        {
+            title: `Edit ${school.name}`,
+            href: route('protected.schools.edit', { school: school.id }),
+        },
+    ];
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Schools" />

@@ -86,6 +86,17 @@ class SchoolController extends Controller
         return redirect()->route('protected.schools.index')->with('success', 'Sekolah berhasil dibuat.');
     }
 
+    public function show(School $school)
+    {
+        // Anda bisa memuat relasi di sini jika perlu,
+        // seperti data kepala sekolah atau tahun ajaran.
+        $school->load(['principal', 'currentAcademicYear']);
+
+        return Inertia::render('protected/schools/show', [
+            'school' => $school,
+        ]);
+    }
+
     /**
      * Menampilkan form untuk mengedit data sekolah.
      * Menggunakan Route Model Binding untuk mengambil data sekolah secara otomatis.
