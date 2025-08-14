@@ -49,7 +49,7 @@ class SchoolController extends Controller
 
         // 6. Lakukan paginasi dan tambahkan semua parameter query string ke link paginasi
         $schools = $query->paginate($perPage)->withQueryString();
-
+        
         return Inertia::render('protected/schools/index', [
             'schools' => $schools,
         ]);
