@@ -14,10 +14,24 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
         return Inertia::render('protected/dashboard/index');
     })->name('dashboard.index');
 
-    // Route::get('schools', [SchoolController::class, 'index'])->name('schools.index');
+    Route::prefix('schools')->name('schools.')->group(function () {
+        // Rute untuk menampilkan semua sekolah (Read)
+        Route::get('', [SchoolController::class, 'index'])->name('index');
 
-    Route::prefix('schools')->group(function () {
-        Route::get('', [SchoolController::class, 'index'])->name('schools.index');
+        // Rute untuk menampilkan form tambah (Create)
+        Route::get('/create', [SchoolController::class, 'create'])->name('create');
+
+        // Rute untuk menyimpan data baru (Create)
+        Route::post('', [SchoolController::class, 'store'])->name('store');
+
+        // Rute untuk menampilkan form edit (Update)
+        Route::get('/{school}/edit', [SchoolController::class, 'edit'])->name('edit');
+
+        // Rute untuk memperbarui data yang ada (Update)
+        Route::put('/{school}', [SchoolController::class, 'update'])->name('update');
+
+        // Rute untuk menghapus data (Delete)
+        Route::delete('/{school}', [SchoolController::class, 'destroy'])->name('destroy');
     });
 });
 
