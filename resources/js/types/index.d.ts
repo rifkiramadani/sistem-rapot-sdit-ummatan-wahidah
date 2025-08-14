@@ -28,6 +28,8 @@ export interface SharedData {
     auth: Auth;
     ziggy: Config & { location: string };
     sidebarOpen: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    queryParams: Record<string, any>;
     [key: string]: unknown;
 }
 
@@ -40,4 +42,23 @@ export interface User {
     created_at: string;
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
+}
+
+export interface Paginator<T> {
+    data: T[];
+    links: {
+        url: string | null;
+        label: string;
+        active: boolean;
+    }[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    from: number;
+    to: number;
+    per_page: number;
+}
+
+export interface TableMeta {
+    from: number;
 }

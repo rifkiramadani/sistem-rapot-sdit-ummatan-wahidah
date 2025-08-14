@@ -8,9 +8,10 @@ import {
     PaginationPrevious,
 } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { router } from '@inertiajs/react';
+import { SharedData } from '@/types';
+import { router, usePage } from '@inertiajs/react';
 
-// Define the shape of the full Paginator object from Laravel
+// Tentukan struktur objek Paginator lengkap dari Laravel
 interface PaginatorInfo {
     links: {
         url: string | null;
@@ -28,37 +29,46 @@ interface InertiaPaginationProps {
 }
 
 const InertiaPagination = ({ paginateItems }: InertiaPaginationProps) => {
+    const { props } = usePage<SharedData>();
+    const { queryParams } = props;
     const { links, total, from, to, per_page } = paginateItems;
 
-    // Function to handle changing the number of items per page
+    // Di Laravel, link pertama selalu "previous" dan yang terakhir adalah "next"
+    const previousLink = links[0];
+    const nextLink = links[links.length - 1];
+    // Ambil hanya link nomor halaman (dan elipsis)
+    const pageLinks = links.slice(1, -1);
+
+    // Fungsi untuk menangani perubahan jumlah item per halaman
     const handlePerPageChange = (newPerPageValue: string) => {
         router.get(
-            window.location.pathname, // Stay on the current page
-            { per_page: newPerPageValue }, // Add the new per_page parameter
+            window.location.pathname,
+            { ...queryParams, per_page: newPerPageValue, page: 1 }, // Reset ke halaman 1 saat item per halaman diubah
             {
-                preserveState: true, // Keep component state (e.g., search filters)
-                replace: true, // Update the URL without adding to browser history
+                preserveState: true,
+                replace: true,
             },
         );
     };
 
     return (
-        <div className="mt-4 flex items-center justify-between px-2">
-            {/* Display "Showing X to Y of Z results" */}
-            <div className="flex-1 text-sm text-muted-foreground">
+        <div className="flex flex-col items-center justify-between gap-4 px-2 sm:flex-row">
+            {/* Tampilkan teks "Showing X to Y of Z results" */}
+            <div className="text-sm text-muted-foreground">
                 Showing <strong>{from}</strong> to <strong>{to}</strong> of <strong>{total}</strong> results
             </div>
 
-            <div className="flex items-center space-x-6 lg:space-x-8">
-                {/* Dropdown to select page size */}
+            {/* Kontrol di sisi kanan */}
+            <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
+                {/* Dropdown untuk memilih ukuran halaman */}
                 <div className="flex items-center space-x-2">
-                    <p className="text-sm font-medium">Rows per page</p>
+                    <span className="text-sm font-medium whitespace-nowrap">Rows per page</span>
                     <Select value={`${per_page}`} onValueChange={handlePerPageChange}>
                         <SelectTrigger className="h-8 w-[70px]">
                             <SelectValue placeholder={per_page} />
                         </SelectTrigger>
                         <SelectContent side="top">
-                            {[1, 50, 100].map((pageSize) => (
+                            {[10, 20, 30, 40, 50].map((pageSize) => (
                                 <SelectItem key={pageSize} value={`${pageSize}`}>
                                     {pageSize}
                                 </SelectItem>
@@ -67,43 +77,43 @@ const InertiaPagination = ({ paginateItems }: InertiaPaginationProps) => {
                     </Select>
                 </div>
 
-                {/* The actual page links */}
-                {links.length > 3 && (
-                    <Pagination>
-                        <PaginationContent>
-                            {links.map((link, index) => {
-                                if (index === 0) {
-                                    return (
-                                        <PaginationItem key={index}>
-                                            <PaginationPrevious href={link.url ?? '#'} />
-                                        </PaginationItem>
-                                    );
-                                }
-                                if (index === links.length - 1) {
-                                    return (
-                                        <PaginationItem key={index}>
-                                            <PaginationNext href={link.url ?? '#'} />
-                                        </PaginationItem>
-                                    );
-                                }
-                                if (link.label.includes('...')) {
-                                    return (
-                                        <PaginationItem key={index}>
-                                            <PaginationEllipsis />
-                                        </PaginationItem>
-                                    );
-                                }
-                                return (
-                                    <PaginationItem key={index}>
-                                        <PaginationLink href={link.url ?? '#'} isActive={link.active}>
-                                            {link.label}
-                                        </PaginationLink>
-                                    </PaginationItem>
-                                );
-                            })}
-                        </PaginationContent>
-                    </Pagination>
-                )}
+                {/* Tautan halaman */}
+                <Pagination>
+                    <PaginationContent>
+                        {/* Tombol Previous */}
+                        <PaginationItem>
+                            <PaginationPrevious
+                                href={previousLink.url ?? '#'}
+                                // Tambahkan style disabled jika tidak ada URL (halaman pertama)
+                                className={!previousLink.url ? 'pointer-events-none opacity-50' : ''}
+                            />
+                        </PaginationItem>
+
+                        {/* Tautan Nomor Halaman dan Elipsis */}
+                        {pageLinks.map((link, index) =>
+                            link.label.includes('...') ? (
+                                <PaginationItem key={`ellipsis-${index}`}>
+                                    <PaginationEllipsis />
+                                </PaginationItem>
+                            ) : (
+                                <PaginationItem key={link.label}>
+                                    <PaginationLink href={link.url ?? '#'} isActive={link.active}>
+                                        {link.label}
+                                    </PaginationLink>
+                                </PaginationItem>
+                            ),
+                        )}
+
+                        {/* Tombol Next */}
+                        <PaginationItem>
+                            <PaginationNext
+                                href={nextLink.url ?? '#'}
+                                // Tambahkan style disabled jika tidak ada URL (halaman terakhir)
+                                className={!nextLink.url ? 'pointer-events-none opacity-50' : ''}
+                            />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
             </div>
         </div>
     );
