@@ -26,7 +26,7 @@ import { TableMeta } from '@/types';
 import { School, SchoolsPaginated } from '@/types/models/schools';
 import { router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, Pen, Trash } from 'lucide-react';
+import { MoreHorizontal, Settings2, Trash2 } from 'lucide-react';
 import { SchoolsTableFilters } from './schools-table-filters';
 
 export const columns: ColumnDef<School>[] = [
@@ -98,34 +98,36 @@ export const columns: ColumnDef<School>[] = [
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onSelect={() => router.get(route('protected.schools.edit', school.id))} className="cursor-pointer">
-                                <span className="flex items-center gap-2">
-                                    <Pen className="h-4 w-4" />
-                                    Edit
-                                </span>
+                            <DropdownMenuItem
+                                onClick={() => router.get(route('protected.schools.edit', { school: school.id }))}
+                                className="cursor-pointer"
+                            >
+                                <Settings2 className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600">
-                                <AlertDialog>
-                                    <AlertDialogContent>
-                                        <AlertDialogTrigger asChild>
-                                            <span className="flex items-center gap-2">
-                                                <Trash className="h-4 w-4" />
-                                                Hapus
-                                            </span>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Apakah Anda Yakin?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Tindakan ini tidak dapat diurungkan. Ini akan menghapus data sekolah secara permanen dari server.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Batal</AlertDialogCancel>
-                                            <AlertDialogAction></AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </DropdownMenuItem>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem className="text-red-600" onSelect={(e) => e.preventDefault()}>
+                                        <Trash2 className="mr-2 h-4 w-4" /> Hapus
+                                    </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data secara permanen.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                                        <AlertDialogAction
+                                            className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
+                                            onClick={() => router.delete(route('protected.schools.destroy', { school: school.id }))}
+                                        >
+                                            Lanjutkan
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
                         </DropdownMenuContent>
                     </DropdownMenu>
 

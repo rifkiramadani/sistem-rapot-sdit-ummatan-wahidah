@@ -83,7 +83,7 @@ class SchoolController extends Controller
         School::create($validated);
 
         // Redirect kembali ke halaman index dengan pesan sukses
-        return Redirect::route('protected.schools.index')->with('success', 'Sekolah berhasil dibuat.');
+        return redirect()->route('protected.schools.index')->with('success', 'Sekolah berhasil dibuat.');
     }
 
     /**
@@ -92,7 +92,7 @@ class SchoolController extends Controller
      */
     public function edit(School $school)
     {
-        return Inertia::render('Protected/Schools/Edit', [ // Pastikan nama view sudah benar
+        return Inertia::render('protected/schools/edit', [ // Pastikan nama view sudah benar
             'school' => $school,
             // Di sini Anda juga bisa meneruskan data lain seperti daftar
             // Kepala Sekolah atau Tahun Ajaran untuk komponen <Select>
@@ -125,7 +125,7 @@ class SchoolController extends Controller
         $school->update($validated);
 
         // Redirect kembali ke halaman index dengan pesan sukses
-        return Redirect::route('protected.schools.index')->with('success', 'Data sekolah berhasil diperbarui.');
+        return redirect()->route('protected.schools.index')->with('success', 'Data sekolah berhasil diperbarui.');
     }
 
     /**
@@ -137,6 +137,6 @@ class SchoolController extends Controller
         $school->delete();
 
         // Redirect kembali ke halaman index dengan pesan sukses
-        return Redirect::route('protected.schools.index')->with('success', 'Data sekolah berhasil dihapus.');
+        return redirect()->route('protected.schools.index')->with('success', 'Data sekolah berhasil dihapus.');
     }
 }

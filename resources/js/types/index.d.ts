@@ -22,6 +22,11 @@ export interface NavItem {
     isActive?: boolean;
 }
 
+export interface FlashData {
+    success?: string;
+    error?: string;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
@@ -30,6 +35,7 @@ export interface SharedData {
     sidebarOpen: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     queryParams: Record<string, any>;
+    flash: FlashData;
     [key: string]: unknown;
 }
 
