@@ -9,6 +9,7 @@ use App\Models\SchoolAcademicYear;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class SchoolAcademicYearController extends Controller
 {
@@ -206,10 +207,18 @@ class SchoolAcademicYearController extends Controller
             'ids.*' => ['exists:school_academic_years,id'],
         ]);
 
-        // Hapus data
-        SchoolAcademicYear::where('school_id', $school->id)
-            ->whereIn('id', $request->input('ids'))
-            ->delete();
+        DB::transaction(function () use ($request, $school) {
+            // 1. Ambil semua model yang akan dihapus
+            $academicYears = SchoolAcademicYear::where('school_id', $school->id)
+                ->whereIn('id', $request->input('ids'))
+                ->get();
+
+            // 2. Lakukan perulangan dan hapus satu per satu
+            foreach ($academicYears as $academicYear) {
+                // Perintah ini akan memicu event 'deleted' secara otomatis
+                $academicYear->delete();
+            }
+        });
 
         return redirect()->route('protected.schools.academic-years.index', $school)->with('success', 'Tahun ajaran yang dipilih berhasil dihapus.');
     }

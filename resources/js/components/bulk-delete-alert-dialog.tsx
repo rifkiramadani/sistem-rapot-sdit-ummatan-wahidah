@@ -35,7 +35,8 @@ export function BulkDeleteAlertDialog({ children, itemCount, itemName = 'data', 
                 <AlertDialogHeader>
                     <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Tindakan ini akan menghapus **{itemCount}** {itemName} secara permanen. Tindakan ini tidak dapat dibatalkan.
+                        Tindakan ini akan menghapus <strong>{itemCount}</strong> <strong>{itemName}</strong> secara permanen. Tindakan ini tidak dapat
+                        dibatalkan.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

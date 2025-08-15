@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB; // Impor DB facade untuk transaksi
 
 class SchoolController extends Controller
 {
@@ -162,8 +163,17 @@ class SchoolController extends Controller
             'ids.*' => ['exists:schools,id'], // Pastikan setiap ID ada di tabel sekolah
         ]);
 
-        // Hapus semua sekolah yang ID-nya ada di dalam array
-        School::whereIn('id', $request->input('ids'))->delete();
+        DB::transaction(function () use ($request) {
+            // 1. Ambil semua model sekolah yang akan dihapus ke dalam koleksi
+            $schools = School::whereIn('id', $request->input('ids'))->get();
+
+            // 2. Lakukan perulangan pada koleksi dan hapus satu per satu
+            foreach ($schools as $school) {
+                // Method delete() pada instance model akan memicu event 'deleted'
+                // sehingga Spatie Activity Log akan mencatatnya secara otomatis.
+                $school->delete();
+            }
+        });
 
         return Redirect::back()->with('success', 'Data sekolah yang dipilih berhasil dihapus.');
     }
