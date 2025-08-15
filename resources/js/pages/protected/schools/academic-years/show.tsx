@@ -1,7 +1,8 @@
 // Di file: resources/js/pages/protected/schools/academic-years/show.tsx
 
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -9,6 +10,7 @@ import { type AcademicYear } from '@/types/models/academic-years';
 import { type SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { type School } from '@/types/models/schools';
 import { format } from 'date-fns';
+import { LayoutDashboard } from 'lucide-react';
 
 // Komponen helper untuk menampilkan baris data, dimodifikasi agar bisa menerima children
 function DetailItem({
@@ -71,7 +73,17 @@ export default function Show({ school, schoolAcademicYear }: ShowProps) {
             <div className="flex h-full flex-1 flex-col space-y-4 overflow-x-auto rounded-xl p-4">
                 <Card>
                     <CardHeader>
-                        <div className="flex items-center justify-end">
+                        <div className="flex items-center justify-start">
+                            <Link
+                                href={route('protected.school-academic-years.dashboard.index', {
+                                    schoolAcademicYear: schoolAcademicYear.id,
+                                })}
+                            >
+                                <Button variant="outline" size="sm">
+                                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                                    Dashboard
+                                </Button>
+                            </Link>
                             {/* <Link
                                 href={route('protected.schools.academic-years.edit', {
                                     school: school.id,
