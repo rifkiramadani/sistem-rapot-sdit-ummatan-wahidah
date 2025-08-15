@@ -5,21 +5,20 @@ type AcademicYear = {
 };
 
 // resources/js/types/models/academic-years-table.ts
-export interface AcademicYearsTable {
-    id: number;
-    year: string;
-    semester: string;
-    startDate: string;
-    endDate: string;
-}
 
-export interface AcademicYearsPaginated {
-    per_page: number;
-    to: number;
-    links: { url: string | null; label: string; active: boolean; }[];
-    from: unknown;
-    data: AcademicYear[];
+export interface Paginator<T> {
+    data: T[];
+    links: {
+        url: string | null;
+        label: string;
+        active: boolean;
+    }[];
     current_page: number;
     last_page: number;
     total: number;
+    from: number;
+    to: number;
+    per_page: number;
 }
+
+export type AcademicYearsPaginated = Paginator<AcademicYear>;

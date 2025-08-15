@@ -9,7 +9,7 @@ import { AcademicYearTable } from './_components/academic-years-table';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Academic Years',
-        href: route('protected.academic-year.index'),
+        href: route('protected.academic-years.index'),
     },
 ];
 
