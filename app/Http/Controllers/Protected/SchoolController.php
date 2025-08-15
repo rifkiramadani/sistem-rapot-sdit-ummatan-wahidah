@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Protected;
 
+use App\Enums\PerPageEnum;
 use App\Http\Controllers\Controller;
 use App\Models\School;
 use Illuminate\Database\Eloquent\Builder; // Import the Builder class
@@ -10,14 +11,17 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB; // Impor DB facade untuk transaksi
+use Illuminate\Support\Facades\Gate;
 
 class SchoolController extends Controller
 {
     public function index(Request $request)
     {
+        Gate::authorize('viewAny', School::class);
+
         // 1. Validasi semua parameter request
         $request->validate([
-            'per_page' => 'sometimes|integer|in:10,20,30,40,50,100',
+            'per_page' => ['sometimes', 'integer', Rule::in(PerPageEnum::values())],
             'sort_by' => 'sometimes|string|in:name,npsn',
             'sort_direction' => 'sometimes|string|in:asc,desc',
             // ++ Tambahkan validasi untuk filter 'q'
@@ -26,7 +30,7 @@ class SchoolController extends Controller
         ]);
 
         // 2. Ambil parameter dengan nilai default
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('per_page', PerPageEnum::DEFAULT->value);
         $sortBy = $request->input('sort_by', 'name');
         $sortDirection = $request->input('sort_direction', 'asc');
         // ++ Ambil nilai filter 'q' dari request
@@ -60,6 +64,8 @@ class SchoolController extends Controller
 
     public function create(Request $request)
     {
+        Gate::authorize('create', School::class);
+
         return Inertia::render('protected/schools/create');
     }
 
@@ -68,6 +74,8 @@ class SchoolController extends Controller
      */
     public function store(Request $request)
     {
+        Gate::authorize('create', School::class);
+
         // Validasi data yang masuk dari form
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:schools,name',
@@ -89,6 +97,8 @@ class SchoolController extends Controller
 
     public function show(School $school)
     {
+        Gate::authorize('view', $school);
+
         // Anda bisa memuat relasi di sini jika perlu,
         // seperti data kepala sekolah atau tahun ajaran.
         $school->load(['principal', 'currentAcademicYear']);
@@ -104,6 +114,8 @@ class SchoolController extends Controller
      */
     public function edit(School $school)
     {
+        Gate::authorize('update', $school);
+
         return Inertia::render('protected/schools/edit', [ // Pastikan nama view sudah benar
             'school' => $school,
             // Di sini Anda juga bisa meneruskan data lain seperti daftar
@@ -116,6 +128,8 @@ class SchoolController extends Controller
      */
     public function update(Request $request, School $school)
     {
+        Gate::authorize('update', $school);
+
         // Validasi data, dengan aturan 'unique' yang mengabaikan data saat ini
         $validated = $request->validate([
             'name' => [
@@ -145,6 +159,8 @@ class SchoolController extends Controller
      */
     public function destroy(School $school)
     {
+        Gate::authorize('delete', $school);
+
         // Hapus record dari database
         $school->delete();
 
@@ -157,6 +173,8 @@ class SchoolController extends Controller
      */
     public function bulkDestroy(Request $request)
     {
+        Gate::authorize('bulkDelete', School::class);
+
         // Validasi bahwa 'ids' ada dan merupakan sebuah array
         $request->validate([
             'ids'   => ['required', 'array'],

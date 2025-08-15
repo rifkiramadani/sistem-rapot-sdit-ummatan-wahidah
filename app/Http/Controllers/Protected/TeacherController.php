@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Protected;
 
+use App\Enums\PerPageEnum;
 use App\Http\Controllers\Controller;
 use App\Models\SchoolAcademicYear;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class TeacherController extends Controller
@@ -13,7 +15,7 @@ class TeacherController extends Controller
     {
         // 1. Validasi semua parameter request
         $request->validate([
-            'per_page' => 'sometimes|integer|in:10,20,50,100',
+            'per_page' => ['sometimes', 'integer', Rule::in(PerPageEnum::values())],
             // Sesuaikan kolom yang bisa di-sort untuk model Teacher
             'sort_by' => 'sometimes|string|in:name,niy',
             'sort_direction' => 'sometimes|string|in:asc,desc',
@@ -22,7 +24,7 @@ class TeacherController extends Controller
         ]);
 
         // 2. Ambil parameter dengan nilai default
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('per_page', PerPageEnum::DEFAULT->value);
         // Default sort adalah 'name' (nama guru), secara ascending
         $sortBy = $request->input('sort_by', 'name');
         $sortDirection = $request->input('sort_direction', 'asc');

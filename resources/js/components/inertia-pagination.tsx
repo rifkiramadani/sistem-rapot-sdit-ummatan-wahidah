@@ -11,7 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SharedData } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 
-// Tentukan struktur objek Paginator lengkap dari Laravel
 interface PaginatorInfo {
     links: {
         url: string | null;
@@ -22,6 +21,15 @@ interface PaginatorInfo {
     from: number;
     to: number;
     per_page: number;
+}
+
+enum PerPageEnum {
+    P10 = 10,
+    P20 = 20,
+    P30 = 30,
+    P40 = 40,
+    P50 = 50,
+    P100 = 100,
 }
 
 interface InertiaPaginationProps {
@@ -38,6 +46,8 @@ const InertiaPagination = ({ paginateItems }: InertiaPaginationProps) => {
     const nextLink = links[links.length - 1];
     // Ambil hanya link nomor halaman (dan elipsis)
     const pageLinks = links.slice(1, -1);
+
+    const perPageOptions: number[] = Object.values(PerPageEnum).filter((value): value is number => typeof value === 'number');
 
     // Fungsi untuk menangani perubahan jumlah item per halaman
     const handlePerPageChange = (newPerPageValue: string) => {
@@ -68,7 +78,7 @@ const InertiaPagination = ({ paginateItems }: InertiaPaginationProps) => {
                             <SelectValue placeholder={per_page} />
                         </SelectTrigger>
                         <SelectContent side="top">
-                            {[10, 20, 30, 40, 50].map((pageSize) => (
+                            {perPageOptions.map((pageSize) => (
                                 <SelectItem key={pageSize} value={`${pageSize}`}>
                                     {pageSize}
                                 </SelectItem>
