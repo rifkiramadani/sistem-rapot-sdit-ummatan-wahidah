@@ -19,9 +19,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableMeta } from '@/types';
 import { SchoolAcademicYear } from '@/types/models/school-academic-years';
+import { router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { Settings2, Trash2 } from 'lucide-react';
+import { Eye, Trash2 } from 'lucide-react';
 import { type SchoolAcademicYearsPaginated } from '../index';
 import { AcademicYearsTableFilters } from './academic-years-table-filters';
 
@@ -100,11 +101,36 @@ export const columns: ColumnDef<SchoolAcademicYear>[] = [
 
             return (
                 <div className="flex gap-2">
-                    <TableTooltipAction info="Pengaturan">
-                        <Button variant="outline" size="icon" onClick={() => alert('Fitur pengaturan belum dibuat')}>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() =>
+                            router.get(
+                                route('protected.schools.academic-years.show', {
+                                    school: schoolAcademicYear.school_id,
+                                    schoolAcademicYear: schoolAcademicYear.id,
+                                }),
+                            )
+                        }
+                    >
+                        <Eye className="h-4 w-4" />
+                    </Button>
+                    {/* <TableTooltipAction info="Pengaturan">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                                router.get(
+                                    route('protected.schools.academic-years.edit', {
+                                        school: schoolAcademicYear.school_id,
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                    }),
+                                )
+                            }
+                        >
                             <Settings2 className="h-4 w-4" />
                         </Button>
-                    </TableTooltipAction>
+                    </TableTooltipAction> */}
                     <TableTooltipAction info="Hapus">
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -121,14 +147,14 @@ export const columns: ColumnDef<SchoolAcademicYear>[] = [
                                     <AlertDialogCancel>Batal</AlertDialogCancel>
                                     <AlertDialogAction
                                         className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
-                                        // onClick={() => {
-                                        //     router.delete(
-                                        //         route('protected.schools.academic-years.destroy', {
-                                        //             school: schoolAcademicYear.school_id,
-                                        //             academic_year: schoolAcademicYear.id,
-                                        //         }),
-                                        //     );
-                                        // }}
+                                        onClick={() => {
+                                            router.delete(
+                                                route('protected.schools.academic-years.destroy', {
+                                                    school: schoolAcademicYear.school_id,
+                                                    schoolAcademicYear: schoolAcademicYear.id,
+                                                }),
+                                            );
+                                        }}
                                     >
                                         Lanjutkan
                                     </AlertDialogAction>

@@ -16,9 +16,9 @@ class StudentSeeder extends Seeder
             return;
         }
 
-        // Create 100 students, each with a parent and guardian record.
-        Student::factory()->count(100)->create();
+        // Create 50 students, each with a parent and guardian record.
+        Student::factory()->count(50)->create();
 
-        $this->command->info('Created 100 students with parent and guardian data.');
+        $this->command->info('Created 50 students with parent and guardian data.');
     }
 }

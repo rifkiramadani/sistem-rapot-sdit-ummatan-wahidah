@@ -40,6 +40,21 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
         Route::prefix('/{school}/academic-years')->name('academic-years.')->group(function () {
             // Rute untuk menampilkan semua sekolah (Read)
             Route::get('', [SchoolAcademicYearController::class, 'index'])->name('index');
+
+            Route::get('/create', [SchoolAcademicYearController::class, 'create'])->name('create');
+
+            // Rute untuk menyimpan data baru (Create)
+            Route::post('', [SchoolAcademicYearController::class, 'store'])->name('store');
+
+            Route::get('/{schoolAcademicYear}', [SchoolAcademicYearController::class, 'show'])->name('show');
+
+
+            Route::get('/{schoolAcademicYear}/edit', [SchoolAcademicYearController::class, 'edit'])->name('edit');
+
+            // Rute untuk memperbarui data
+            Route::put('/{schoolAcademicYear}', [SchoolAcademicYearController::class, 'update'])->name('update');
+
+            Route::delete('/{schoolAcademicYear}', [SchoolAcademicYearController::class, 'destroy'])->name('destroy');
         });
     });
 });
