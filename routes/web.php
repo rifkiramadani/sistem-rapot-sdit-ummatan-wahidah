@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Protected\SchoolAcademicYearController;
 use App\Http\Controllers\Protected\SchoolController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -34,6 +35,12 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
 
         // Rute untuk menghapus data (Delete)
         Route::delete('/{school}', [SchoolController::class, 'destroy'])->name('destroy');
+
+
+        Route::prefix('/{school}/academic-years')->name('academic-years.')->group(function () {
+            // Rute untuk menampilkan semua sekolah (Read)
+            Route::get('', [SchoolAcademicYearController::class, 'index'])->name('index');
+        });
     });
 });
 

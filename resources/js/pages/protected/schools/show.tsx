@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { type School } from '@/types/models/schools';
-import { Pencil } from 'lucide-react';
+import { CalendarClock, Pencil } from 'lucide-react';
 
 // Komponen kecil untuk menampilkan baris data
 function DetailItem({ label, value, className }: { label: string; value: string | number | null | undefined; className?: string }) {
@@ -37,7 +37,15 @@ export default function Show({ school }: { school: School }) {
             <div className="flex h-full flex-1 flex-col space-y-4 overflow-x-auto rounded-xl p-4">
                 <Card>
                     <CardHeader>
-                        <div className="flex items-center justify-end">
+                        <div className="flex items-center justify-between">
+                            <div className="flex gap-2">
+                                <Link href={route('protected.schools.academic-years.index', school.id)}>
+                                    <Button variant="outline" size="sm">
+                                        <CalendarClock className="mr-2 h-4 w-4" />
+                                        Tahun Ajaran
+                                    </Button>
+                                </Link>
+                            </div>
                             <div className="flex gap-2">
                                 <Link href={route('protected.schools.edit', school.id)}>
                                     <Button variant="outline" size="sm">

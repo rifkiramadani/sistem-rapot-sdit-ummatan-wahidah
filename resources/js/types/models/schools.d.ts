@@ -1,3 +1,6 @@
+import { AcademicYear } from './academic-years';
+import { Principal } from './principals';
+
 export type School = {
     id: string;
     name: string;
@@ -16,6 +19,8 @@ export type School = {
     // Relasi (jika di-load dari backend)
     principal?: Principal | null;
     current_academic_year?: AcademicYear | null;
+
+    academic_years?: AcademicYear[];
 };
 
 export type SchoolsPaginated = Paginator<School>;
