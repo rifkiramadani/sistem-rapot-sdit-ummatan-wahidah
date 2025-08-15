@@ -73,7 +73,7 @@ class SchoolAcademicYearController extends Controller
      */
     public function show(School $school, SchoolAcademicYear $schoolAcademicYear)
     {
-        Gate::authorize('show', $schoolAcademicYear);
+        Gate::authorize('view', $schoolAcademicYear);
 
         // Eager load relasi academicYear agar datanya tersedia di frontend
         $schoolAcademicYear->load('academicYear');
