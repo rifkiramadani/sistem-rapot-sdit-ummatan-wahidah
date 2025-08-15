@@ -1,11 +1,25 @@
 import { DataTable } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import InertiaPagination from '@/components/inertia-pagination';
+import TableTooltipAction from '@/components/table-tooltip-action';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableMeta } from '@/types';
 import { School, SchoolsPaginated } from '@/types/models/schools';
+import { router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { SchoolsTableActions } from './schools-table-actions';
+import { Eye, Settings2, Trash2 } from 'lucide-react';
 import { SchoolsTableFilters } from './schools-table-filters';
 
 export const columns: ColumnDef<School>[] = [
@@ -60,7 +74,52 @@ export const columns: ColumnDef<School>[] = [
     {
         id: 'actions',
         header: 'Aksi',
-        cell: ({ row }) => <SchoolsTableActions school={row.original} />,
+        cell: ({ row }) => {
+            const school = row.original;
+
+            return (
+                <div className="flex gap-2">
+                    <TableTooltipAction info="Lihat">
+                        <Button variant="outline" size="icon" onClick={() => router.get(route('protected.schools.show', { school: school.id }))}>
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction>
+                    <TableTooltipAction info="Edit">
+                        <Button variant="outline" size="icon" onClick={() => router.get(route('protected.schools.edit', { school: school.id }))}>
+                            <Settings2 className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction>
+                    <TableTooltipAction info="Lihat">
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data secara permanen.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
+                                        onClick={() => {
+                                            router.delete(route('protected.schools.destroy', { school: school.id }));
+                                        }}
+                                    >
+                                        Lanjutkan
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </TableTooltipAction>
+                </div>
+            );
+        },
     },
 ];
 
