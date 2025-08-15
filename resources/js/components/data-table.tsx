@@ -7,6 +7,7 @@ import {
     OnChangeFn,
     RowSelectionState,
     SortingState,
+    Table as TanstackTable,
     useReactTable,
     VisibilityState,
 } from '@tanstack/react-table';
@@ -23,7 +24,8 @@ interface DataTableProps<TData, TValue> {
     data: TData[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     meta?: any;
-    children?: ReactNode;
+    // children?: ReactNode;
+    children?: ReactNode | ((table: TanstackTable<TData>) => ReactNode);
 }
 
 export function DataTable<TData, TValue>({ columns, data, meta, children }: DataTableProps<TData, TValue>) {
@@ -150,7 +152,11 @@ export function DataTable<TData, TValue>({ columns, data, meta, children }: Data
     return (
         <div>
             <div className="flex items-center py-4">
-                <div className="flex flex-1 items-center space-x-2">{children}</div>
+                <div className="flex flex-1 items-center space-x-2">
+                    {/* Di sini perubahannya: */}
+                    {/* Jika `children` adalah fungsi, panggil dengan `table`. Jika tidak, render seperti biasa. */}
+                    {typeof children === 'function' ? children(table) : children}
+                </div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="ml-auto">

@@ -196,4 +196,21 @@ class SchoolAcademicYearController extends Controller
         return redirect()->route('protected.schools.academic-years.index', $school)
             ->with('success', 'Tahun ajaran berhasil dihapus.');
     }
+
+    public function bulkDestroy(Request $request, School $school)
+    {
+        // Validasi
+        $request->validate([
+            'ids'   => ['required', 'array'],
+            // Pastikan setiap ID ada dan milik sekolah yang benar
+            'ids.*' => ['exists:school_academic_years,id'],
+        ]);
+
+        // Hapus data
+        SchoolAcademicYear::where('school_id', $school->id)
+            ->whereIn('id', $request->input('ids'))
+            ->delete();
+
+        return redirect()->route('protected.schools.academic-years.index', $school)->with('success', 'Tahun ajaran yang dipilih berhasil dihapus.');
+    }
 }

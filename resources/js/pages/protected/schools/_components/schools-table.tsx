@@ -1,3 +1,4 @@
+import { BulkDeleteAlertDialog } from '@/components/bulk-delete-alert-dialog';
 import { DataTable } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import InertiaPagination from '@/components/inertia-pagination';
@@ -18,7 +19,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { TableMeta } from '@/types';
 import { School, SchoolsPaginated } from '@/types/models/schools';
 import { router } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
 import { Eye, Settings2, Trash2 } from 'lucide-react';
 import { SchoolsTableFilters } from './schools-table-filters';
 
@@ -127,10 +128,43 @@ interface SchoolsTableProps {
     schools: SchoolsPaginated;
 }
 export function SchoolsTable({ schools }: SchoolsTableProps) {
+    const handleBulkDelete = (table: TanstackTable<School>) => {
+        // Ambil semua baris yang dipilih
+        const selectedRows = table.getFilteredSelectedRowModel().rows;
+        // Ekstrak ID dari setiap baris
+        const selectedIds = selectedRows.map((row) => row.original.id);
+
+        // Kirim ID ke backend
+        router.post(
+            route('protected.schools.bulk-destroy'),
+            {
+                ids: selectedIds,
+            },
+            {
+                onSuccess: () => {
+                    table.resetRowSelection();
+                },
+                preserveScroll: true,
+            },
+        );
+    };
+
     return (
         <>
             <DataTable columns={columns} data={schools.data} meta={{ from: schools.from }}>
-                <SchoolsTableFilters />
+                {(table) => {
+                    const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+                    return (
+                        <div className="flex w-full items-center gap-4">
+                            <SchoolsTableFilters />
+                            <BulkDeleteAlertDialog itemCount={selectedRowCount} itemName="data sekolah" onConfirm={() => handleBulkDelete(table)}>
+                                <Button className="text-xs" variant="destructive" disabled={selectedRowCount === 0}>
+                                    <Trash2 className="mr-1 h-2 w-2" />({selectedRowCount})
+                                </Button>
+                            </BulkDeleteAlertDialog>
+                        </div>
+                    );
+                }}
             </DataTable>
             <InertiaPagination paginateItems={schools} />
         </>

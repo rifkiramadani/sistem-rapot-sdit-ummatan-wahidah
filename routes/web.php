@@ -6,8 +6,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    // return Inertia::render('welcome');
-    return redirect('/login');
+    return Inertia::render('welcome');
+    // return redirect('/login');
 })->name('home');
 
 Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(function () {
@@ -35,7 +35,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
 
         // Rute untuk menghapus data (Delete)
         Route::delete('/{school}', [SchoolController::class, 'destroy'])->name('destroy');
-
+        Route::post('/bulk-destroy', [SchoolController::class, 'bulkDestroy'])->name('bulk-destroy');
 
         Route::prefix('/{school}/academic-years')->name('academic-years.')->group(function () {
             // Rute untuk menampilkan semua sekolah (Read)
@@ -55,6 +55,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
             Route::put('/{schoolAcademicYear}', [SchoolAcademicYearController::class, 'update'])->name('update');
 
             Route::delete('/{schoolAcademicYear}', [SchoolAcademicYearController::class, 'destroy'])->name('destroy');
+            Route::post('/bulk-destroy', [SchoolAcademicYearController::class, 'bulkDestroy'])->name('bulk-destroy');
         });
     });
 });

@@ -150,4 +150,21 @@ class SchoolController extends Controller
         // Redirect kembali ke halaman index dengan pesan sukses
         return redirect()->route('protected.schools.index')->with('success', 'Data sekolah berhasil dihapus.');
     }
+
+    /**
+     * Remove multiple specified resources from storage.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        // Validasi bahwa 'ids' ada dan merupakan sebuah array
+        $request->validate([
+            'ids'   => ['required', 'array'],
+            'ids.*' => ['exists:schools,id'], // Pastikan setiap ID ada di tabel sekolah
+        ]);
+
+        // Hapus semua sekolah yang ID-nya ada di dalam array
+        School::whereIn('id', $request->input('ids'))->delete();
+
+        return Redirect::back()->with('success', 'Data sekolah yang dipilih berhasil dihapus.');
+    }
 }

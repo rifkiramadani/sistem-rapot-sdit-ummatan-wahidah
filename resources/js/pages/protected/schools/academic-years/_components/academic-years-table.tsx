@@ -1,5 +1,6 @@
 // Di file: resources/js/pages/protected/schools/academic-years/_components/academic-years-table.tsx
 
+import { BulkDeleteAlertDialog } from '@/components/bulk-delete-alert-dialog';
 import { DataTable } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import InertiaPagination from '@/components/inertia-pagination';
@@ -20,7 +21,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { TableMeta } from '@/types';
 import { SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { router } from '@inertiajs/react';
-import { ColumnDef } from '@tanstack/react-table';
+import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { Eye, Trash2 } from 'lucide-react';
 import { type SchoolAcademicYearsPaginated } from '../index';
@@ -172,10 +173,46 @@ interface AcademicYearsTableProps {
     schoolAcademicYears: SchoolAcademicYearsPaginated;
 }
 export function AcademicYearsTable({ schoolAcademicYears }: AcademicYearsTableProps) {
+    const handleBulkDelete = (table: TanstackTable<SchoolAcademicYear>) => {
+        const selectedRows = table.getFilteredSelectedRowModel().rows;
+
+        // Pastikan ada baris yang dipilih untuk mendapatkan school_id
+        if (selectedRows.length === 0) return;
+
+        const schoolId = selectedRows[0].original.school_id;
+
+        const selectedIds = selectedRows.map((row) => row.original.id);
+
+        router.post(
+            route('protected.schools.academic-years.bulk-destroy', { school: schoolId }),
+            {
+                ids: selectedIds, // Kirim array ID di dalam body
+            },
+            {
+                onSuccess: () => table.resetRowSelection(),
+                preserveScroll: true,
+            },
+        );
+    };
     return (
         <>
             <DataTable columns={columns} data={schoolAcademicYears.data} meta={{ from: schoolAcademicYears.from }}>
-                <AcademicYearsTableFilters />
+                {(table) => {
+                    const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+                    return (
+                        <div className="flex w-full items-center gap-4">
+                            {/* Filter tetap di posisi atas */}
+                            <AcademicYearsTableFilters />
+
+                            {/* Gunakan komponen BulkDeleteDialog */}
+                            <BulkDeleteAlertDialog itemCount={selectedRowCount} itemName="tahun ajaran" onConfirm={() => handleBulkDelete(table)}>
+                                <Button className="text-xs" variant="destructive" disabled={selectedRowCount === 0}>
+                                    <Trash2 className="mr-1 h-2 w-2" />({selectedRowCount})
+                                </Button>
+                            </BulkDeleteAlertDialog>
+                        </div>
+                    );
+                }}
             </DataTable>
             <InertiaPagination paginateItems={schoolAcademicYears} />
         </>

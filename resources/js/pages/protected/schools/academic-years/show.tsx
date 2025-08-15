@@ -1,9 +1,7 @@
 // Di file: resources/js/pages/protected/schools/academic-years/show.tsx
 
-import { Head, Link } from '@inertiajs/react';
-import { Pencil } from 'lucide-react';
+import { Head } from '@inertiajs/react';
 
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
@@ -74,7 +72,7 @@ export default function Show({ school, schoolAcademicYear }: ShowProps) {
                 <Card>
                     <CardHeader>
                         <div className="flex items-center justify-end">
-                            <Link
+                            {/* <Link
                                 href={route('protected.schools.academic-years.edit', {
                                     school: school.id,
                                     schoolAcademicYear: schoolAcademicYear.id,
@@ -84,7 +82,7 @@ export default function Show({ school, schoolAcademicYear }: ShowProps) {
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Edit
                                 </Button>
-                            </Link>
+                            </Link> */}
                         </div>
                     </CardHeader>
                     <CardContent>
