@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { TableMeta } from '@/types';
 import { AcademicYear, AcademicYearsPaginated } from '@/types/models/academic-years.d';
 import { ColumnDef } from '@tanstack/react-table';
-import { AcademicYearTableFilters } from '../_components/academic-years-table-filters';
+import { AcademicYearTableFilters } from './academic-years-table-filters';
 
 export const columns: ColumnDef<AcademicYear>[] = [
     {
