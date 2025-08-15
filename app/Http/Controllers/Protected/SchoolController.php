@@ -175,6 +175,6 @@ class SchoolController extends Controller
             }
         });
 
-        return Redirect::back()->with('success', 'Data sekolah yang dipilih berhasil dihapus.');
+        return redirect()->route('protected.schools.index')->with('success', 'Data sekolah yang dipilih berhasil dihapus.');
     }
 }

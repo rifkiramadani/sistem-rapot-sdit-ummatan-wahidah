@@ -46,9 +46,9 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
             ]);
         })->name('dashboard.index');
 
-        // Route::prefix('/teachers')->name('teachers.')->group(function () {
-        //     Route::get('', [TeacherController::class, 'index'])->name('index');
-        // });
+        Route::prefix('/teachers')->name('teachers.')->group(function () {
+            Route::get('', [TeacherController::class, 'index'])->name('index');
+        });
     });
 });
 
