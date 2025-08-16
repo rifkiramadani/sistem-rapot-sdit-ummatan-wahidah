@@ -20,8 +20,8 @@ class SubjectSeeder extends Seeder
         }
 
         // Create 15 subjects. The factory will handle assigning them.
-        Subject::factory()->count(15)->create();
+        Subject::factory()->count(5)->create();
 
-        $this->command->info('Created 15 subjects.');
+        $this->command->info('Created 5 subjects.');
     }
 }

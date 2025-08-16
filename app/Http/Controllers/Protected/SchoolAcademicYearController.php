@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Protected;
 
+use App\Enums\PerPageEnum;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\School;
@@ -10,14 +11,17 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class SchoolAcademicYearController extends Controller
 {
     public function index(Request $request, School $school)
     {
+        Gate::authorize('viewAny', SchoolAcademicYear::class);
+
         // 1. Validasi semua parameter request
         $request->validate([
-            'per_page' => 'sometimes|integer|in:10,20,30,40,50,100',
+            'per_page' => ['sometimes', 'integer', Rule::in(PerPageEnum::values())],
             // Sesuaikan kolom yang bisa di-sort
             'sort_by' => 'sometimes|string|in:name,start,end',
             'sort_direction' => 'sometimes|string|in:asc,desc',
@@ -25,8 +29,7 @@ class SchoolAcademicYearController extends Controller
             'filter.q' => 'sometimes|string|nullable',
         ]);
 
-        // 2. Ambil parameter dengan nilai default
-        $perPage = $request->input('per_page', 10);
+        $perPage = $request->input('per_page', PerPageEnum::DEFAULT->value);
         // Default sort adalah 'start' (tanggal mulai), dari yang terbaru
         $sortBy = $request->input('sort_by', 'start');
         $sortDirection = $request->input('sort_direction', 'desc');
@@ -64,10 +67,29 @@ class SchoolAcademicYearController extends Controller
     }
 
     /**
+     * Menampilkan detail tautan tahun ajaran sekolah.
+     */
+    public function show(School $school, SchoolAcademicYear $schoolAcademicYear)
+    {
+        Gate::authorize('view', $schoolAcademicYear);
+
+        // Eager load relasi academicYear agar datanya tersedia di frontend
+        $schoolAcademicYear->load('academicYear');
+
+        // Render halaman show dengan data yang diperlukan
+        return Inertia::render('protected/schools/academic-years/show', [
+            'school' => $school,
+            'schoolAcademicYear' => $schoolAcademicYear,
+        ]);
+    }
+
+    /**
      * Menampilkan form untuk menambahkan tahun ajaran ke sekolah.
      */
     public function create(School $school)
     {
+        Gate::authorize('create', SchoolAcademicYear::class);
+      
         // Ambil ID tahun ajaran yang sudah ditautkan ke sekolah ini
         $linkedAcademicYearIds = $school->schoolAcademicYears()->pluck('academic_year_id');
 
@@ -87,6 +109,8 @@ class SchoolAcademicYearController extends Controller
      */
     public function store(Request $request, School $school)
     {
+        Gate::authorize('create', SchoolAcademicYear::class);
+
         $validated = $request->validate([
             'academic_year_id' => [
                 'required',
@@ -111,10 +135,7 @@ class SchoolAcademicYearController extends Controller
      */
     public function edit(School $school, SchoolAcademicYear $schoolAcademicYear)
     {
-        // Otorisasi: Pastikan data yang akan diedit milik sekolah yang bersangkutan
-        if ($schoolAcademicYear->school_id !== $school->id) {
-            abort(403);
-        }
+        Gate::authorize('update', $schoolAcademicYear);
 
         // Ambil ID tahun ajaran yang sudah ditautkan, KECUALI yang sedang diedit
         $linkedAcademicYearIds = $school->schoolAcademicYears()
@@ -134,34 +155,11 @@ class SchoolAcademicYearController extends Controller
     }
 
     /**
-     * Menampilkan detail tautan tahun ajaran sekolah.
-     */
-    public function show(School $school, SchoolAcademicYear $schoolAcademicYear)
-    {
-        // Otorisasi: Pastikan data yang akan ditampilkan milik sekolah yang bersangkutan
-        if ($schoolAcademicYear->school_id !== $school->id) {
-            abort(403);
-        }
-
-        // Eager load relasi academicYear agar datanya tersedia di frontend
-        $schoolAcademicYear->load('academicYear');
-
-        // Render halaman show dengan data yang diperlukan
-        return Inertia::render('protected/schools/academic-years/show', [
-            'school' => $school,
-            'schoolAcademicYear' => $schoolAcademicYear,
-        ]);
-    }
-
-    /**
      * Memperbarui tautan tahun ajaran sekolah.
      */
     public function update(Request $request, School $school, SchoolAcademicYear $schoolAcademicYear)
     {
-        // Otorisasi
-        if ($schoolAcademicYear->school_id !== $school->id) {
-            abort(403);
-        }
+        Gate::authorize('update', $schoolAcademicYear);
 
         $validated = $request->validate([
             'academic_year_id' => [
@@ -187,10 +185,7 @@ class SchoolAcademicYearController extends Controller
      */
     public function destroy(School $school, SchoolAcademicYear $schoolAcademicYear)
     {
-        // Otorisasi: Pastikan data yang akan dihapus benar-benar milik sekolah yang bersangkutan
-        if ($schoolAcademicYear->school_id !== $school->id) {
-            abort(403, 'UNAUTHORIZED ACTION');
-        }
+        Gate::authorize('delete', $schoolAcademicYear);
 
         $schoolAcademicYear->delete();
 
@@ -200,6 +195,8 @@ class SchoolAcademicYearController extends Controller
 
     public function bulkDestroy(Request $request, School $school)
     {
+        Gate::authorize('bulkDelete', SchoolAcademicYear::class);
+
         // Validasi
         $request->validate([
             'ids'   => ['required', 'array'],

@@ -2,9 +2,9 @@ import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { mainNavItems } from '@/constants/protected-sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
+import { getSchoolAcademicYearNavItems, mainNavItems } from '@/constants/protected-sidebar';
+import { SharedData, type NavItem } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -22,13 +22,33 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { props } = usePage<SharedData>();
+    const { schoolAcademicYear } = props;
+    let navItems: NavItem[];
+
+    if (schoolAcademicYear) {
+        // Jika ada prop schoolAcademicYear, gunakan navigasi konteks tahun ajaran
+        navItems = getSchoolAcademicYearNavItems(schoolAcademicYear);
+    } else {
+        // Jika tidak, gunakan navigasi utama
+        navItems = mainNavItems;
+    }
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={route('protected.dashboard.index')} prefetch>
+                            <Link
+                                href={
+                                    schoolAcademicYear
+                                        ? route('protected.school-academic-years.dashboard.index', {
+                                              schoolAcademicYear: schoolAcademicYear.id,
+                                          })
+                                        : route('protected.dashboard.index')
+                                }
+                                prefetch
+                            >
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -37,7 +57,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={navItems} />
             </SidebarContent>
 
             <SidebarFooter>

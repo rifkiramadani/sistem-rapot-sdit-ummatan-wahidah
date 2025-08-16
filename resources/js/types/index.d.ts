@@ -1,5 +1,6 @@
 import { LucideIcon } from 'lucide-react';
 import type { Config } from 'ziggy-js';
+import { SchoolAcademicYear } from './models/school-academic-years';
 
 export interface Auth {
     user: User;
@@ -22,6 +23,11 @@ export interface NavItem {
     isActive?: boolean;
 }
 
+export interface FlashData {
+    success?: string;
+    error?: string;
+}
+
 export interface SharedData {
     name: string;
     quote: { message: string; author: string };
@@ -30,6 +36,8 @@ export interface SharedData {
     sidebarOpen: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     queryParams: Record<string, any>;
+    flash: FlashData;
+    schoolAcademicYear: SchoolAcademicYear;
     [key: string]: unknown;
 }
 

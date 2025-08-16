@@ -1,10 +1,26 @@
+import { BulkDeleteAlertDialog } from '@/components/bulk-delete-alert-dialog';
 import { DataTable } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import InertiaPagination from '@/components/inertia-pagination';
+import TableTooltipAction from '@/components/table-tooltip-action';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableMeta } from '@/types';
 import { School, SchoolsPaginated } from '@/types/models/schools';
-import { ColumnDef } from '@tanstack/react-table';
+import { router } from '@inertiajs/react';
+import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
+import { Eye, Settings2, Trash2 } from 'lucide-react';
 import { SchoolsTableFilters } from './schools-table-filters';
 
 export const columns: ColumnDef<School>[] = [
@@ -56,16 +72,99 @@ export const columns: ColumnDef<School>[] = [
         header: 'Current Academic Year',
         enableSorting: false,
     },
+    {
+        id: 'actions',
+        header: 'Aksi',
+        cell: ({ row }) => {
+            const school = row.original;
+
+            return (
+                <div className="flex gap-2">
+                    <TableTooltipAction info="Lihat">
+                        <Button variant="outline" size="icon" onClick={() => router.get(route('protected.schools.show', { school: school.id }))}>
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction>
+                    <TableTooltipAction info="Edit">
+                        <Button variant="outline" size="icon" onClick={() => router.get(route('protected.schools.edit', { school: school.id }))}>
+                            <Settings2 className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction>
+                    <TableTooltipAction info="Lihat">
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data secara permanen.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
+                                        onClick={() => {
+                                            router.delete(route('protected.schools.destroy', { school: school.id }));
+                                        }}
+                                    >
+                                        Lanjutkan
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </TableTooltipAction>
+                </div>
+            );
+        },
+    },
 ];
 
 interface SchoolsTableProps {
     schools: SchoolsPaginated;
 }
 export function SchoolsTable({ schools }: SchoolsTableProps) {
+    const handleBulkDelete = (table: TanstackTable<School>) => {
+        // Ambil semua baris yang dipilih
+        const selectedRows = table.getFilteredSelectedRowModel().rows;
+        // Ekstrak ID dari setiap baris
+        const selectedIds = selectedRows.map((row) => row.original.id);
+
+        // Kirim ID ke backend
+        router.post(
+            route('protected.schools.bulk-destroy'),
+            {
+                ids: selectedIds,
+            },
+            {
+                onSuccess: () => {
+                    table.resetRowSelection();
+                },
+                preserveScroll: true,
+            },
+        );
+    };
+
     return (
         <>
             <DataTable columns={columns} data={schools.data} meta={{ from: schools.from }}>
-                <SchoolsTableFilters />
+                {(table) => {
+                    const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+                    return (
+                        <div className="flex w-full items-center gap-4">
+                            <SchoolsTableFilters />
+                            <BulkDeleteAlertDialog itemCount={selectedRowCount} itemName="data sekolah" onConfirm={() => handleBulkDelete(table)}>
+                                <Button className="text-xs" variant="destructive" disabled={selectedRowCount === 0}>
+                                    <Trash2 className="mr-1 h-2 w-2" />({selectedRowCount})
+                                </Button>
+                            </BulkDeleteAlertDialog>
+                        </div>
+                    );
+                }}
             </DataTable>
             <InertiaPagination paginateItems={schools} />
         </>
