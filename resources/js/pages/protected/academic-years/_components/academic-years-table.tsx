@@ -8,6 +8,7 @@ import { TableMeta } from '@/types';
 import { AcademicYear, AcademicYearsPaginated } from '@/types/models/academic-years.d';
 import { ColumnDef } from '@tanstack/react-table';
 import { AcademicYearTableFilters } from '../_components/academic-years-table-filters';
+import { format } from "date-fns"
 
 export const columns: ColumnDef<AcademicYear>[] = [
     {
@@ -42,10 +43,20 @@ export const columns: ColumnDef<AcademicYear>[] = [
     {
         accessorKey: 'start',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Start Year" />,
+        // Custom cell to format the date
+        cell: ({ row }) => {
+            const date = new Date(row.original.start);
+            return format(date, 'yyyy'); // Format to display only the year
+        },
     },
     {
         accessorKey: 'end',
         header: ({ column }) => <DataTableColumnHeader column={column} title="End Year" />,
+        // Custom cell to format the date
+        cell: ({ row }) => {
+            const date = new Date(row.original.end);
+            return format(date, 'yyyy'); // Format to display only the year
+        },
     },
 ];
 
@@ -53,6 +64,7 @@ interface AcademicYearTableProps {
     academicYears: AcademicYearsPaginated;
 }
 export function AcademicYearTable({ academicYears }: AcademicYearTableProps) {
+
     return (
         <>
             <DataTable columns={columns} data={academicYears.data} meta={{ from: academicYears.from }}>
