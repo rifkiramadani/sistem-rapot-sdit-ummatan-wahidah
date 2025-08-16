@@ -19,6 +19,11 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
         return Inertia::render('protected/dashboard/index');
     })->name('dashboard.index');
 
+    // ROUTE FOR ACADEMIC YEAR
+    Route::prefix('academic-years')->name('academic-years.')->group(function () {
+        Route::get('', [AcademicYearController::class, 'index'])->name('index');
+    });
+
     Route::prefix('schools')->name('schools.')->group(function () {
         Route::get('', [SchoolController::class, 'index'])->name('index');
         Route::get('/create', [SchoolController::class, 'create'])->name('create');
@@ -51,11 +56,6 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
         Route::prefix('/teachers')->name('teachers.')->group(function () {
             Route::get('', [TeacherController::class, 'index'])->name('index');
         });
-    });
-
-    // ROUTE FOR ACADEMIC YEAR
-    Route::prefix('academic-years')->group(function () {
-        Route::get('', [AcademicYearController::class, 'index'])->name('academic-years.index');
     });
 });
 
