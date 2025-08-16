@@ -4,8 +4,10 @@ use App\Http\Controllers\Protected\SchoolAcademicYearController;
 use App\Http\Controllers\Protected\SchoolController;
 use App\Http\Controllers\Protected\TeacherController;
 use App\Models\SchoolAcademicYear;
-use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Models\AcademicYear;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Protected\AcademicYearController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -49,6 +51,11 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
         Route::prefix('/teachers')->name('teachers.')->group(function () {
             Route::get('', [TeacherController::class, 'index'])->name('index');
         });
+    });
+
+    // ROUTE FOR ACADEMIC YEAR
+    Route::prefix('academic-years')->group(function () {
+        Route::get('', [AcademicYearController::class, 'index'])->name('academic-years.index');
     });
 });
 

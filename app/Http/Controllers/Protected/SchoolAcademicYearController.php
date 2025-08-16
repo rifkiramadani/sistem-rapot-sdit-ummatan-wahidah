@@ -29,7 +29,6 @@ class SchoolAcademicYearController extends Controller
             'filter.q' => 'sometimes|string|nullable',
         ]);
 
-        // 2. Ambil parameter dengan nilai default
         $perPage = $request->input('per_page', PerPageEnum::DEFAULT->value);
         // Default sort adalah 'start' (tanggal mulai), dari yang terbaru
         $sortBy = $request->input('sort_by', 'start');
@@ -67,7 +66,6 @@ class SchoolAcademicYearController extends Controller
         ]);
     }
 
-
     /**
      * Menampilkan detail tautan tahun ajaran sekolah.
      */
@@ -91,7 +89,7 @@ class SchoolAcademicYearController extends Controller
     public function create(School $school)
     {
         Gate::authorize('create', SchoolAcademicYear::class);
-
+      
         // Ambil ID tahun ajaran yang sudah ditautkan ke sekolah ini
         $linkedAcademicYearIds = $school->schoolAcademicYears()->pluck('academic_year_id');
 

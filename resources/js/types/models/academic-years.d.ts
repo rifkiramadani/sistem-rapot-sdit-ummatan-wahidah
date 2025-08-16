@@ -1,3 +1,4 @@
+
 import { School } from "./schools";
 
 export type AcademicYear = {
@@ -8,3 +9,6 @@ export type AcademicYear = {
 
     schools?: School[];
 };
+
+
+export type AcademicYearsPaginated = Paginator<AcademicYear>;
