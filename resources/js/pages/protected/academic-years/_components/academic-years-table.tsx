@@ -47,12 +47,6 @@ export const columns: ColumnDef<AcademicYear>[] = [
         accessorKey: 'end',
         header: ({ column }) => <DataTableColumnHeader column={column} title="End Year" />,
     },
-    {
-        accessorFn: (row) => row.schools?.length ?? 0,
-        id: 'totalSchools',
-        header: 'Total Schools',
-        enableSorting: false,
-    },
 ];
 
 interface AcademicYearTableProps {
