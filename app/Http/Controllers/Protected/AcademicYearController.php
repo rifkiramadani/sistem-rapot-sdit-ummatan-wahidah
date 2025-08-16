@@ -49,7 +49,7 @@ class AcademicYearController extends Controller
         // 6. Pagination
         $academicYears = $query->paginate($perPage)->withQueryString();
 
-        return Inertia::render('protected/academicYear/index', [
+        return Inertia::render('protected/academic-years/index', [
             'academicYears' => $academicYears,
         ]);
     }
