@@ -88,4 +88,13 @@ class AcademicYearController extends Controller
 
         return redirect()->route('protected.academic-years.index')->with('success', 'Tahun ajaran berhasil dibuat.');
     }
+
+    public function show(AcademicYear $academicYear)
+    {
+        Gate::authorize('view', $academicYear);
+
+        return Inertia::render('protected/academic-years/show', [
+            'academicYear' => $academicYear,
+        ]);
+    }
 }

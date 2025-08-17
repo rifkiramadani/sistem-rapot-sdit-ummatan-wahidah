@@ -9,6 +9,11 @@ import { AcademicYear, AcademicYearsPaginated } from '@/types/models/academic-ye
 import { ColumnDef } from '@tanstack/react-table';
 import { AcademicYearTableFilters } from '../_components/academic-years-table-filters';
 import { format } from "date-fns"
+import TableTooltipAction from '@/components/table-tooltip-action';
+import { Button } from '@/components/ui/button';
+import { Eye, Settings2, Trash2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { router } from '@inertiajs/react';
 
 export const columns: ColumnDef<AcademicYear>[] = [
     {
@@ -58,6 +63,56 @@ export const columns: ColumnDef<AcademicYear>[] = [
             return format(date, 'yyyy'); // Format to display only the year
         },
     },
+    {
+        id: 'actions',
+        header: 'Aksi',
+        cell: ({ row }) => {
+            const academicYear = row.original;
+
+            return (
+                <div className="flex gap-2">
+                    <TableTooltipAction info="Lihat">
+                        <Button variant="outline" size="icon" onClick={() => router.get(route('protected.academic-years.show', { academicYear: academicYear.id }))}>
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction>
+                    <TableTooltipAction info="Edit">
+                        <Button variant="outline" size="icon">
+                            <Settings2 className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction>
+                    <TableTooltipAction info="Lihat">
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data secara permanen.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
+                                        onClick={() => {
+                                            // router.delete(route('protected.academic-years.destroy', { academicYear: academicYear.id }));
+                                        }}
+                                    >
+                                        Lanjutkan
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </TableTooltipAction>
+                </div >
+            );
+        },
+    }
 ];
 
 interface AcademicYearTableProps {
