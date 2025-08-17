@@ -40,10 +40,10 @@ class AcademicYearController extends Controller
             $searchLower = strtolower($search);
 
             $query->where(function (Builder $q) use ($searchLower) {
-                // Cari berdasarkan name atau format tahun
+                // Ganti 'start' dan 'end' dengan '"start"' dan '"end"'
                 $q->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
-                  ->orWhereRaw('CAST(start AS CHAR) LIKE ?', ["%{$searchLower}%"])
-                  ->orWhereRaw('CAST(end AS CHAR) LIKE ?', ["%{$searchLower}%"]);
+                    ->orWhereRaw('CAST("start" AS CHAR) LIKE ?', ["%{$searchLower}%"])
+                    ->orWhereRaw('CAST("end" AS CHAR) LIKE ?', ["%{$searchLower}%"]);
             });
         });
 
@@ -52,6 +52,8 @@ class AcademicYearController extends Controller
 
         // 6. Pagination
         $academicYears = $query->paginate($perPage)->withQueryString();
+
+        // dd($academicYears);
 
         return Inertia::render('protected/academic-years/index', [
             'academicYears' => $academicYears,
@@ -63,5 +65,27 @@ class AcademicYearController extends Controller
         Gate::authorize('create', AcademicYear::class);
 
         return Inertia::render('protected/academic-years/create');
+    }
+
+    public function store(Request $request)
+    {
+        // dd($request->all());
+
+        Gate::authorize('create', AcademicYear::class);
+
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'regex:/^\d{4}\/\d{4}$/', // Aturan validasi baru contoh 2032/2033
+                'unique:academic_years,name', // Tambahkan validasi unique
+            ],
+            'start' => 'required|integer',
+            'end' => 'required|integer'
+        ]);
+
+        AcademicYear::create($validated);
+
+        return redirect()->route('protected.academic-years.index')->with('success', 'Tahun ajaran berhasil dibuat.');
     }
 }
