@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers\Protected;
 
-use App\Http\Controllers\Controller;
-use App\Models\AcademicYear;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\AcademicYear;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Database\Eloquent\Builder;
 
 class AcademicYearController extends Controller
 {
     public function index(Request $request)
     {
+
+        Gate::authorize('viewAny', AcademicYear::class);
+
         // 1. Validasi request
         $request->validate([
             'per_page' => 'sometimes|integer|in:10,20,30,40,50,100',
@@ -52,5 +56,12 @@ class AcademicYearController extends Controller
         return Inertia::render('protected/academic-years/index', [
             'academicYears' => $academicYears,
         ]);
+    }
+
+    public function create()
+    {
+        Gate::authorize('create', AcademicYear::class);
+
+        return Inertia::render('protected/academic-years/create');
     }
 }

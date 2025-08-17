@@ -22,6 +22,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
     // ROUTE FOR ACADEMIC YEAR
     Route::prefix('academic-years')->name('academic-years.')->group(function () {
         Route::get('', [AcademicYearController::class, 'index'])->name('index');
+        Route::get('/create', [AcademicYearController::class, 'create'])->name('create');
     });
 
     Route::prefix('schools')->name('schools.')->group(function () {
