@@ -1,7 +1,7 @@
 
 import { NavItem } from '@/types';
 import { SchoolAcademicYear } from '@/types/models/school-academic-years';
-import { LayoutGrid, PersonStanding, School } from 'lucide-react';
+import { LayoutGrid, PersonStanding, School, CalendarRange } from 'lucide-react';
 
 export const mainNavItems: NavItem[] = [
     {
