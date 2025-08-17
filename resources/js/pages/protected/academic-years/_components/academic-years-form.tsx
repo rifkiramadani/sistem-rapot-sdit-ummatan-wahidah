@@ -60,7 +60,7 @@ export default function AcademicYearsForm({ academicYear }: AcademicYearsFormPro
                         <Label htmlFor="start">
                             Mulai <span className="text-red-500">*</span>
                         </Label>
-                        <Input type='number' id='start' name='start' value={data.start} onChange={(e) => setData('start', e.target.value)} />
+                        <Input type='date' id='start' name='start' value={data.start} onChange={(e) => setData('start', e.target.value)} />
                         <InputError message={errors.start} />
                     </div>
 
@@ -69,7 +69,7 @@ export default function AcademicYearsForm({ academicYear }: AcademicYearsFormPro
                         <Label htmlFor="end">
                             Selesai <span className="text-red-500">*</span>
                         </Label>
-                        <Input id="end" name="end" type="number" value={data.end} onChange={(e) => setData('end', e.target.value)} />
+                        <Input id="end" name="end" type="date" value={data.end} onChange={(e) => setData('end', e.target.value)} />
                         <InputError message={errors.end} />
                     </div>
 

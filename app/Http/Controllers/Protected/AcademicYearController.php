@@ -80,8 +80,8 @@ class AcademicYearController extends Controller
                 'regex:/^\d{4}\/\d{4}$/', // Aturan validasi baru contoh 2032/2033
                 'unique:academic_years,name', // Tambahkan validasi unique
             ],
-            'start' => 'required|integer',
-            'end' => 'required|integer'
+            'start' => 'required|date',
+            'end' => 'required|date'
         ]);
 
         AcademicYear::create($validated);
