@@ -1,3 +1,5 @@
+import { Paginator } from "..";
+
 export type Teacher = {
     id: string; // Primary key (ULID)
     name: string;
@@ -11,3 +13,5 @@ export type Teacher = {
     school_academic_year?: SchoolAcademicYear;
     classrooms?: Classroom[];
 };
+
+export type TeachersPaginated = Paginator<Teacher>;

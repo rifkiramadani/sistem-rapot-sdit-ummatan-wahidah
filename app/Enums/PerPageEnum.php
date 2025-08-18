@@ -2,14 +2,15 @@
 
 namespace App\Enums;
 
-enum PerPageEnum: int
+enum PerPageEnum: string
 {
-    case P10 = 10;
-    case P20 = 20;
-    case P30 = 30;
-    case P40 = 40;
-    case P50 = 50;
-    case P100 = 100;
+    case P10 = '10';
+    case P20 = '20';
+    case P30 = '30';
+    case P40 = '40';
+    case P50 = '50';
+    case P100 = '100';
+    case Pall = 'all'; // <-- Tambahkan case baru di sini
 
     /**
      * Nilai default untuk paginasi.
@@ -17,13 +18,13 @@ enum PerPageEnum: int
     public const DEFAULT = self::P10;
 
     /**
-     * Mengembalikan semua nilai integer dari case Enum.
-     * Berguna untuk aturan validasi 'in'.
+     * Mengembalikan semua nilai dari case Enum.
      *
-     * @return array<int>
+     * @return array<string>
      */
     public static function values(): array
     {
+        // Logikanya menjadi lebih sederhana
         return array_column(self::cases(), 'value');
     }
 }

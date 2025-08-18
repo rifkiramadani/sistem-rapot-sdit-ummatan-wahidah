@@ -24,12 +24,13 @@ interface PaginatorInfo {
 }
 
 enum PerPageEnum {
-    P10 = 10,
-    P20 = 20,
-    P30 = 30,
-    P40 = 40,
-    P50 = 50,
-    P100 = 100,
+    P10 = '10',
+    P20 = '20',
+    P30 = '30',
+    P40 = '40',
+    P50 = '50',
+    P100 = '100',
+    Pall = 'all',
 }
 
 interface InertiaPaginationProps {
@@ -41,19 +42,26 @@ const InertiaPagination = ({ paginateItems }: InertiaPaginationProps) => {
     const { queryParams } = props;
     const { links, total, from, to, per_page } = paginateItems;
 
-    // Di Laravel, link pertama selalu "previous" dan yang terakhir adalah "next"
     const previousLink = links[0];
     const nextLink = links[links.length - 1];
-    // Ambil hanya link nomor halaman (dan elipsis)
     const pageLinks = links.slice(1, -1);
 
-    const perPageOptions: number[] = Object.values(PerPageEnum).filter((value): value is number => typeof value === 'number');
+    const perPageOptions = Object.values(PerPageEnum);
 
-    // Fungsi untuk menangani perubahan jumlah item per halaman
+    // [FIX 1] STATE DERIVED DIRECTLY FROM URL QUERY PARAMS
+    // Nilai dropdown diambil dari URL sebagai prioritas utama.
+    // Jika tidak ada di URL, baru gunakan nilai dari data server (`per_page`).
+    const selectValue = queryParams?.per_page || `${per_page}`;
+
+    // Logika ini harus tetap menggunakan data dari server (`paginateItems`)
+    // karena hanya server yang tahu jumlah total item.
+    const isShowingAll = total > 0 && per_page >= total;
+
+    // Handler ini sudah benar, tugasnya hanya mengubah URL.
     const handlePerPageChange = (newPerPageValue: string) => {
         router.get(
             window.location.pathname,
-            { ...queryParams, per_page: newPerPageValue, page: 1 }, // Reset ke halaman 1 saat item per halaman diubah
+            { ...queryParams, per_page: newPerPageValue, page: 1 },
             {
                 preserveState: true,
                 replace: true,
@@ -63,67 +71,59 @@ const InertiaPagination = ({ paginateItems }: InertiaPaginationProps) => {
 
     return (
         <div className="flex flex-col items-center justify-between gap-4 px-2 sm:flex-row">
-            {/* Tampilkan teks "Showing X to Y of Z results" */}
             <div className="text-sm text-muted-foreground">
                 Showing <strong>{from}</strong> to <strong>{to}</strong> of <strong>{total}</strong> results
             </div>
 
-            {/* Kontrol di sisi kanan */}
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
-                {/* Dropdown untuk memilih ukuran halaman */}
                 <div className="flex items-center space-x-2">
                     <span className="text-sm font-medium whitespace-nowrap">Rows per page</span>
-                    <Select value={`${per_page}`} onValueChange={handlePerPageChange}>
+                    <Select value={selectValue} onValueChange={handlePerPageChange}>
                         <SelectTrigger className="h-8 w-[70px]">
-                            <SelectValue placeholder={per_page} />
+                            <SelectValue placeholder={selectValue === 'all' ? 'All' : selectValue} />
                         </SelectTrigger>
                         <SelectContent side="top">
                             {perPageOptions.map((pageSize) => (
-                                <SelectItem key={pageSize} value={`${pageSize}`}>
-                                    {pageSize}
+                                <SelectItem key={pageSize} value={pageSize}>
+                                    {pageSize === PerPageEnum.Pall ? 'Semua' : pageSize}
                                 </SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
                 </div>
 
-                {/* Tautan halaman */}
-                <Pagination>
-                    <PaginationContent>
-                        {/* Tombol Previous */}
-                        <PaginationItem>
-                            <PaginationPrevious
-                                href={previousLink.url ?? '#'}
-                                // Tambahkan style disabled jika tidak ada URL (halaman pertama)
-                                className={!previousLink.url ? 'pointer-events-none opacity-50' : ''}
-                            />
-                        </PaginationItem>
+                {/* [FIX 2] HIDE NAVIGATION WHEN ALL ITEMS ARE SHOWN */}
+                {/* Navigasi hanya muncul jika TIDAK semua item ditampilkan. */}
+                {!isShowingAll && total > 0 && (
+                    <Pagination>
+                        <PaginationContent>
+                            <PaginationItem>
+                                <PaginationPrevious
+                                    href={previousLink.url ?? '#'}
+                                    className={!previousLink.url ? 'pointer-events-none opacity-50' : ''}
+                                />
+                            </PaginationItem>
 
-                        {/* Tautan Nomor Halaman dan Elipsis */}
-                        {pageLinks.map((link, index) =>
-                            link.label.includes('...') ? (
-                                <PaginationItem key={`ellipsis-${index}`}>
-                                    <PaginationEllipsis />
-                                </PaginationItem>
-                            ) : (
-                                <PaginationItem key={link.label}>
-                                    <PaginationLink href={link.url ?? '#'} isActive={link.active}>
-                                        {link.label}
-                                    </PaginationLink>
-                                </PaginationItem>
-                            ),
-                        )}
+                            {pageLinks.map((link, index) =>
+                                link.label.includes('...') ? (
+                                    <PaginationItem key={`ellipsis-${index}`}>
+                                        <PaginationEllipsis />
+                                    </PaginationItem>
+                                ) : (
+                                    <PaginationItem key={link.label}>
+                                        <PaginationLink href={link.url ?? '#'} isActive={link.active}>
+                                            {link.label}
+                                        </PaginationLink>
+                                    </PaginationItem>
+                                ),
+                            )}
 
-                        {/* Tombol Next */}
-                        <PaginationItem>
-                            <PaginationNext
-                                href={nextLink.url ?? '#'}
-                                // Tambahkan style disabled jika tidak ada URL (halaman terakhir)
-                                className={!nextLink.url ? 'pointer-events-none opacity-50' : ''}
-                            />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
+                            <PaginationItem>
+                                <PaginationNext href={nextLink.url ?? '#'} className={!nextLink.url ? 'pointer-events-none opacity-50' : ''} />
+                            </PaginationItem>
+                        </PaginationContent>
+                    </Pagination>
+                )}
             </div>
         </div>
     );

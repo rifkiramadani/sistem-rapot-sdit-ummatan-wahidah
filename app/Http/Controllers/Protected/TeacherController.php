@@ -15,7 +15,7 @@ class TeacherController extends Controller
     {
         // 1. Validasi semua parameter request
         $request->validate([
-            'per_page' => ['sometimes', 'integer', Rule::in(PerPageEnum::values())],
+            'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
             // Sesuaikan kolom yang bisa di-sort untuk model Teacher
             'sort_by' => 'sometimes|string|in:name,niy',
             'sort_direction' => 'sometimes|string|in:asc,desc',
@@ -55,8 +55,18 @@ class TeacherController extends Controller
         // Karena 'name' dan 'niy' ada di tabel 'teachers' itu sendiri, kita tidak perlu JOIN
         $query->orderBy($sortBy, $sortDirection);
 
-        // 6. Lakukan paginasi dan tambahkan semua parameter query string
-        $teachers = $query->paginate($perPage)->withQueryString();
+        $teachers = null;
+        if ($perPage === PerPageEnum::Pall->value) { // Gunakan Enum case untuk perbandingan
+            // Dapatkan jumlah total item dari query yang sudah difilter
+            $total = $query->count();
+            // Paginate dengan jumlah total untuk mendapatkan semua item dalam satu halaman.
+            // Jika total 0, gunakan default untuk menghindari error paginate(0).
+            $teachers = $query->paginate($total > 0 ? $total : PerPageEnum::DEFAULT->value)->withQueryString();
+        } else {
+            // Gunakan paginasi normal jika bukan 'all'.
+            // Laravel dapat menangani string numerik ('10', '20') secara otomatis.
+            $teachers = $query->paginate($perPage)->withQueryString();
+        }
 
         // 7. Kembalikan response ke view Inertia
         return Inertia::render('protected/school-academic-years/teachers/index', [

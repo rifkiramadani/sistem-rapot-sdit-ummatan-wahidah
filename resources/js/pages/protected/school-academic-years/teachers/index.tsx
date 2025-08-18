@@ -1,13 +1,18 @@
-import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
-import { SchoolAcademicYear } from '@/types/models/school-academic-years';
-import { Teacher } from '@/types/models/teachers';
-import { Head } from '@inertiajs/react';
+// resources/js/Pages/protected/school-academic-years/teachers/index.tsx
 
+import AppLayout from '@/layouts/app-layout';
+import { BreadcrumbItem } from '@/types';
+import { SchoolAcademicYear } from '@/types/models/school-academic-years';
+import { TeachersPaginated } from '@/types/models/teachers';
+import { Head } from '@inertiajs/react';
+import { TeachersTable } from './_components/teachers-table';
+
+// Ganti interface props untuk menerima data paginasi
 interface IndexProps {
-    teachers: Teacher[];
+    teachers: TeachersPaginated;
     schoolAcademicYear: SchoolAcademicYear;
 }
+
 export default function Index({ teachers, schoolAcademicYear }: IndexProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
@@ -16,17 +21,31 @@ export default function Index({ teachers, schoolAcademicYear }: IndexProps) {
                 schoolAcademicYear: schoolAcademicYear.id,
             }),
         },
+        {
+            title: 'Guru',
+            href: route('protected.school-academic-years.teachers.index', {
+                schoolAcademicYear: schoolAcademicYear.id,
+            }),
+        },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
+            <Head title="Guru" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <pre>{JSON.stringify(schoolAcademicYear, null, 2)}</pre>
-                </div>
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <pre>{JSON.stringify(teachers, null, 2)}</pre>
+                <div className="flex-1 space-y-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
+                    {/* <Link
+                        href={route('protected.school-academic-years.teachers.create', {
+                            schoolAcademicYear: schoolAcademicYear.id,
+                        })}
+                    >
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Tambah Guru
+                        </Button>
+                    </Link> */}
+
+                    <TeachersTable teachers={teachers} schoolAcademicYear={schoolAcademicYear} />
                 </div>
             </div>
         </AppLayout>

@@ -1,3 +1,5 @@
+// resources/js/Pages/protected/school-academic-years/teachers/_components/teachers-table.tsx
+
 import { BulkDeleteAlertDialog } from '@/components/bulk-delete-alert-dialog';
 import { DataTable } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
@@ -17,13 +19,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableMeta } from '@/types';
-import { School, SchoolsPaginated } from '@/types/models/schools';
+import { SchoolAcademicYear } from '@/types/models/school-academic-years';
+import { Teacher, TeachersPaginated } from '@/types/models/teachers';
 import { router } from '@inertiajs/react';
 import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
-import { Eye, Settings2, Trash2 } from 'lucide-react';
-import { SchoolsTableFilters } from './schools-table-filters';
+import { Settings2, Trash2 } from 'lucide-react';
+import { TeachersTableFilters } from './teachers-table-filters';
 
-export const columns: ColumnDef<School>[] = [
+// Mendefinisikan kolom-kolom tabel
+export const getColumns = (schoolAcademicYear: SchoolAcademicYear): ColumnDef<Teacher>[] => [
     {
         id: 'select',
         header: ({ table }) => (
@@ -43,50 +47,45 @@ export const columns: ColumnDef<School>[] = [
         id: 'no',
         header: 'No.',
         cell: ({ row, table }) => {
-            const { from } = table.options.meta as TableMeta;
-            return from + row.index;
+            const { from } = (table.options.meta as TableMeta) || {};
+            return from ? from + row.index : row.index + 1;
         },
         enableSorting: false,
-        enableHiding: false,
     },
     {
         accessorKey: 'name',
-        // Ganti header menjadi komponen Button
-        header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Nama" />,
     },
     {
-        accessorKey: 'npsn',
-        // Lakukan hal yang sama untuk kolom lain yang bisa di-sort
-        header: ({ column }) => <DataTableColumnHeader column={column} title="NPSN" />,
+        accessorKey: 'niy',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="NIY" />,
     },
     {
-        accessorFn: (row) => row.principal?.name ?? 'N/A',
-        id: 'principalName',
-        header: 'Principal',
-        // Untuk saat ini kita nonaktifkan, karena sorting relasi memerlukan penanganan khusus di backend
-        enableSorting: false,
-    },
-    {
-        accessorFn: (row) => row.current_academic_year?.name ?? 'N/A',
-        id: 'academicYear',
-        header: 'Current Academic Year',
-        enableSorting: false,
+        accessorFn: (row) => row.user?.email ?? 'N/A',
+        id: 'email',
+        header: 'Email',
+        enableSorting: false, // Sorting relasi perlu penanganan khusus di backend
     },
     {
         id: 'actions',
         header: 'Aksi',
         cell: ({ row }) => {
-            const school = row.original;
-
+            const teacher = row.original;
             return (
                 <div className="flex gap-2">
-                    <TableTooltipAction info="Lihat">
-                        <Button variant="outline" size="icon" onClick={() => router.get(route('protected.schools.show', { school: school.id }))}>
-                            <Eye className="h-4 w-4" />
-                        </Button>
-                    </TableTooltipAction>
                     <TableTooltipAction info="Edit">
-                        <Button variant="outline" size="icon" onClick={() => router.get(route('protected.schools.edit', { school: school.id }))}>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                                router.get(
+                                    route('protected.school-academic-years.teachers.edit', {
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                        teacher: teacher.id,
+                                    }),
+                                )
+                            }
+                        >
                             <Settings2 className="h-4 w-4" />
                         </Button>
                     </TableTooltipAction>
@@ -103,16 +102,21 @@ export const columns: ColumnDef<School>[] = [
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data secara permanen.
+                                    Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data guru secara permanen.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel>Batal</AlertDialogCancel>
                                 <AlertDialogAction
                                     className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
-                                    onClick={() => {
-                                        router.delete(route('protected.schools.destroy', { school: school.id }));
-                                    }}
+                                    onClick={() =>
+                                        router.delete(
+                                            route('protected.school-academic-years.teachers.destroy', {
+                                                schoolAcademicYear: schoolAcademicYear.id,
+                                                teacher: teacher.id,
+                                            }),
+                                        )
+                                    }
                                 >
                                     Lanjutkan
                                 </AlertDialogAction>
@@ -125,49 +129,48 @@ export const columns: ColumnDef<School>[] = [
     },
 ];
 
-interface SchoolsTableProps {
-    schools: SchoolsPaginated;
+// Props untuk komponen TeachersTable
+interface TeachersTableProps {
+    teachers: TeachersPaginated;
+    schoolAcademicYear: SchoolAcademicYear;
 }
-export function SchoolsTable({ schools }: SchoolsTableProps) {
-    const handleBulkDelete = (table: TanstackTable<School>) => {
-        // Ambil semua baris yang dipilih
-        const selectedRows = table.getFilteredSelectedRowModel().rows;
-        // Ekstrak ID dari setiap baris
-        const selectedIds = selectedRows.map((row) => row.original.id);
 
-        // Kirim ID ke backend
+export function TeachersTable({ teachers, schoolAcademicYear }: TeachersTableProps) {
+    // Fungsi untuk menangani hapus data massal
+    const handleBulkDelete = (table: TanstackTable<Teacher>) => {
+        const selectedIds = table.getFilteredSelectedRowModel().rows.map((row) => row.original.id);
         router.post(
-            route('protected.schools.bulk-destroy'),
+            route('protected.school-academic-years.teachers.bulk-destroy', { schoolAcademicYear: schoolAcademicYear.id }),
+            { ids: selectedIds },
             {
-                ids: selectedIds,
-            },
-            {
-                onSuccess: () => {
-                    table.resetRowSelection();
-                },
+                onSuccess: () => table.resetRowSelection(),
                 preserveScroll: true,
             },
         );
     };
 
+    // Gunakan useMemo atau definisikan di dalam komponen untuk mengakses schoolAcademicYear
+    const columns = getColumns(schoolAcademicYear);
+
     return (
-        <>
-            <DataTable columns={columns} data={schools.data} meta={{ from: schools.from }}>
+        <div className="space-y-4">
+            <DataTable columns={columns} data={teachers.data} meta={{ from: teachers.from }}>
                 {(table) => {
                     const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
                     return (
                         <div className="flex w-full items-center gap-4">
-                            <SchoolsTableFilters />
-                            <BulkDeleteAlertDialog itemCount={selectedRowCount} itemName="data sekolah" onConfirm={() => handleBulkDelete(table)}>
+                            <TeachersTableFilters />
+                            <BulkDeleteAlertDialog itemCount={selectedRowCount} itemName="data guru" onConfirm={() => handleBulkDelete(table)}>
                                 <Button className="text-xs" variant="destructive" disabled={selectedRowCount === 0}>
-                                    <Trash2 className="mr-1 h-2 w-2" />({selectedRowCount})
+                                    <Trash2 className="mr-1 h-2 w-2" />
+                                    Hapus ({selectedRowCount})
                                 </Button>
                             </BulkDeleteAlertDialog>
                         </div>
                     );
                 }}
             </DataTable>
-            <InertiaPagination paginateItems={schools} />
-        </>
+            <InertiaPagination paginateItems={teachers} />
+        </div>
     );
 }

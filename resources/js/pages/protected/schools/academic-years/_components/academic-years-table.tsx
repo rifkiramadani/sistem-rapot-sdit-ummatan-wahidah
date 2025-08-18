@@ -102,20 +102,22 @@ export const columns: ColumnDef<SchoolAcademicYear>[] = [
 
             return (
                 <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() =>
-                            router.get(
-                                route('protected.schools.academic-years.show', {
-                                    school: schoolAcademicYear.school_id,
-                                    schoolAcademicYear: schoolAcademicYear.id,
-                                }),
-                            )
-                        }
-                    >
-                        <Eye className="h-4 w-4" />
-                    </Button>
+                    <TableTooltipAction info="Lihat">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                                router.get(
+                                    route('protected.schools.academic-years.show', {
+                                        school: schoolAcademicYear.school_id,
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                    }),
+                                )
+                            }
+                        >
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction>
                     {/* <TableTooltipAction info="Pengaturan">
                         <Button
                             variant="outline"
@@ -132,37 +134,38 @@ export const columns: ColumnDef<SchoolAcademicYear>[] = [
                             <Settings2 className="h-4 w-4" />
                         </Button>
                     </TableTooltipAction> */}
-                    <TableTooltipAction info="Hapus">
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
+
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <TableTooltipAction info="Hapus">
                                 <Button variant="outline" size="icon">
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
-                                    <AlertDialogDescription>Tindakan ini akan menghapus tautan tahun ajaran dari sekolah ini.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                                    <AlertDialogAction
-                                        className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
-                                        onClick={() => {
-                                            router.delete(
-                                                route('protected.schools.academic-years.destroy', {
-                                                    school: schoolAcademicYear.school_id,
-                                                    schoolAcademicYear: schoolAcademicYear.id,
-                                                }),
-                                            );
-                                        }}
-                                    >
-                                        Lanjutkan
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </TableTooltipAction>
+                            </TableTooltipAction>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
+                                <AlertDialogDescription>Tindakan ini akan menghapus tautan tahun ajaran dari sekolah ini.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                <AlertDialogAction
+                                    className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
+                                    onClick={() => {
+                                        router.delete(
+                                            route('protected.schools.academic-years.destroy', {
+                                                school: schoolAcademicYear.school_id,
+                                                schoolAcademicYear: schoolAcademicYear.id,
+                                            }),
+                                        );
+                                    }}
+                                >
+                                    Lanjutkan
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             );
         },

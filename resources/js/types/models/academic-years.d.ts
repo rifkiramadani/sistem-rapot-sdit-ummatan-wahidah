@@ -1,5 +1,5 @@
-
-import { School } from "./schools";
+import { Paginator } from '..';
+import { School } from './schools';
 
 export type AcademicYear = {
     id: string;
@@ -9,6 +9,5 @@ export type AcademicYear = {
 
     schools?: School[];
 };
-
 
 export type AcademicYearsPaginated = Paginator<AcademicYear>;

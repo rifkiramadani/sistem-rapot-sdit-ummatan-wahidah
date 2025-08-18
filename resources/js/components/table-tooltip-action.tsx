@@ -7,7 +7,7 @@ interface TableTooltipActionProps {
     delay?: number;
     side?: 'top' | 'right' | 'bottom' | 'left';
 }
-const TableTooltipAction = ({ children, info, delay = 2000, side = 'left' }: TableTooltipActionProps) => {
+const TableTooltipAction = ({ children, info, delay = 1500, side = 'left' }: TableTooltipActionProps) => {
     return (
         <Tooltip delayDuration={delay}>
             <TooltipTrigger asChild>{children}</TooltipTrigger>

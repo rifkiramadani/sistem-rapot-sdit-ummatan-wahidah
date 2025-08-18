@@ -1,3 +1,4 @@
+import { Paginator } from '..';
 import { AcademicYear } from './academic-years';
 import { Principal } from './principals';
 
