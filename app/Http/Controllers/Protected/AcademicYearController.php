@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Protected;
 use Inertia\Inertia;
 use App\Models\AcademicYear;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Database\Eloquent\Builder;
@@ -123,7 +124,7 @@ class AcademicYearController extends Controller
 
         $academicYear->update($validated);
 
-        return redirect()->route('protected.academic-years.index')->with('success', 'Tahun Ajaran Berhasil diubah');
+        return redirect()->route('protected.academic-years.index')->with('success', 'Tahun Ajaran Berhasil diubah.');
     }
 
     public function destroy(AcademicYear $academicYear)
@@ -132,6 +133,27 @@ class AcademicYearController extends Controller
 
         $academicYear->delete();
 
-        return redirect()->route('protected.academic-years.index')->with('success', 'Tahun Ajaran Berhasil dihapus');
+        return redirect()->route('protected.academic-years.index')->with('success', 'Tahun Ajaran Berhasil dihapus.');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        Gate::authorize('bulkDelete', AcademicYear::class);
+
+        $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['exists:academic_years,id']
+        ]);
+
+
+        DB::transaction(function () use ($request) {
+            $academicYears = AcademicYear::whereIn('id', $request->input('ids'))->get();
+
+            foreach ($academicYears as $academicYear) {
+                $academicYear->delete();
+            }
+        });
+
+        return redirect()->route('protected.academic-years.index')->with('success', 'Data Tahun Ajaran yang dipilih berhasil dihapus.');
     }
 }

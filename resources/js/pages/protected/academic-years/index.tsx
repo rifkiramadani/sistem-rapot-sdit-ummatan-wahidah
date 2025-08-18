@@ -4,7 +4,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { AcademicYearsPaginated } from '@/types/models/academic-years';
 import { Head, Link } from '@inertiajs/react';
-import { AcademicYearTable } from './_components/academic-years-table';
+import { AcademicYearsTable } from './_components/academic-years-table';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
@@ -30,7 +30,7 @@ export default function Index({ academicYears }: IndexProps) {
                             Tambah
                         </Button>
                     </Link>
-                    <AcademicYearTable academicYears={academicYears} />
+                    <AcademicYearsTable academicYears={academicYears} />
                 </div>
             </div>
         </AppLayout>
