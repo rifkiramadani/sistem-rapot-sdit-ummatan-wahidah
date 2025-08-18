@@ -55,6 +55,13 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
 
         Route::prefix('/teachers')->name('teachers.')->group(function () {
             Route::get('', [TeacherController::class, 'index'])->name('index');
+            Route::get('/create', [TeacherController::class, 'create'])->name('create');
+            Route::post('', [TeacherController::class, 'store'])->name('store');
+            Route::get('/{teacher}', [TeacherController::class, 'show'])->name('show');
+            Route::get('/{teacher}/edit', [TeacherController::class, 'edit'])->name('edit');
+            Route::put('/{teacher}', [TeacherController::class, 'update'])->name('update');
+            Route::delete('/{teacher}', [TeacherController::class, 'destroy'])->name('destroy');
+            Route::post('/bulk-destroy', [TeacherController::class, 'bulkDestroy'])->name('bulk-destroy');
         });
     });
 });

@@ -92,13 +92,13 @@ export const columns: ColumnDef<School>[] = [
                     </TableTooltipAction>
 
                     <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <TableTooltipAction info="Hapus">
+                        <TableTooltipAction info="Hapus">
+                            <AlertDialogTrigger asChild>
                                 <Button variant="outline" size="icon">
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
-                            </TableTooltipAction>
-                        </AlertDialogTrigger>
+                            </AlertDialogTrigger>
+                        </TableTooltipAction>
                         <AlertDialogContent>
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
@@ -130,10 +130,7 @@ interface SchoolsTableProps {
 }
 export function SchoolsTable({ schools }: SchoolsTableProps) {
     const handleBulkDelete = (table: TanstackTable<School>) => {
-        // Ambil semua baris yang dipilih
-        const selectedRows = table.getFilteredSelectedRowModel().rows;
-        // Ekstrak ID dari setiap baris
-        const selectedIds = selectedRows.map((row) => row.original.id);
+        const selectedIds = Object.keys(table.getState().rowSelection);
 
         // Kirim ID ke backend
         router.post(
@@ -154,7 +151,7 @@ export function SchoolsTable({ schools }: SchoolsTableProps) {
         <>
             <DataTable columns={columns} data={schools.data} meta={{ from: schools.from }}>
                 {(table) => {
-                    const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+                    const selectedRowCount = Object.keys(table.getState().rowSelection).length;
                     return (
                         <div className="flex w-full items-center gap-4">
                             <SchoolsTableFilters />

@@ -91,13 +91,13 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear): ColumnDef<Te
                     </TableTooltipAction>
 
                     <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <TableTooltipAction info="Hapus">
+                        <TableTooltipAction info="Hapus">
+                            <AlertDialogTrigger asChild>
                                 <Button variant="outline" size="icon">
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
-                            </TableTooltipAction>
-                        </AlertDialogTrigger>
+                            </AlertDialogTrigger>
+                        </TableTooltipAction>
                         <AlertDialogContent>
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
@@ -138,7 +138,8 @@ interface TeachersTableProps {
 export function TeachersTable({ teachers, schoolAcademicYear }: TeachersTableProps) {
     // Fungsi untuk menangani hapus data massal
     const handleBulkDelete = (table: TanstackTable<Teacher>) => {
-        const selectedIds = table.getFilteredSelectedRowModel().rows.map((row) => row.original.id);
+        const selectedIds = Object.keys(table.getState().rowSelection);
+
         router.post(
             route('protected.school-academic-years.teachers.bulk-destroy', { schoolAcademicYear: schoolAcademicYear.id }),
             { ids: selectedIds },
@@ -156,7 +157,9 @@ export function TeachersTable({ teachers, schoolAcademicYear }: TeachersTablePro
         <div className="space-y-4">
             <DataTable columns={columns} data={teachers.data} meta={{ from: teachers.from }}>
                 {(table) => {
-                    const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+                    // [UBAH] Hitung jumlah baris yang dipilih dari state global
+                    const selectedRowCount = Object.keys(table.getState().rowSelection).length;
+
                     return (
                         <div className="flex w-full items-center gap-4">
                             <TeachersTableFilters />

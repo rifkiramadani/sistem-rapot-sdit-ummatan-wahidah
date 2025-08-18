@@ -136,13 +136,13 @@ export const columns: ColumnDef<SchoolAcademicYear>[] = [
                     </TableTooltipAction> */}
 
                     <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <TableTooltipAction info="Hapus">
+                        <TableTooltipAction info="Hapus">
+                            <AlertDialogTrigger asChild>
                                 <Button variant="outline" size="icon">
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
-                            </TableTooltipAction>
-                        </AlertDialogTrigger>
+                            </AlertDialogTrigger>
+                        </TableTooltipAction>
                         <AlertDialogContent>
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
@@ -177,14 +177,8 @@ interface AcademicYearsTableProps {
 }
 export function AcademicYearsTable({ schoolAcademicYears }: AcademicYearsTableProps) {
     const handleBulkDelete = (table: TanstackTable<SchoolAcademicYear>) => {
-        const selectedRows = table.getFilteredSelectedRowModel().rows;
-
-        // Pastikan ada baris yang dipilih untuk mendapatkan school_id
-        if (selectedRows.length === 0) return;
-
-        const schoolId = selectedRows[0].original.school_id;
-
-        const selectedIds = selectedRows.map((row) => row.original.id);
+        const selectedIds = Object.keys(table.getState().rowSelection);
+        const schoolId = route().params.school as string;
 
         router.post(
             route('protected.schools.academic-years.bulk-destroy', { school: schoolId }),
@@ -201,7 +195,7 @@ export function AcademicYearsTable({ schoolAcademicYears }: AcademicYearsTablePr
         <>
             <DataTable columns={columns} data={schoolAcademicYears.data} meta={{ from: schoolAcademicYears.from }}>
                 {(table) => {
-                    const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+                    const selectedRowCount = Object.keys(table.getState().rowSelection).length;
                     return (
                         <div className="flex w-full items-center gap-4">
                             {/* Filter tetap di posisi atas */}

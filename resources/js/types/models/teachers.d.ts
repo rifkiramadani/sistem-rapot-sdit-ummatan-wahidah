@@ -1,4 +1,7 @@
 import { Paginator } from "..";
+import { Classroom } from "./classroom";
+import { SchoolAcademicYear } from "./school-academic-years";
+import { User } from "./user";
 
 export type Teacher = {
     id: string; // Primary key (ULID)

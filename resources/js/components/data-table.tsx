@@ -108,26 +108,24 @@ export function DataTable<TData, TValue>({ columns, data, meta, children }: Data
         );
     };
 
-    const selectedRowsStr = queryParams?.selected_rows || '';
-    const rowSelection: RowSelectionState = selectedRowsStr
+    const selectedIdsStr = queryParams?.selected_ids || '';
+    const rowSelection: RowSelectionState = selectedIdsStr
         .split(',')
         .filter(Boolean)
-        .reduce((acc: RowSelectionState, rowIndex: string) => {
-            acc[rowIndex] = true; // Set baris dengan indeks ini sebagai terpilih
+        .reduce((acc: RowSelectionState, id: string) => {
+            acc[id] = true; // Kunci dari state adalah ID unik (misal: 'ulid_abc'), bukan '0' atau '1'.
             return acc;
         }, {} as RowSelectionState);
     const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (updater) => {
         const newRowSelection = updater instanceof Function ? updater(rowSelection) : updater;
-
-        // Ambil semua kunci (indeks baris) dari objek selection
-        const selectedRowIndexes = Object.keys(newRowSelection);
-
-        // Gabungkan menjadi string "0,2,5"
-        const newSelectedRowsStr = selectedRowIndexes.join(',');
+        // 'Object.keys' sekarang akan mengembalikan array ID unik yang dipilih
+        const selectedIds = Object.keys(newRowSelection);
+        const newSelectedIdsStr = selectedIds.join(',');
 
         router.get(
             window.location.pathname,
-            { ...queryParams, selected_rows: newSelectedRowsStr || undefined },
+            // Simpan kembali ke URL sebagai 'selected_ids'
+            { ...queryParams, selected_ids: newSelectedIdsStr || undefined },
             { preserveState: true, replace: true, preserveScroll: true },
         );
     };
@@ -137,14 +135,19 @@ export function DataTable<TData, TValue>({ columns, data, meta, children }: Data
         columns,
         meta,
         manualSorting: true,
-        // 4. Gunakan handler dan state yang baru
+
+        // --- [KUNCI 3] Konfigurasi inti untuk seleksi berbasis ID ---
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        getRowId: (row: any) => row.id, // Beritahu table cara menemukan ID unik di setiap baris data
+        enableRowSelection: true, // Aktifkan mode seleksi berbasis ID
+
         onSortingChange: handleSortingChange,
         onColumnVisibilityChange: handleColumnVisibilityChange,
         onRowSelectionChange: handleRowSelectionChange,
         state: {
-            sorting, // State sorting yang diturunkan dari props
+            sorting,
             columnVisibility,
-            rowSelection,
+            rowSelection, // Gunakan state seleksi berbasis ID
         },
         getCoreRowModel: getCoreRowModel(),
     });
@@ -216,11 +219,17 @@ export function DataTable<TData, TValue>({ columns, data, meta, children }: Data
                     </TableBody>
                 </Table>
             </div>
-            <div className="flex items-center justify-between px-2">
+            {/* <div className="flex items-center justify-between px-2 py-4">
                 <div className="flex-1 text-sm text-muted-foreground">
-                    {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s) selected.
+                    {(() => {
+                        const totalSelected = Object.keys(table.getState().rowSelection).length;
+                        if (totalSelected === 0) {
+                            return null; // Tidak menampilkan apa-apa jika tidak ada yang dipilih
+                        }
+                        return <>{totalSelected.toLocaleString()} baris dipilih.</>;
+                    })()}
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }
