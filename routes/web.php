@@ -26,6 +26,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
         Route::post('', [AcademicYearController::class, 'store'])->name('store');
         Route::get('/{academicYear}', [AcademicYearController::class, 'show'])->name('show');
         Route::get('/{academicYear}/edit', [AcademicYearController::class, 'edit'])->name('edit');
+        Route::put('/{academicYear}', [AcademicYearController::class, 'update'])->name('update');
     });
 
     Route::prefix('schools')->name('schools.')->group(function () {

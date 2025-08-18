@@ -106,4 +106,23 @@ class AcademicYearController extends Controller
             'academicYear' => $academicYear
         ]);
     }
+
+    public function update(Request $request, AcademicYear $academicYear)
+    {
+        Gate::authorize('update', $academicYear);
+
+        $validated = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'regex:/^\d{4}\/\d{4}$/', // Aturan validasi baru contoh 2032/2033
+            ],
+            'start' => 'required|date',
+            'end' => 'required|date'
+        ]);
+
+        $academicYear->update($validated);
+
+        return redirect()->route('protected.academic-years.index')->with('succes', 'Tahun Ajaran Berhasil diubah');
+    }
 }

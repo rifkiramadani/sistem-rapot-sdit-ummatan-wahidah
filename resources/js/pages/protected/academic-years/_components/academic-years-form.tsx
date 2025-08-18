@@ -18,7 +18,7 @@ export default function AcademicYearsForm({ academicYear }: AcademicYearsFormPro
 
     const isEditMode = !!academicYear;
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, put, processing, errors } = useForm({
         name: academicYear?.name ?? '',
         start: academicYear?.start ? format(new Date(academicYear.start), 'yyyy-MM-dd') : '',
         end: academicYear?.end ? format(new Date(academicYear?.end), 'yyyy-MM-dd') : '',
@@ -26,14 +26,11 @@ export default function AcademicYearsForm({ academicYear }: AcademicYearsFormPro
 
     function handleSubmit(e: FormEvent) {
         e.preventDefault()
-        post(route('protected.academic-years.store'), {
-            preserveScroll: false
-        });
-        // if (isEditMode) {
-        //     // put(route('protected.schools.update', school.id));
-        // } else {
-        //     post(route('protected.academic-years.store'));
-        // }
+        if (isEditMode) {
+            put(route('protected.academic-years.update', academicYear.id));
+        } else {
+            post(route('protected.academic-years.store'));
+        }
     }
 
     return (
