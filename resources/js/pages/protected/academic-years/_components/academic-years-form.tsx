@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { type AcademicYear } from '@/types/models/academic-years';
 import { FormEvent } from 'react';
+import { format } from 'date-fns'
 
 interface AcademicYearsFormProps {
     academicYear?: AcademicYear;
@@ -18,9 +19,9 @@ export default function AcademicYearsForm({ academicYear }: AcademicYearsFormPro
     const isEditMode = !!academicYear;
 
     const { data, setData, post, processing, errors } = useForm({
-        name: '',
-        start: '',
-        end: ''
+        name: academicYear?.name ?? '',
+        start: academicYear?.start ? format(new Date(academicYear.start), 'yyyy-MM-dd') : '',
+        end: academicYear?.end ? format(new Date(academicYear?.end), 'yyyy-MM-dd') : '',
     })
 
     function handleSubmit(e: FormEvent) {

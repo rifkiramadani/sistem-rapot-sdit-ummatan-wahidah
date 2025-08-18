@@ -39,21 +39,13 @@ export default function Show({ academicYear }: { academicYear: AcademicYear }) {
                 <Card>
                     <CardHeader>
                         <div className="flex items-center justify-between">
-                            {/* <div className="flex gap-2">
-                                <Link href={route('protected.schools.academic-years.index', school.id)}>
+                            <div className="flex gap-2">
+                                <Link href={route('protected.academic-years.edit', academicYear.id)}>
                                     <Button variant="outline" size="sm">
-                                        <CalendarClock className="mr-2 h-4 w-4" />
-                                        Tahun Ajaran
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Edit
                                     </Button>
                                 </Link>
-                            </div> */}
-                            <div className="flex gap-2">
-                                {/* <Link href={route('protected.academic-years.edit', academicYear.id)}>
-                                </Link> */}
-                                <Button variant="outline" size="sm">
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Edit
-                                </Button>
                             </div>
                         </div>
                     </CardHeader>

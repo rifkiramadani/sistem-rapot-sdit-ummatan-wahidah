@@ -97,4 +97,13 @@ class AcademicYearController extends Controller
             'academicYear' => $academicYear,
         ]);
     }
+
+    public function edit(AcademicYear $academicYear)
+    {
+        Gate::authorize('update', $academicYear);
+
+        return Inertia::render('protected/academic-years/edit', [
+            'academicYear' => $academicYear
+        ]);
+    }
 }

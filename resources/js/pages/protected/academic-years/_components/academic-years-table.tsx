@@ -77,7 +77,7 @@ export const columns: ColumnDef<AcademicYear>[] = [
                         </Button>
                     </TableTooltipAction>
                     <TableTooltipAction info="Edit">
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" onClick={() => router.get(route('protected.academic-years.edit', { academicYear: academicYear.id }))}>
                             <Settings2 className="h-4 w-4" />
                         </Button>
                     </TableTooltipAction>
