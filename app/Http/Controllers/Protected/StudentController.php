@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class StudentController extends Controller
 {
@@ -239,6 +240,7 @@ class StudentController extends Controller
     public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
         // Gate::authorize('bulkDelete', Student::class);
+        LogBatch::startBatch();
 
         $request->validate([
             'ids'   => ['required', 'array'],
@@ -251,6 +253,8 @@ class StudentController extends Controller
                 ->get()
                 ->each->delete();
         });
+
+        LogBatch::endBatch();
 
         return redirect()->route('protected.school-academic-years.students.index', $schoolAcademicYear)
             ->with('success', 'Data siswa yang dipilih berhasil dihapus.');
