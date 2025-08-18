@@ -46,6 +46,19 @@ class TeacherController extends Controller
         ]);
     }
 
+    public function show(Request $request, SchoolAcademicYear $schoolAcademicYear, Teacher $teacher)
+    {
+        // Gate::authorize('view', $teacher);
+
+        // Muat relasi 'user' untuk menampilkan data user seperti email
+        $teacher->load('user');
+
+        return Inertia::render('protected/school-academic-years/teachers/show', [
+            'schoolAcademicYear' => $schoolAcademicYear,
+            'teacher' => $teacher,
+        ]);
+    }
+
     public function create(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
         // Tidak perlu lagi mengambil data user

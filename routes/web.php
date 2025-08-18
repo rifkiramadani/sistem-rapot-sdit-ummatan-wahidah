@@ -65,6 +65,8 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
             Route::post('/bulk-destroy', [TeacherController::class, 'bulkDestroy'])->name('bulk-destroy');
         });
 
+        // classroom.....
+
         Route::prefix('/students')->name('students.')->group(function () {
             Route::get('', [StudentController::class, 'index'])->name('index');
             Route::get('/create', [StudentController::class, 'create'])->name('create');

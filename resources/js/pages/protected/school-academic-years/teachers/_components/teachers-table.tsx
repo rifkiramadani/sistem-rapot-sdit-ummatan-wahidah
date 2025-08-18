@@ -23,7 +23,7 @@ import { SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { Teacher, TeachersPaginated } from '@/types/models/teachers';
 import { router } from '@inertiajs/react';
 import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
-import { Settings2, Trash2 } from 'lucide-react';
+import { Eye, Settings2, Trash2 } from 'lucide-react';
 import { TeachersTableFilters } from './teachers-table-filters';
 
 // Mendefinisikan kolom-kolom tabel
@@ -73,6 +73,22 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear): ColumnDef<Te
             const teacher = row.original;
             return (
                 <div className="flex gap-2">
+                    <TableTooltipAction info="Lihat">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                                router.get(
+                                    route('protected.school-academic-years.teachers.show', {
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                        teacher: teacher.id,
+                                    }),
+                                )
+                            }
+                        >
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction>
                     <TableTooltipAction info="Edit">
                         <Button
                             variant="outline"
