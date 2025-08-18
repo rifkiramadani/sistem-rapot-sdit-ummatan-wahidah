@@ -1,7 +1,6 @@
-
 import { NavItem } from '@/types';
 import { SchoolAcademicYear } from '@/types/models/school-academic-years';
-import { LayoutGrid, PersonStanding, School, CalendarRange } from 'lucide-react';
+import { CalendarRange, GraduationCap, LayoutGrid, PersonStanding, School } from 'lucide-react';
 
 export const mainNavItems: NavItem[] = [
     {
@@ -31,6 +30,11 @@ export const getSchoolAcademicYearNavItems = (schoolAcademicYear: SchoolAcademic
         title: 'Guru',
         href: route('protected.school-academic-years.teachers.index', { schoolAcademicYear: schoolAcademicYear.id }),
         icon: PersonStanding,
+    },
+    {
+        title: 'Siswa',
+        href: route('protected.school-academic-years.students.index', { schoolAcademicYear: schoolAcademicYear.id }),
+        icon: GraduationCap,
     },
     // Contoh item menu lain di dalam konteks tahun ajaran
     // {

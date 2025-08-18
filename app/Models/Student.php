@@ -10,10 +10,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Builder;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Student extends Model
 {
-    use HasFactory, HasUlids;
+    use HasFactory, HasUlids, LogsActivity;
 
     protected $fillable = [
         'nisn',
@@ -33,6 +36,27 @@ class Student extends Model
         'birth_date' => 'date',
     ];
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly($this->fillable);
+    }
+
+    public function scopeQ(Builder $query, string $search): Builder
+    {
+        $searchLower = strtolower($search);
+
+        return $query->where(function (Builder $subQuery) use ($searchLower) {
+            // Cari di tabel students
+            $subQuery->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
+                ->orWhere('nisn', 'like', "%{$searchLower}%")
+                // Cari juga di tabel relasi student_guardian
+                ->orWhereHas('guardian', function ($guardianQuery) use ($searchLower) {
+                    $guardianQuery->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"]);
+                });
+        });
+    }
+
     /**
      * Get the school academic year this student is enrolled in.
      */
@@ -46,7 +70,7 @@ class Student extends Model
         return $this->hasOne(StudentParent::class);
     }
 
-    public function guardians(): HasOne
+    public function guardian(): HasOne
     {
         return $this->hasOne(StudentGuardian::class);
     }

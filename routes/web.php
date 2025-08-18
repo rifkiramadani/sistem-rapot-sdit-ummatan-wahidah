@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Models\AcademicYear;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Protected\AcademicYearController;
+use App\Http\Controllers\Protected\StudentController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -62,6 +63,17 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
             Route::put('/{teacher}', [TeacherController::class, 'update'])->name('update');
             Route::delete('/{teacher}', [TeacherController::class, 'destroy'])->name('destroy');
             Route::post('/bulk-destroy', [TeacherController::class, 'bulkDestroy'])->name('bulk-destroy');
+        });
+
+        Route::prefix('/students')->name('students.')->group(function () {
+            Route::get('', [StudentController::class, 'index'])->name('index');
+            Route::get('/create', [StudentController::class, 'create'])->name('create');
+            Route::post('', [StudentController::class, 'store'])->name('store');
+            Route::get('/{student}', [StudentController::class, 'show'])->name('show');
+            Route::get('/{student}/edit', [StudentController::class, 'edit'])->name('edit');
+            Route::put('/{student}', [StudentController::class, 'update'])->name('update');
+            Route::delete('/{student}', [StudentController::class, 'destroy'])->name('destroy');
+            Route::post('/bulk-destroy', [StudentController::class, 'bulkDestroy'])->name('bulk-destroy');
         });
     });
 });
