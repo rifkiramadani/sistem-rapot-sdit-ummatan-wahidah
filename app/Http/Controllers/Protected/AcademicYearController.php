@@ -123,6 +123,15 @@ class AcademicYearController extends Controller
 
         $academicYear->update($validated);
 
-        return redirect()->route('protected.academic-years.index')->with('succes', 'Tahun Ajaran Berhasil diubah');
+        return redirect()->route('protected.academic-years.index')->with('success', 'Tahun Ajaran Berhasil diubah');
+    }
+
+    public function destroy(AcademicYear $academicYear)
+    {
+        Gate::authorize('delete', $academicYear);
+
+        $academicYear->delete();
+
+        return redirect()->route('protected.academic-years.index')->with('success', 'Tahun Ajaran Berhasil dihapus');
     }
 }

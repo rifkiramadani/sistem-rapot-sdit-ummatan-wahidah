@@ -100,7 +100,7 @@ export const columns: ColumnDef<AcademicYear>[] = [
                                     <AlertDialogAction
                                         className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
                                         onClick={() => {
-                                            // router.delete(route('protected.academic-years.destroy', { academicYear: academicYear.id }));
+                                            router.delete(route('protected.academic-years.destroy', { academicYear: academicYear.id }));
                                         }}
                                     >
                                         Lanjutkan
