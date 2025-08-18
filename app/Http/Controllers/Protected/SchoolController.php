@@ -47,6 +47,9 @@ class SchoolController extends Controller
     public function create(Request $request)
     {
         Gate::authorize('create', School::class);
+        $user = $request->user(); // <-- current authenticated user
+
+        $user->notify(new \App\Notifications\ReportFinished(reportId: 1));
 
         return Inertia::render('protected/schools/create');
     }
