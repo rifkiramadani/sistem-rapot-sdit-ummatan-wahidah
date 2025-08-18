@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Builder;
 
 class SchoolAcademicYear extends Model
 {
@@ -23,6 +24,23 @@ class SchoolAcademicYear extends Model
     {
         return LogOptions::defaults()
             ->logOnly($this->fillable);
+    }
+
+    public function scopeQ(Builder $query, string $search): Builder
+    {
+        $searchLower = strtolower($search);
+
+        // Gunakan whereHas untuk filter pada relasi 'academicYear'
+        return $query->whereHas('academicYear', function ($subQuery) use ($searchLower) {
+            $subQuery->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"]);
+        });
+    }
+
+    public function scopeSort(Builder $query, string $sortBy, string $sortDirection): Builder
+    {
+        return $query->join('academic_years', 'school_academic_years.academic_year_id', '=', 'academic_years.id')
+            ->orderBy('academic_years.' . $sortBy, $sortDirection)
+            ->select('school_academic_years.*');
     }
 
     public function school(): BelongsTo

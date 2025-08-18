@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB; // Impor DB facade untuk transaksi
 use Illuminate\Support\Facades\Gate;
+use App\Support\QueryBuilder; // <-- Import QueryBuilder
+use App\QueryFilters\Filter;   // <-- Import Filter pipe
+use App\QueryFilters\Sort;     // <-- Import Sort pipe
 
 class SchoolController extends Controller
 {
@@ -21,7 +24,7 @@ class SchoolController extends Controller
 
         // 1. Validasi semua parameter request
         $request->validate([
-            'per_page' => ['sometimes', 'integer', Rule::in(PerPageEnum::values())],
+            'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
             'sort_by' => 'sometimes|string|in:name,npsn',
             'sort_direction' => 'sometimes|string|in:asc,desc',
             // ++ Tambahkan validasi untuk filter 'q'
@@ -29,33 +32,12 @@ class SchoolController extends Controller
             'filter.q' => 'sometimes|string|nullable',
         ]);
 
-        // 2. Ambil parameter dengan nilai default
-        $perPage = $request->input('per_page', PerPageEnum::DEFAULT->value);
-        $sortBy = $request->input('sort_by', 'name');
-        $sortDirection = $request->input('sort_direction', 'asc');
-        // ++ Ambil nilai filter 'q' dari request
-        $searchQuery = $request->input('filter.q');
-
-        // 3. Bangun query dasar
-        $query = School::with(['principal', 'currentAcademicYear']);
-
-        // ++ 4. Terapkan filtering (pencarian) jika ada searchQuery
-        $query->when($searchQuery, function (Builder $query, string $search) {
-            $searchLower = strtolower($search);
-
-            $query->where(function (Builder $q) use ($searchLower) {
-                // ++ Gunakan whereRaw dengan LOWER() untuk pencarian case-insensitive
-                // Ini akan cocok dengan 'sekolah', 'Sekolah', atau 'SEKOLAH'
-                $q->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
-                    ->orWhere('npsn', 'like', "%{$searchLower}%"); // NPSN biasanya angka, tapi ini untuk konsistensi
-            });
-        });
-
-        // 5. Terapkan sorting ke query
-        $query->orderBy($sortBy, $sortDirection);
-
-        // 6. Lakukan paginasi dan tambahkan semua parameter query string ke link paginasi
-        $schools = $query->paginate($perPage)->withQueryString();
+        $schools = QueryBuilder::for(School::with(['principal', 'currentAcademicYear']))
+            ->through([
+                Filter::class, // Pipe ini akan otomatis memanggil scopeQ()
+                Sort::class,
+            ])
+            ->paginate();
 
         return Inertia::render('protected/schools/index', [
             'schools' => $schools,

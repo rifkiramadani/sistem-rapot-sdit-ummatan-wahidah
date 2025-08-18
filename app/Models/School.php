@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Builder;
 
 class School extends Model
 {
@@ -33,6 +34,16 @@ class School extends Model
     {
         return LogOptions::defaults()
             ->logOnly($this->fillable);
+    }
+
+    public function scopeQ(Builder $query, string $search): Builder
+    {
+        $searchLower = strtolower($search);
+
+        return $query->where(function (Builder $subQuery) use ($searchLower) {
+            $subQuery->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
+                ->orWhere('npsn', 'like', "%{$searchLower}%");
+        });
     }
 
     public function principal(): BelongsTo

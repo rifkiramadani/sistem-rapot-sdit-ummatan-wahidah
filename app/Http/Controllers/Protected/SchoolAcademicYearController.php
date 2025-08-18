@@ -7,6 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\School;
 use App\Models\SchoolAcademicYear;
+use App\QueryFilters\Filter;
+use App\QueryFilters\Sort;
+use App\Support\QueryBuilder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
@@ -21,7 +24,7 @@ class SchoolAcademicYearController extends Controller
 
         // 1. Validasi semua parameter request
         $request->validate([
-            'per_page' => ['sometimes', 'integer', Rule::in(PerPageEnum::values())],
+            'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
             // Sesuaikan kolom yang bisa di-sort
             'sort_by' => 'sometimes|string|in:name,start,end',
             'sort_direction' => 'sometimes|string|in:asc,desc',
@@ -29,36 +32,12 @@ class SchoolAcademicYearController extends Controller
             'filter.q' => 'sometimes|string|nullable',
         ]);
 
-        $perPage = $request->input('per_page', PerPageEnum::DEFAULT->value);
-        // Default sort adalah 'start' (tanggal mulai), dari yang terbaru
-        $sortBy = $request->input('sort_by', 'start');
-        $sortDirection = $request->input('sort_direction', 'desc');
-        $searchQuery = $request->input('filter.q');
-
-        // 3. Bangun query dasar dari relasi
-        $query = $school->schoolAcademicYears()
-            ->with('academicYear');
-
-        // 4. Terapkan filtering (pencarian) jika ada searchQuery
-        $query->when($searchQuery, function ($query, $search) {
-            $searchLower = strtolower($search);
-            // Gunakan whereHas untuk filter pada relasi 'academicYear'
-            $query->whereHas('academicYear', function ($subQuery) use ($searchLower) {
-                // Gunakan whereRaw untuk pencarian case-insensitive pada nama tahun ajaran
-                $subQuery->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"]);
-            });
-        });
-
-        // 5. Terapkan sorting pada kolom dari tabel relasi
-        // Kita perlu JOIN untuk bisa mengurutkan berdasarkan kolom di tabel academic_years
-        $query->join('academic_years', 'school_academic_years.academic_year_id', '=', 'academic_years.id')
-            ->orderBy('academic_years.' . $sortBy, $sortDirection)
-            // Penting: Pilih kolom dari tabel asli untuk menghindari konflik
-            ->select('school_academic_years.*');
-
-
-        // 6. Lakukan paginasi dan tambahkan semua parameter query string
-        $schoolAcademicYears = $query->paginate($perPage)->withQueryString();
+        $schoolAcademicYears = QueryBuilder::for($school->schoolAcademicYears()->with('academicYear'))
+            ->through([
+                Filter::class,
+                Sort::class, // <-- Sekarang menggunakan Sort generik yang sudah pintar
+            ])
+            ->paginate();
 
         return Inertia::render('protected/schools/academic-years/index', [
             'school' => $school,
@@ -89,7 +68,7 @@ class SchoolAcademicYearController extends Controller
     public function create(School $school)
     {
         Gate::authorize('create', SchoolAcademicYear::class);
-      
+
         // Ambil ID tahun ajaran yang sudah ditautkan ke sekolah ini
         $linkedAcademicYearIds = $school->schoolAcademicYears()->pluck('academic_year_id');
 
