@@ -9,16 +9,8 @@ import { type BreadcrumbItem } from '@/types';
 import { type SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { type Teacher } from '@/types/models/teachers';
 import { BookMarked, Pencil } from 'lucide-react';
+import DetailItem from '@/components/detail-item';
 
-// Komponen kecil untuk menampilkan baris data (sama seperti referensi)
-function DetailItem({ label, value }: { label: string; value: string | number | null | undefined }) {
-    return (
-        <div>
-            <p className="text-sm font-medium text-muted-foreground">{label}</p>
-            <p className="text-base font-semibold">{value || '-'}</p>
-        </div>
-    );
-}
 
 // Definisikan props untuk halaman Show
 interface ShowProps {

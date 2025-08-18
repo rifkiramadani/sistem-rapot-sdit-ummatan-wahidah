@@ -73,7 +73,20 @@ function FormSectionTitle({ title, description }: { title: string; description?:
 export default function StudentsForm({ student, schoolAcademicYear }: StudentsFormProps) {
     const isEditMode = !!student;
 
-    const { data, setData, post, processing, errors } = useForm({
+    const getInitialGuardianType = () => {
+        if (isEditMode && student?.guardian && student?.parent) {
+            if (student.guardian.name === student.parent.father_name && student.guardian.address === student.parent.address) {
+                return GuardianTypeEnum.Father;
+            }
+            if (student.guardian.name === student.parent.mother_name && student.guardian.address === student.parent.address) {
+                return GuardianTypeEnum.Mother;
+            }
+        }
+        // Default untuk mode create, atau jika data tidak cocok di mode edit
+        return GuardianTypeEnum.Other;
+    };
+
+    const { data, setData, post, put, processing, errors } = useForm({
         // Data Siswa
         nisn: student?.nisn ?? '',
         name: student?.name ?? '',
@@ -82,24 +95,22 @@ export default function StudentsForm({ student, schoolAcademicYear }: StudentsFo
         birth_date: student?.birth_date ?? '',
         religion: student?.religion ?? '',
         address: student?.address ?? '',
-
         // Data Orang Tua
         father_name: student?.parent?.father_name ?? '',
         mother_name: student?.parent?.mother_name ?? '',
         father_job: student?.parent?.father_job ?? '',
         mother_job: student?.parent?.mother_job ?? '',
         parent_address: student?.parent?.address ?? '',
-
-        guardian_type: GuardianTypeEnum.Other,
-
+        // Tipe wali akan kita tentukan di useEffect
+        guardian_type: getInitialGuardianType(),
         // Data Wali
         guardian_name: student?.guardian?.name ?? '',
         guardian_job: student?.guardian?.job ?? '',
         guardian_phone_number: student?.guardian?.phone_number ?? '',
         guardian_address: student?.guardian?.address ?? '',
-        // TODO: Optional current class input
     });
 
+    // Efek untuk menyinkronkan data wali jika tipe-nya bukan 'other'
     useEffect(() => {
         if (data.guardian_type === GuardianTypeEnum.Father) {
             setData('guardian_name', data.father_name);
@@ -114,8 +125,13 @@ export default function StudentsForm({ student, schoolAcademicYear }: StudentsFo
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        // Untuk saat ini hanya handle create
-        post(route('protected.school-academic-years.students.store', { schoolAcademicYear: schoolAcademicYear.id }));
+        if (isEditMode) {
+            // Gunakan method PUT untuk update
+            put(route('protected.school-academic-years.students.update', { schoolAcademicYear: schoolAcademicYear.id, student: student.id }));
+        } else {
+            // Gunakan method POST untuk create
+            post(route('protected.school-academic-years.students.store', { schoolAcademicYear: schoolAcademicYear.id }));
+        }
     };
 
     return (
@@ -310,14 +326,13 @@ export default function StudentsForm({ student, schoolAcademicYear }: StudentsFo
                             id="guardian_phone_number"
                             value={data.guardian_phone_number}
                             onChange={(e) => setData('guardian_phone_number', e.target.value)}
-                            disabled={data.guardian_type === 'other' ? false : true}
                         />
                         <InputError message={errors.guardian_phone_number} />
                     </div>
 
                     <div className="flex justify-end md:col-span-2">
                         <Button type="submit" disabled={processing}>
-                            {processing ? 'Menyimpan...' : 'Simpan Data Siswa'}
+                            {processing ? 'Menyimpan...' : isEditMode ? 'Simpan Perubahan' : 'Simpan Data Siswa'}
                         </Button>
                     </div>
                 </form>

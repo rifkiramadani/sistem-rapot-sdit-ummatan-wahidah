@@ -2,6 +2,7 @@
 
 import { Head, Link } from '@inertiajs/react';
 
+import DetailItem from '@/components/detail-item';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
@@ -11,26 +12,6 @@ import { type SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { type School } from '@/types/models/schools';
 import { format } from 'date-fns';
 import { LayoutDashboard } from 'lucide-react';
-
-// Komponen helper untuk menampilkan baris data, dimodifikasi agar bisa menerima children
-function DetailItem({
-    label,
-    value,
-    className,
-    children,
-}: {
-    label: string;
-    value?: string | number | null;
-    className?: string;
-    children?: React.ReactNode;
-}) {
-    return (
-        <div className={className}>
-            <p className="text-sm font-medium text-muted-foreground">{label}</p>
-            {children ? <div className="text-base font-semibold">{children}</div> : <p className="text-base font-semibold">{value || '-'}</p>}
-        </div>
-    );
-}
 
 // Props untuk halaman Show, dengan asumsi data academic_year disertakan
 interface ShowProps {

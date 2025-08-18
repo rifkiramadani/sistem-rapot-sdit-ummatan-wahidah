@@ -12,7 +12,7 @@ export type Gender = 'male' | 'female';
  * Tipe data untuk Agama, sesuai dengan ReligionEnum di backend.
  * Anda mungkin perlu menyesuaikan nilai-nilai ini agar cocok persis.
  */
-export type Religion = 'islam' | 'protestan' | 'katolik' | 'hindu' | 'buddha' | 'khonghucu';
+export type Religion = 'muslim' | 'christian' | 'catholic' | 'hindu' | 'buddhist' | 'other'; // TODO: change other to konghuchu
 
 export type Student = {
     id: string; // Kunci utama (ULID)

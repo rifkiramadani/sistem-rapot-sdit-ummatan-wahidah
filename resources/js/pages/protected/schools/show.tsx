@@ -2,22 +2,13 @@
 
 import { Head, Link } from '@inertiajs/react';
 
+import DetailItem from '@/components/detail-item';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { type School } from '@/types/models/schools';
 import { CalendarClock, Pencil } from 'lucide-react';
-
-// Komponen kecil untuk menampilkan baris data
-function DetailItem({ label, value, className }: { label: string; value: string | number | null | undefined; className?: string }) {
-    return (
-        <div className={className}>
-            <p className="text-sm font-medium text-muted-foreground">{label}</p>
-            <p className="text-base font-semibold">{value || '-'}</p>
-        </div>
-    );
-}
 
 export default function Show({ school }: { school: School }) {
     const breadcrumbs: BreadcrumbItem[] = [

@@ -2,6 +2,7 @@ import { BulkDeleteAlertDialog } from '@/components/bulk-delete-alert-dialog';
 import { DataTable } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import InertiaPagination from '@/components/inertia-pagination';
+import TableTooltipAction from '@/components/table-tooltip-action';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -15,13 +16,12 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { TableMeta } from '@/types';
 import { SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { Student, StudentsPaginated } from '@/types/models/students';
 import { router } from '@inertiajs/react';
 import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
-import { Settings2, Trash2 } from 'lucide-react';
+import { Eye, Settings2, Trash2 } from 'lucide-react';
 import { StudentsTableFilters } from './students-table-filters';
 
 export const getColumns = (schoolAcademicYear: SchoolAcademicYear): ColumnDef<Student>[] => [
@@ -52,40 +52,46 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear): ColumnDef<St
             const student = row.original;
             return (
                 <div className="flex gap-2">
-                    <Tooltip delayDuration={1000}>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() =>
-                                    router.get(
-                                        route('protected.school-academic-years.students.edit', {
-                                            schoolAcademicYear: schoolAcademicYear.id,
-                                            student: student.id,
-                                        }),
-                                    )
-                                }
-                            >
-                                <Settings2 className="h-4 w-4" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Edit</p>
-                        </TooltipContent>
-                    </Tooltip>
+                    <TableTooltipAction info="Lihat">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                                router.get(
+                                    route('protected.school-academic-years.students.show', {
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                        student: student.id,
+                                    }),
+                                )
+                            }
+                        >
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction>
+                    <TableTooltipAction info="Edit">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                                router.get(
+                                    route('protected.school-academic-years.students.edit', {
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                        student: student.id,
+                                    }),
+                                )
+                            }
+                        >
+                            <Settings2 className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction>
                     <AlertDialog>
-                        <Tooltip delayDuration={1000}>
-                            <TooltipTrigger asChild>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="outline" size="icon">
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </AlertDialogTrigger>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Hapus</p>
-                            </TooltipContent>
-                        </Tooltip>
+                        <TableTooltipAction info="Hapus">
+                            <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                        </TableTooltipAction>
                         <AlertDialogContent>
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
