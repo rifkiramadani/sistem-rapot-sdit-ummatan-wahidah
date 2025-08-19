@@ -51,8 +51,8 @@ class ClassroomController extends Controller
         // Gate::authorize('view', $classroom);
 
         // Muat relasi yang dibutuhkan untuk halaman detail
-        $classroom->load(['teacher', 'studentClassrooms.student'])
-            ->loadCount('studentClassrooms');
+        $classroom->load(['teacher', 'classroomStudents.student'])
+            ->loadCount('classroomStudents');
 
         return Inertia::render('protected/school-academic-years/classrooms/show', [
             'schoolAcademicYear' => $schoolAcademicYear,

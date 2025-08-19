@@ -33,7 +33,7 @@ export type Student = {
     parent?: StudentParent;
     guardian?: StudentGuardian;
     // Anda bisa menambahkan tipe untuk relasi lain di sini jika diperlukan
-    // student_classrooms?: StudentClassroom[];
+    // classroom_student?: ClassroomStudent[];
     // student_summatives?: StudentSummative[];
 };
 

@@ -75,9 +75,9 @@ class Student extends Model
         return $this->hasOne(StudentGuardian::class);
     }
 
-    public function studentClassrooms(): HasMany
+    public function classroomStudents(): HasMany
     {
-        return $this->hasMany(StudentClassroom::class);
+        return $this->hasMany(ClassroomStudent::class);
     }
 
     public function studentSummatives(): HasMany

@@ -58,13 +58,13 @@ class Classroom extends Model
         return $this->belongsTo(SchoolAcademicYear::class);
     }
 
-    public function studentClassrooms(): HasMany
+    public function classroomStudents(): HasMany
     {
-        return $this->hasMany(StudentClassroom::class);
+        return $this->hasMany(ClassroomStudent::class);
     }
 
-    public function classSubjects(): HasMany
+    public function classroomSubjects(): HasMany
     {
-        return $this->hasMany(ClassSubject::class);
+        return $this->hasMany(ClassroomSubject::class);
     }
 }

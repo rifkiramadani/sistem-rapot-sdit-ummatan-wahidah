@@ -8,26 +8,33 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('student_classrooms', function (Blueprint $table) {
+        // Ganti nama tabel dari 'student_classrooms' menjadi 'classroom_students'
+        Schema::create('classroom_students', function (Blueprint $table) {
             $table->ulid('id')->primary();
 
-            // Foreign key for the Student model
+            // Foreign key untuk model Student
             $table->foreignIdFor(Student::class)->constrained()->onDelete('cascade');
 
-            // Foreign key for the Classroom model
+            // Foreign key untuk model Classroom
             $table->foreignIdFor(Classroom::class)->constrained()->onDelete('cascade');
 
-            // Optional: Prevent a student from being in the same class twice
+            // Mencegah seorang siswa dimasukkan ke kelas yang sama lebih dari sekali
             $table->unique(['student_id', 'classroom_id']);
 
             $table->timestamps();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('student_classrooms');
+        Schema::dropIfExists('classroom_students');
     }
 };

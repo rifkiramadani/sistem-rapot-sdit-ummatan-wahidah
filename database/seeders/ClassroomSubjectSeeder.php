@@ -3,40 +3,36 @@
 namespace Database\Seeders;
 
 use App\Models\Classroom;
-use App\Models\ClassSubject;
+use App\Models\ClassroomSubject;
 use App\Models\Subject;
 use Illuminate\Database\Seeder;
 
-class ClassSubjectSeeder extends Seeder
+class ClassroomSubjectSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // 1. Group classrooms and subjects by their school_academic_year_id
+        // 1. Kelompokkan kelas dan mapel berdasarkan tahun ajaran
         $classroomsBySchoolYear = Classroom::all()->groupBy('school_academic_year_id');
         $subjectsBySchoolYear = Subject::all()->groupBy('school_academic_year_id');
 
         if ($classroomsBySchoolYear->isEmpty() || $subjectsBySchoolYear->isEmpty()) {
-            $this->command->warn('No classrooms or subjects found to assign.');
+            $this->command->warn('Tidak ada kelas atau mata pelajaran untuk ditautkan.');
             return;
         }
 
-        // 2. Iterate over each school year group of classrooms
+        // 2. Iterasi setiap grup kelas
         foreach ($classroomsBySchoolYear as $schoolYearId => $classrooms) {
-            // Find the corresponding subjects for this specific school year
+            // Temukan mapel yang sesuai untuk tahun ajaran ini
             $subjects = $subjectsBySchoolYear->get($schoolYearId);
 
-            // Skip if there are no subjects for this school year
             if (is_null($subjects) || $subjects->isEmpty()) {
                 continue;
             }
 
-            // 3. For each classroom in this group, assign all subjects from the same group
+            // 3. Untuk setiap kelas, tetapkan semua mapel dari tahun ajaran yang sama
             foreach ($classrooms as $classroom) {
                 foreach ($subjects as $subject) {
-                    ClassSubject::firstOrCreate([
+                    ClassroomSubject::firstOrCreate([
                         'classroom_id' => $classroom->id,
                         'subject_id' => $subject->id,
                     ]);
@@ -44,6 +40,6 @@ class ClassSubjectSeeder extends Seeder
             }
         }
 
-        $this->command->info('Assigned all subjects to classrooms within the correct school year.');
+        $this->command->info('Berhasil menautkan mata pelajaran ke kelas sesuai tahun ajaran.');
     }
 }

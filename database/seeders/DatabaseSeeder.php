@@ -3,9 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\RoleEnum;
-use App\Models\ClassSubject;
 use App\Models\Role;
-use App\Models\SchoolAcademicYear;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Seeder;
@@ -26,8 +24,8 @@ class DatabaseSeeder extends Seeder
             SubjectSeeder::class,
             SummativeTypeSeeder::class,
             SummativeSeeder::class,
-            ClassSubjectSeeder::class,
-            StudentClassroomSeeder::class,
+            ClassroomSubjectSeeder::class,
+            ClassroomStudentSeeder::class,
             StudentSummativeSeeder::class,
         ]);
 

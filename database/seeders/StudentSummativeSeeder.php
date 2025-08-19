@@ -25,15 +25,15 @@ class StudentSummativeSeeder extends Seeder
         // Iterate over each student to assign their scores
         foreach ($students as $student) {
             // 1. Find the student's classroom. We'll take the first one assigned.
-            $studentClassroom = $student->studentClassrooms()->first();
+            $classroomStudent = $student->classroomStudents()->first();
 
-            if (!$studentClassroom) {
+            if (!$classroomStudent) {
                 continue; // Skip if the student isn't in a class.
             }
 
             // 2. Get all subject IDs for that specific classroom.
             $subjectIdsInClass = DB::table('class_subjects')
-                ->where('classroom_id', $studentClassroom->classroom_id)
+                ->where('classroom_id', $classroomStudent->classroom_id)
                 ->pluck('subject_id');
 
             if ($subjectIdsInClass->isEmpty()) {
