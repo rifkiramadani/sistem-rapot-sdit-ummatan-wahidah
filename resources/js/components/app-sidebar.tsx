@@ -26,13 +26,12 @@ export function AppSidebar() {
     const { schoolAcademicYear } = props;
     let navItems: NavItem[];
 
-    if (schoolAcademicYear) {
-        // Jika ada prop schoolAcademicYear, gunakan navigasi konteks tahun ajaran
+    if (schoolAcademicYear && route().current()?.startsWith('protected.school-academic-years.')) {
         navItems = getSchoolAcademicYearNavItems(schoolAcademicYear);
     } else {
-        // Jika tidak, gunakan navigasi utama
         navItems = mainNavItems;
     }
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>

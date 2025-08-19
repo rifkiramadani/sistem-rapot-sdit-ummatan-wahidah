@@ -1,13 +1,18 @@
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 import { SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { Student } from '@/types/models/students';
 import { useForm } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
 import { useEffect, type FormEvent } from 'react';
 
 // Enum ini sudah cocok dengan backend
@@ -207,7 +212,32 @@ export default function StudentsForm({ student, schoolAcademicYear }: StudentsFo
                         <Label htmlFor="birth_date">
                             Tanggal Lahir <span className="text-red-500">*</span>
                         </Label>
-                        <Input id="birth_date" type="date" value={data.birth_date} onChange={(e) => setData('birth_date', e.target.value)} />
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={'outline'}
+                                    className={cn('w-full justify-start text-left font-normal', !data.birth_date && 'text-muted-foreground')}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {data.birth_date ? format(new Date(data.birth_date), 'PPP') : <span>Pilih tanggal lahir</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                                <Calendar
+                                    mode="single"
+                                    captionLayout="dropdown"
+                                    // Atur rentang tahun yang masuk akal untuk tanggal lahir
+                                    fromYear={new Date().getFullYear() - 100}
+                                    toYear={new Date().getFullYear()}
+                                    selected={data.birth_date ? new Date(data.birth_date) : undefined}
+                                    onSelect={(date) => date && setData('birth_date', format(date, 'yyyy-MM-dd'))}
+                                    defaultMonth={
+                                        data.birth_date ? new Date(data.birth_date) : new Date(new Date().setFullYear(new Date().getFullYear() - 15))
+                                    }
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
                         <InputError message={errors.birth_date} />
                     </div>
                     <div className="space-y-2 md:col-span-2">
@@ -285,7 +315,6 @@ export default function StudentsForm({ student, schoolAcademicYear }: StudentsFo
                         </Select>
                     </div>
 
-                    {/* [UBAH] Buat input wali menjadi dinamis (disabled/enabled) */}
                     <div className="space-y-2">
                         <Label htmlFor="guardian_name">
                             Nama Wali <span className="text-red-500">*</span>
@@ -294,7 +323,8 @@ export default function StudentsForm({ student, schoolAcademicYear }: StudentsFo
                             id="guardian_name"
                             value={data.guardian_name}
                             onChange={(e) => setData('guardian_name', e.target.value)}
-                            disabled={data.guardian_type === 'father' || data.guardian_type === 'mother'}
+                            // [FIX] Gunakan enum untuk perbandingan
+                            disabled={data.guardian_type !== GuardianTypeEnum.Other}
                         />
                         <InputError message={errors.guardian_name} />
                     </div>
@@ -304,7 +334,8 @@ export default function StudentsForm({ student, schoolAcademicYear }: StudentsFo
                             id="guardian_job"
                             value={data.guardian_job}
                             onChange={(e) => setData('guardian_job', e.target.value)}
-                            disabled={data.guardian_type === 'father' || data.guardian_type === 'mother'}
+                            // [FIX] Gunakan enum untuk perbandingan
+                            disabled={data.guardian_type !== GuardianTypeEnum.Other}
                         />
                         <InputError message={errors.guardian_job} />
                     </div>
@@ -316,7 +347,8 @@ export default function StudentsForm({ student, schoolAcademicYear }: StudentsFo
                             id="guardian_address"
                             value={data.guardian_address}
                             onChange={(e) => setData('guardian_address', e.target.value)}
-                            disabled={data.guardian_type === 'father' || data.guardian_type === 'mother'}
+                            // [FIX] Gunakan enum untuk perbandingan
+                            disabled={data.guardian_type !== GuardianTypeEnum.Other}
                         />
                         <InputError message={errors.guardian_address} />
                     </div>

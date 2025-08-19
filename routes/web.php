@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Protected\ClassroomController;
 use App\Http\Controllers\Protected\SchoolAcademicYearController;
 use App\Http\Controllers\Protected\SchoolController;
 use App\Http\Controllers\Protected\TeacherController;
@@ -72,7 +73,16 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
             Route::post('/bulk-destroy', [TeacherController::class, 'bulkDestroy'])->name('bulk-destroy');
         });
 
-        // classroom.....
+        Route::prefix('/classrooms')->name('classrooms.')->group(function () {
+            Route::get('', [ClassroomController::class, 'index'])->name('index');
+            Route::get('/create', [ClassroomController::class, 'create'])->name('create');
+            Route::post('', [ClassroomController::class, 'store'])->name('store');
+            Route::get('/{classroom}', [ClassroomController::class, 'show'])->name('show');
+            Route::get('/{classroom}/edit', [ClassroomController::class, 'edit'])->name('edit');
+            Route::put('/{classroom}', [ClassroomController::class, 'update'])->name('update');
+            Route::delete('/{classroom}', [ClassroomController::class, 'destroy'])->name('destroy');
+            Route::post('/bulk-destroy', [ClassroomController::class, 'bulkDestroy'])->name('bulk-destroy');
+        });
 
         Route::prefix('/students')->name('students.')->group(function () {
             Route::get('', [StudentController::class, 'index'])->name('index');

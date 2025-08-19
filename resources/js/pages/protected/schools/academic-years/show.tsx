@@ -12,6 +12,7 @@ import { type SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { type School } from '@/types/models/schools';
 import { format } from 'date-fns';
 import { LayoutDashboard } from 'lucide-react';
+import SectionTitle from '@/components/section-title';
 
 // Props untuk halaman Show, dengan asumsi data academic_year disertakan
 interface ShowProps {
@@ -80,6 +81,7 @@ export default function Show({ school, schoolAcademicYear }: ShowProps) {
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <SectionTitle title="Data Tahun Ajaran Sekolah" />
                             <DetailItem label="Nama Tahun Ajaran" value={academicYear.name} className="md:col-span-2" />
 
                             <DetailItem label="Tanggal Mulai" value={format(new Date(academicYear.start), 'dd MMMM yyyy')} />

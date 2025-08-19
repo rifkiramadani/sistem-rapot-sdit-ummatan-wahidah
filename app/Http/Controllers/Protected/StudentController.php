@@ -240,12 +240,14 @@ class StudentController extends Controller
     public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
         // Gate::authorize('bulkDelete', Student::class);
-        LogBatch::startBatch();
+
 
         $request->validate([
             'ids'   => ['required', 'array'],
             'ids.*' => ['exists:students,id'],
         ]);
+
+        LogBatch::startBatch();
 
         // Menggunakan loop agar event model (seperti 'deleting') tetap terpicu
         DB::transaction(function () use ($request) {

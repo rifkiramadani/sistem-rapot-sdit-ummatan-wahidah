@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Gate;
 use App\Support\QueryBuilder; // <-- Import QueryBuilder
 use App\QueryFilters\Filter;   // <-- Import Filter pipe
 use App\QueryFilters\Sort;     // <-- Import Sort pipe
+use Spatie\Activitylog\Facades\LogBatch;
 
 class SchoolController extends Controller
 {
@@ -49,7 +50,7 @@ class SchoolController extends Controller
         Gate::authorize('create', School::class);
         $user = $request->user(); // <-- current authenticated user
 
-        $user->notify(new \App\Notifications\ReportFinished(reportId: 1));
+        // $user->notify(new \App\Notifications\ReportFinished(reportId: 1));
 
         return Inertia::render('protected/schools/create');
     }
@@ -166,6 +167,8 @@ class SchoolController extends Controller
             'ids.*' => ['exists:schools,id'], // Pastikan setiap ID ada di tabel sekolah
         ]);
 
+        LogBatch::startBatch();
+
         DB::transaction(function () use ($request) {
             // 1. Ambil semua model sekolah yang akan dihapus ke dalam koleksi
             $schools = School::whereIn('id', $request->input('ids'))->get();
@@ -177,6 +180,8 @@ class SchoolController extends Controller
                 $school->delete();
             }
         });
+
+        LogBatch::endBatch();
 
         return redirect()->route('protected.schools.index')->with('success', 'Data sekolah yang dipilih berhasil dihapus.');
     }

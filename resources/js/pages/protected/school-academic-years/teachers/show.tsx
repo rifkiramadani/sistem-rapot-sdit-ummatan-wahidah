@@ -2,6 +2,8 @@
 
 import { Head, Link } from '@inertiajs/react';
 
+import DetailItem from '@/components/detail-item';
+import SectionTitle from '@/components/section-title';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
@@ -9,8 +11,6 @@ import { type BreadcrumbItem } from '@/types';
 import { type SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { type Teacher } from '@/types/models/teachers';
 import { BookMarked, Pencil } from 'lucide-react';
-import DetailItem from '@/components/detail-item';
-
 
 // Definisikan props untuk halaman Show
 interface ShowProps {
@@ -66,10 +66,8 @@ export default function Show({ schoolAcademicYear, teacher }: ShowProps) {
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            <div className="md:col-span-2">
-                                <p className="text-sm font-medium text-muted-foreground">Nama Lengkap</p>
-                                <p className="text-xl font-semibold">{teacher.name || '-'}</p>
-                            </div>
+                            <SectionTitle title="Data Diri Guru" />
+                            <DetailItem label="Nama" value={teacher.name} />
                             <DetailItem label="Nomor Induk Yayasan (NIY)" value={teacher.niy} />
                             <DetailItem label="Email Akun" value={teacher.user?.email} />
                         </div>

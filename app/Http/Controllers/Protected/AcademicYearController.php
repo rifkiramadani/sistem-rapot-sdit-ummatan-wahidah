@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class AcademicYearController extends Controller
 {
@@ -147,6 +148,7 @@ class AcademicYearController extends Controller
             'ids.*' => ['exists:academic_years,id']
         ]);
 
+        LogBatch::startBatch();
 
         DB::transaction(function () use ($request) {
             $academicYears = AcademicYear::whereIn('id', $request->input('ids'))->get();
@@ -155,6 +157,8 @@ class AcademicYearController extends Controller
                 $academicYear->delete();
             }
         });
+
+        LogBatch::endBatch();
 
         return redirect()->route('protected.academic-years.index')->with('success', 'Data Tahun Ajaran yang dipilih berhasil dihapus.');
     }

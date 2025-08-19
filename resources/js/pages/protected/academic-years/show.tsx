@@ -3,6 +3,7 @@
 import { Head, Link } from '@inertiajs/react';
 
 import DetailItem from '@/components/detail-item';
+import SectionTitle from '@/components/section-title';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
@@ -43,6 +44,7 @@ export default function Show({ academicYear }: { academicYear: AcademicYear }) {
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            <SectionTitle title="Data Tahun Ajaran" />
                             <DetailItem label="Nama" value={academicYear.name} className="md:col-span-2" />
                             <DetailItem label="Mulai" value={format(academicYear.start, 'dd MMMM yyyy')} />
                             <DetailItem label="Selesai" value={format(academicYear.end, 'dd MMMM yyyy')} />

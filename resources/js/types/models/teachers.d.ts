@@ -1,5 +1,5 @@
 import { Paginator } from "..";
-import { Classroom } from "./classroom";
+import { Classroom } from "./classrooms";
 import { SchoolAcademicYear } from "./school-academic-years";
 import { User } from "./user";
 

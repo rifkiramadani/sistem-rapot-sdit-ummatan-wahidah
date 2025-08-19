@@ -17,6 +17,7 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB; // <-- Import DB
 use Illuminate\Support\Facades\Hash; // <-- Import Hash
+use Spatie\Activitylog\Facades\LogBatch;
 
 class TeacherController extends Controller
 {
@@ -182,6 +183,8 @@ class TeacherController extends Controller
             'ids.*' => ['exists:teachers,id'],
         ]);
 
+        LogBatch::startBatch();
+
         DB::transaction(function () use ($request) {
             // Ambil semua model teacher yang akan dihapus, beserta relasi user-nya
             $teachers = Teacher::with('user')->whereIn('id', $request->input('ids'))->get();
@@ -196,6 +199,8 @@ class TeacherController extends Controller
                 }
             }
         });
+
+        LogBatch::endBatch();
 
         return redirect()->route('protected.school-academic-years.teachers.index', $schoolAcademicYear)
             ->with('success', 'Data guru yang dipilih berhasil dihapus.');

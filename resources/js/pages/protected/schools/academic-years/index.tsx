@@ -42,7 +42,7 @@ export default function Index({ school, schoolAcademicYears }: IndexProps) {
                     <Link href={route('protected.schools.academic-years.create', { school: school.id })}>
                         <Button>
                             <Plus className="mr-2 h-4 w-4" />
-                            Tambah Tahun Ajaran
+                            Tambah Tahun Ajaran {school.name}
                         </Button>
                     </Link>
                     <AcademicYearsTable schoolAcademicYears={schoolAcademicYears} />
