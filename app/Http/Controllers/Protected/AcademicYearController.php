@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rule;
 
 class AcademicYearController extends Controller
 {
@@ -117,6 +118,7 @@ class AcademicYearController extends Controller
                 'required',
                 'string',
                 'regex:/^\d{4}\/\d{4}$/', // Aturan validasi baru contoh 2032/2033
+                Rule::unique('academic_years')->ignore($academicYear->id),
             ],
             'start' => 'required|date',
             'end' => 'required|date'

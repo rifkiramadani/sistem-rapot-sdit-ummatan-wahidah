@@ -10,32 +10,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
     const page = usePage<SharedData>();
     const { auth } = page.props;
     // Dummy data in local state (so delete/read updates the UI immediately)
-    const [notifications, setNotifications] = React.useState<Notification[]>([
-        {
-            id: 1,
-            title: 'Report Finished',
-            body: 'Your sales report is ready to download.',
-            href: '/reports/1',
-            read: false,
-            createdAt: new Date(),
-        },
-        {
-            id: 2,
-            title: 'Job Failed',
-            body: 'Image processing failed due to timeout.',
-            href: '/jobs/2',
-            read: false,
-            createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 min ago
-        },
-        {
-            id: 3,
-            title: 'Backup Completed',
-            body: 'Nightly backup completed successfully.',
-            href: '/backups',
-            read: true,
-            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-        },
-    ]);
+    const [notifications, setNotifications] = React.useState<Notification[]>([]);
 
     const markAllRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
@@ -43,6 +18,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
 
     const handleDelete = (n: Notification) => setNotifications((prev) => prev.filter((x) => x.id !== n.id));
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     useEcho(`App.Models.User.${auth.user.id}`, '.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated', (e: any) => {
         console.log(e);
         const data = e?.data ?? e; // Notification payload is under e.data

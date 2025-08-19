@@ -1,20 +1,30 @@
 // Di file: app/protected/academicYear/_components/academic-year-table.tsx
 
+import { BulkDeleteAlertDialog } from '@/components/bulk-delete-alert-dialog';
 import { DataTable } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import InertiaPagination from '@/components/inertia-pagination';
+import TableTooltipAction from '@/components/table-tooltip-action';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableMeta } from '@/types';
 import { AcademicYear, AcademicYearsPaginated } from '@/types/models/academic-years.d';
-import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
-import { format } from "date-fns"
-import TableTooltipAction from '@/components/table-tooltip-action';
-import { Button } from '@/components/ui/button';
-import { Eye, Settings2, Trash2 } from 'lucide-react';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { router } from '@inertiajs/react';
+import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
+import { format } from 'date-fns';
+import { Eye, Settings2, Trash2 } from 'lucide-react';
 import { AcademicYearsTableFilters } from '../../schools/academic-years/_components/academic-years-table-filters';
-import { BulkDeleteAlertDialog } from '@/components/bulk-delete-alert-dialog';
 
 export const columns: ColumnDef<AcademicYear>[] = [
     {
@@ -73,47 +83,56 @@ export const columns: ColumnDef<AcademicYear>[] = [
             return (
                 <div className="flex gap-2">
                     <TableTooltipAction info="Lihat">
-                        <Button variant="outline" size="icon" onClick={() => router.get(route('protected.academic-years.show', { academicYear: academicYear.id }))}>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => router.get(route('protected.academic-years.show', { academicYear: academicYear.id }))}
+                        >
                             <Eye className="h-4 w-4" />
                         </Button>
                     </TableTooltipAction>
                     <TableTooltipAction info="Edit">
-                        <Button variant="outline" size="icon" onClick={() => router.get(route('protected.academic-years.edit', { academicYear: academicYear.id }))}>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => router.get(route('protected.academic-years.edit', { academicYear: academicYear.id }))}
+                        >
                             <Settings2 className="h-4 w-4" />
                         </Button>
                     </TableTooltipAction>
-                    <TableTooltipAction info="Lihat">
-                        <AlertDialog>
+
+                    <AlertDialog>
+                        <TableTooltipAction info="Hapus">
                             <AlertDialogTrigger asChild>
                                 <Button variant="outline" size="icon">
                                     <Trash2 className="h-4 w-4" />
                                 </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data secara permanen.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                                    <AlertDialogAction
-                                        className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
-                                        onClick={() => {
-                                            router.delete(route('protected.academic-years.destroy', { academicYear: academicYear.id }));
-                                        }}
-                                    >
-                                        Lanjutkan
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </TableTooltipAction>
-                </div >
+                        </TableTooltipAction>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data secara permanen.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Batal</AlertDialogCancel>
+                                <AlertDialogAction
+                                    className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
+                                    onClick={() => {
+                                        router.delete(route('protected.academic-years.destroy', { academicYear: academicYear.id }));
+                                    }}
+                                >
+                                    Lanjutkan
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
             );
         },
-    }
+    },
 ];
 
 interface AcademicYearsTableProps {
@@ -121,10 +140,7 @@ interface AcademicYearsTableProps {
 }
 export function AcademicYearsTable({ academicYears }: AcademicYearsTableProps) {
     const handleBulkDelete = (table: TanstackTable<AcademicYear>) => {
-        // Ambil semua baris yang dipilih
-        const selectedRows = table.getFilteredSelectedRowModel().rows;
-        // Ekstrak ID dari setiap baris
-        const selectedIds = selectedRows.map((row) => row.original.id);
+        const selectedIds = Object.keys(table.getState().rowSelection);
 
         // Kirim ID ke backend
         router.post(
@@ -144,11 +160,15 @@ export function AcademicYearsTable({ academicYears }: AcademicYearsTableProps) {
         <>
             <DataTable columns={columns} data={academicYears.data} meta={{ from: academicYears.from }}>
                 {(table) => {
-                    const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+                    const selectedRowCount = Object.keys(table.getState().rowSelection).length;
                     return (
                         <div className="flex w-full items-center gap-4">
                             <AcademicYearsTableFilters />
-                            <BulkDeleteAlertDialog itemCount={selectedRowCount} itemName="data tahun ajaran" onConfirm={() => handleBulkDelete(table)}>
+                            <BulkDeleteAlertDialog
+                                itemCount={selectedRowCount}
+                                itemName="data tahun ajaran"
+                                onConfirm={() => handleBulkDelete(table)}
+                            >
                                 <Button className="text-xs" variant="destructive" disabled={selectedRowCount === 0}>
                                     <Trash2 className="mr-1 h-2 w-2" />({selectedRowCount})
                                 </Button>

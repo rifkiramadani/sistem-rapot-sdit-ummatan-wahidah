@@ -2,23 +2,14 @@
 
 import { Head, Link } from '@inertiajs/react';
 
+import DetailItem from '@/components/detail-item';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { type AcademicYear } from '@/types/models/academic-years';
+import { format } from 'date-fns';
 import { Pencil } from 'lucide-react';
-import { format } from 'date-fns'
-
-// Komponen kecil untuk menampilkan baris data
-function DetailItem({ label, value, className }: { label: string; value: string | number | null | undefined; className?: string }) {
-    return (
-        <div className={className}>
-            <p className="text-sm font-medium text-muted-foreground">{label}</p>
-            <p className="text-base font-semibold">{value || '-'}</p>
-        </div>
-    );
-}
 
 export default function Show({ academicYear }: { academicYear: AcademicYear }) {
     const breadcrumbs: BreadcrumbItem[] = [
@@ -39,6 +30,7 @@ export default function Show({ academicYear }: { academicYear: AcademicYear }) {
                 <Card>
                     <CardHeader>
                         <div className="flex items-center justify-between">
+                            <div className="flex gap-2"></div>
                             <div className="flex gap-2">
                                 <Link href={route('protected.academic-years.edit', academicYear.id)}>
                                     <Button variant="outline" size="sm">
@@ -52,13 +44,8 @@ export default function Show({ academicYear }: { academicYear: AcademicYear }) {
                     <CardContent>
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <DetailItem label="Nama" value={academicYear.name} className="md:col-span-2" />
-                            <DetailItem label="Mulai" value={format(academicYear.start, 'yyyy')} className="md:col-span-2" />
-                            <DetailItem label="Selesai" value={format(academicYear.end, 'yyyy')} />
-                            {/* <DetailItem label="Kode Pos" value={school.postal_code} />
-                            <DetailItem label="Website" value={school.website} />
-                            <DetailItem label="Email" value={school.email} />
-                            <DetailItem label="Tempat & Tanggal Rapor" value={school.place_date_raport} />
-                            <DetailItem label="Tempat & Tanggal STS" value={school.place_date_sts} /> */}
+                            <DetailItem label="Mulai" value={format(academicYear.start, 'dd MMMM yyyy')} />
+                            <DetailItem label="Selesai" value={format(academicYear.end, 'dd MMMM yyyy')} />
                         </div>
                     </CardContent>
                 </Card>
