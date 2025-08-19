@@ -23,6 +23,13 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
     // ROUTE FOR ACADEMIC YEAR
     Route::prefix('academic-years')->name('academic-years.')->group(function () {
         Route::get('', [AcademicYearController::class, 'index'])->name('index');
+        Route::get('/create', [AcademicYearController::class, 'create'])->name('create');
+        Route::post('', [AcademicYearController::class, 'store'])->name('store');
+        Route::get('/{academicYear}', [AcademicYearController::class, 'show'])->name('show');
+        Route::get('/{academicYear}/edit', [AcademicYearController::class, 'edit'])->name('edit');
+        Route::put('/{academicYear}', [AcademicYearController::class, 'update'])->name('update');
+        Route::delete('/{academicYear}', [AcademicYearController::class, 'destroy'])->name('destroy');
+        Route::post('/bulk-destroy', [AcademicYearController::class, 'bulkDestroy'])->name('bulk-destroy');
     });
 
     Route::prefix('schools')->name('schools.')->group(function () {

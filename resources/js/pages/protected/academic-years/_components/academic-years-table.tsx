@@ -6,9 +6,15 @@ import InertiaPagination from '@/components/inertia-pagination';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableMeta } from '@/types';
 import { AcademicYear, AcademicYearsPaginated } from '@/types/models/academic-years.d';
-import { ColumnDef } from '@tanstack/react-table';
-import { AcademicYearTableFilters } from '../_components/academic-years-table-filters';
+import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
 import { format } from "date-fns"
+import TableTooltipAction from '@/components/table-tooltip-action';
+import { Button } from '@/components/ui/button';
+import { Eye, Settings2, Trash2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { router } from '@inertiajs/react';
+import { AcademicYearsTableFilters } from '../../schools/academic-years/_components/academic-years-table-filters';
+import { BulkDeleteAlertDialog } from '@/components/bulk-delete-alert-dialog';
 
 export const columns: ColumnDef<AcademicYear>[] = [
     {
@@ -58,17 +64,98 @@ export const columns: ColumnDef<AcademicYear>[] = [
             return format(date, 'yyyy'); // Format to display only the year
         },
     },
+    {
+        id: 'actions',
+        header: 'Aksi',
+        cell: ({ row }) => {
+            const academicYear = row.original;
+
+            return (
+                <div className="flex gap-2">
+                    <TableTooltipAction info="Lihat">
+                        <Button variant="outline" size="icon" onClick={() => router.get(route('protected.academic-years.show', { academicYear: academicYear.id }))}>
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction>
+                    <TableTooltipAction info="Edit">
+                        <Button variant="outline" size="icon" onClick={() => router.get(route('protected.academic-years.edit', { academicYear: academicYear.id }))}>
+                            <Settings2 className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction>
+                    <TableTooltipAction info="Lihat">
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Apakah Anda benar-benar yakin?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Tindakan ini tidak dapat dibatalkan. Ini akan menghapus data secara permanen.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
+                                        onClick={() => {
+                                            router.delete(route('protected.academic-years.destroy', { academicYear: academicYear.id }));
+                                        }}
+                                    >
+                                        Lanjutkan
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </TableTooltipAction>
+                </div >
+            );
+        },
+    }
 ];
 
-interface AcademicYearTableProps {
+interface AcademicYearsTableProps {
     academicYears: AcademicYearsPaginated;
 }
-export function AcademicYearTable({ academicYears }: AcademicYearTableProps) {
+export function AcademicYearsTable({ academicYears }: AcademicYearsTableProps) {
+    const handleBulkDelete = (table: TanstackTable<AcademicYear>) => {
+        // Ambil semua baris yang dipilih
+        const selectedRows = table.getFilteredSelectedRowModel().rows;
+        // Ekstrak ID dari setiap baris
+        const selectedIds = selectedRows.map((row) => row.original.id);
 
+        // Kirim ID ke backend
+        router.post(
+            route('protected.academic-years.bulk-destroy'),
+            {
+                ids: selectedIds,
+            },
+            {
+                onSuccess: () => {
+                    table.resetRowSelection();
+                },
+                preserveScroll: true,
+            },
+        );
+    };
     return (
         <>
             <DataTable columns={columns} data={academicYears.data} meta={{ from: academicYears.from }}>
-                <AcademicYearTableFilters />
+                {(table) => {
+                    const selectedRowCount = table.getFilteredSelectedRowModel().rows.length;
+                    return (
+                        <div className="flex w-full items-center gap-4">
+                            <AcademicYearsTableFilters />
+                            <BulkDeleteAlertDialog itemCount={selectedRowCount} itemName="data tahun ajaran" onConfirm={() => handleBulkDelete(table)}>
+                                <Button className="text-xs" variant="destructive" disabled={selectedRowCount === 0}>
+                                    <Trash2 className="mr-1 h-2 w-2" />({selectedRowCount})
+                                </Button>
+                            </BulkDeleteAlertDialog>
+                        </div>
+                    );
+                }}
             </DataTable>
             <InertiaPagination paginateItems={academicYears} />
         </>
