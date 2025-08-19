@@ -11,53 +11,35 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
 use Spatie\Activitylog\Facades\LogBatch;
+use App\Support\QueryBuilder; // <-- Import QueryBuilder
+use App\QueryFilters\Filter;   // <-- Import Filter pipe
+use App\QueryFilters\Sort;     // <-- Import Sort pipe
+use App\Enums\PerPageEnum; // <-- Import Enum
 
 class AcademicYearController extends Controller
 {
     public function index(Request $request)
     {
-
         Gate::authorize('viewAny', AcademicYear::class);
 
-        // 1. Validasi request
+        // 1. Validasi tetap di controller (kita buat lebih konsisten)
         $request->validate([
-            'per_page' => 'sometimes|integer|in:10,20,30,40,50,100',
-            // sort_by sekarang sesuai field yang ada di tabel academic_years
+            'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
             'sort_by' => 'sometimes|string|in:name,start,end',
             'sort_direction' => 'sometimes|string|in:asc,desc',
             'filter' => 'sometimes|array',
             'filter.q' => 'sometimes|string|nullable',
         ]);
 
-        // 2. Ambil parameter dengan default
-        $perPage = $request->input('per_page', 10);
-        $sortBy = $request->input('sort_by', 'start'); // default urut dari start date
-        $sortDirection = $request->input('sort_direction', 'asc');
-        $searchQuery = $request->input('filter.q');
+        // 2. Ganti semua logika query manual dengan QueryBuilder
+        $academicYears = QueryBuilder::for(AcademicYear::with(['schools', 'schoolAcademicYears']))
+            ->through([
+                Filter::class, // Akan otomatis memanggil scopeQ()
+                Sort::class,
+            ])
+            ->paginate();
 
-        // 3. Bangun query dasar
-        $query = AcademicYear::with(['schools', 'schoolAcademicYears']);
-
-        // 4. Filter pencarian
-        $query->when($searchQuery, function (Builder $query, string $search) {
-            $searchLower = strtolower($search);
-
-            $query->where(function (Builder $q) use ($searchLower) {
-                // Ganti 'start' dan 'end' dengan '"start"' dan '"end"'
-                $q->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
-                    ->orWhereRaw('CAST("start" AS CHAR) LIKE ?', ["%{$searchLower}%"])
-                    ->orWhereRaw('CAST("end" AS CHAR) LIKE ?', ["%{$searchLower}%"]);
-            });
-        });
-
-        // 5. Sorting
-        $query->orderBy($sortBy, $sortDirection);
-
-        // 6. Pagination
-        $academicYears = $query->paginate($perPage)->withQueryString();
-
-        // dd($academicYears);
-
+        // 3. Kembalikan response
         return Inertia::render('protected/academic-years/index', [
             'academicYears' => $academicYears,
         ]);
@@ -72,7 +54,6 @@ class AcademicYearController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request->all());
 
         Gate::authorize('create', AcademicYear::class);
 
