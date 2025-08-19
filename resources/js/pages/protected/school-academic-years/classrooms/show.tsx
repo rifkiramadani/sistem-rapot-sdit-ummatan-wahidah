@@ -48,10 +48,17 @@ export default function Show({ schoolAcademicYear, classroom }: ShowProps) {
                                     </Button>
                                 </Link>
 
-                                <Button variant="outline" size="sm">
-                                    <BookCopy className="mr-2 h-4 w-4" />
-                                    Mata Pelajaran (Segera)
-                                </Button>
+                                <Link
+                                    href={route('protected.school-academic-years.classrooms.subjects.index', {
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                        classroom: classroom.id,
+                                    })}
+                                >
+                                    <Button variant="outline" size="sm">
+                                        <BookCopy className="mr-2 h-4 w-4" />
+                                        Mata Pelajaran
+                                    </Button>
+                                </Link>
                             </div>
                             <Link
                                 href={route('protected.school-academic-years.classrooms.edit', {

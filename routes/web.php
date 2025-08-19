@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Protected\ClassroomController;
 use App\Http\Controllers\Protected\ClassroomStudentController;
+use App\Http\Controllers\Protected\ClassroomSubjectController;
 use App\Http\Controllers\Protected\SchoolAcademicYearController;
 use App\Http\Controllers\Protected\SchoolController;
 use App\Http\Controllers\Protected\TeacherController;
@@ -93,6 +94,17 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
                 // Route::put('/{classroomStudent}', [ClassroomStudentController::class, 'update'])->name('update');
                 Route::delete('/{classroomStudent}', [ClassroomStudentController::class, 'destroy'])->name('destroy');
                 Route::post('/bulk-destroy', [ClassroomStudentController::class, 'bulkDestroy'])->name('bulk-destroy');
+            });
+
+            Route::prefix('/{classroom}/subjects')->name('subjects.')->group(function () {
+                Route::get('', [ClassroomSubjectController::class, 'index'])->name('index');
+                Route::get('/create', [ClassroomSubjectController::class, 'create'])->name('create');
+                Route::post('', [ClassroomSubjectController::class, 'store'])->name('store');
+                Route::get('/{classroomSubject}', [ClassroomSubjectController::class, 'show'])->name('show');
+                // Route::get('/{classroomSubject}/edit', [ClassroomSubjectController::class, 'edit'])->name('edit');
+                // Route::put('/{classroomSubject}', [ClassroomSubjectController::class, 'update'])->name('update');
+                Route::delete('/{classroomSubject}', [ClassroomSubjectController::class, 'destroy'])->name('destroy');
+                Route::post('/bulk-destroy', [ClassroomSubjectController::class, 'bulkDestroy'])->name('bulk-destroy');
             });
         });
 

@@ -110,54 +110,54 @@ class SchoolAcademicYearController extends Controller
             ->with('success', 'Tahun ajaran berhasil ditambahkan.');
     }
 
-    /**
-     * Menampilkan form untuk mengedit tahun ajaran sekolah.
-     */
-    public function edit(School $school, SchoolAcademicYear $schoolAcademicYear)
-    {
-        Gate::authorize('update', $schoolAcademicYear);
+    // /**
+    //  * Menampilkan form untuk mengedit tahun ajaran sekolah.
+    //  */
+    // public function edit(School $school, SchoolAcademicYear $schoolAcademicYear)
+    // {
+    //     Gate::authorize('update', $schoolAcademicYear);
 
-        // Ambil ID tahun ajaran yang sudah ditautkan, KECUALI yang sedang diedit
-        $linkedAcademicYearIds = $school->schoolAcademicYears()
-            ->where('id', '!=', $schoolAcademicYear->id)
-            ->pluck('academic_year_id');
+    //     // Ambil ID tahun ajaran yang sudah ditautkan, KECUALI yang sedang diedit
+    //     $linkedAcademicYearIds = $school->schoolAcademicYears()
+    //         ->where('id', '!=', $schoolAcademicYear->id)
+    //         ->pluck('academic_year_id');
 
-        // Ambil tahun ajaran yang bisa dipilih (semua yang belum ditautkan + yang sedang diedit)
-        $availableAcademicYears = AcademicYear::whereNotIn('id', $linkedAcademicYearIds)
-            ->orderBy('start', 'desc')
-            ->get();
+    //     // Ambil tahun ajaran yang bisa dipilih (semua yang belum ditautkan + yang sedang diedit)
+    //     $availableAcademicYears = AcademicYear::whereNotIn('id', $linkedAcademicYearIds)
+    //         ->orderBy('start', 'desc')
+    //         ->get();
 
-        return Inertia::render('protected/schools/academic-years/edit', [
-            'school' => $school,
-            'schoolAcademicYear' => $schoolAcademicYear,
-            'academicYears' => $availableAcademicYears,
-        ]);
-    }
+    //     return Inertia::render('protected/schools/academic-years/edit', [
+    //         'school' => $school,
+    //         'schoolAcademicYear' => $schoolAcademicYear,
+    //         'academicYears' => $availableAcademicYears,
+    //     ]);
+    // }
 
-    /**
-     * Memperbarui tautan tahun ajaran sekolah.
-     */
-    public function update(Request $request, School $school, SchoolAcademicYear $schoolAcademicYear)
-    {
-        Gate::authorize('update', $schoolAcademicYear);
+    // /**
+    //  * Memperbarui tautan tahun ajaran sekolah.
+    //  */
+    // public function update(Request $request, School $school, SchoolAcademicYear $schoolAcademicYear)
+    // {
+    //     Gate::authorize('update', $schoolAcademicYear);
 
-        $validated = $request->validate([
-            'academic_year_id' => [
-                'required',
-                'ulid',
-                Rule::exists('academic_years', 'id'),
-                // Pastikan unik, tapi abaikan record yang sedang diedit
-                Rule::unique('school_academic_years')->where(function ($query) use ($school) {
-                    return $query->where('school_id', $school->id);
-                })->ignore($schoolAcademicYear->id),
-            ],
-        ]);
+    //     $validated = $request->validate([
+    //         'academic_year_id' => [
+    //             'required',
+    //             'ulid',
+    //             Rule::exists('academic_years', 'id'),
+    //             // Pastikan unik, tapi abaikan record yang sedang diedit
+    //             Rule::unique('school_academic_years')->where(function ($query) use ($school) {
+    //                 return $query->where('school_id', $school->id);
+    //             })->ignore($schoolAcademicYear->id),
+    //         ],
+    //     ]);
 
-        $schoolAcademicYear->update($validated);
+    //     $schoolAcademicYear->update($validated);
 
-        return redirect()->route('protected.schools.academic-years.index', $school)
-            ->with('success', 'Tahun ajaran berhasil diperbarui.');
-    }
+    //     return redirect()->route('protected.schools.academic-years.index', $school)
+    //         ->with('success', 'Tahun ajaran berhasil diperbarui.');
+    // }
 
 
     /**

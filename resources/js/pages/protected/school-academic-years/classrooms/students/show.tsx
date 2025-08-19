@@ -59,7 +59,7 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
             <div className="flex h-full flex-1 flex-col space-y-4 overflow-x-auto rounded-xl p-4">
                 <Card>
                     <CardHeader>
-                        <div className="flex items-center justify-start">
+                        <div className="flex items-center justify-between">
                             {/* Tombol edit tetap mengarah ke halaman edit siswa utama */}
                             <div className="flex items-center gap-2">
                                 <Link

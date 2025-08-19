@@ -115,31 +115,54 @@ class ClassroomStudentController extends Controller
             ->with('success', 'Siswa berhasil ditambahkan ke kelas.');
     }
 
-    /**
-     * Menampilkan form untuk mengedit (mengganti) siswa dalam sebuah kelas.
-     */
-    public function edit(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
-    {
-        // Gate::authorize('update', $classroom);
+    // /**
+    //  * Menampilkan form untuk mengedit (mengganti) siswa dalam sebuah kelas.
+    //  */
+    // public function edit(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
+    // {
+    //     // Gate::authorize('update', $classroom);
 
-        // 1. Ambil ID siswa yang sudah ada di kelas ini, KECUALI siswa yang sedang diedit
-        $existingStudentIds = $classroom->classroomStudents()
-            ->where('id', '!=', $classroomStudent->id)
-            ->pluck('student_id');
+    //     // 1. Ambil ID siswa yang sudah ada di kelas ini, KECUALI siswa yang sedang diedit
+    //     $existingStudentIds = $classroom->classroomStudents()
+    //         ->where('id', '!=', $classroomStudent->id)
+    //         ->pluck('student_id');
 
-        // 2. Ambil siswa yang ada di tahun ajaran ini, TAPI belum ada di kelas ini
-        $availableStudents = $schoolAcademicYear->students()
-            ->whereNotIn('id', $existingStudentIds)
-            ->orderBy('name')
-            ->get();
+    //     // 2. Ambil siswa yang ada di tahun ajaran ini, TAPI belum ada di kelas lain
+    //     $availableStudents = $schoolAcademicYear->students()
+    //         ->whereNotIn('id', $existingStudentIds)
+    //         ->orderBy('name')
+    //         ->get();
 
-        return Inertia::render('protected/school-academic-years/classrooms/students/edit', [
-            'schoolAcademicYear' => $schoolAcademicYear,
-            'classroom' => $classroom,
-            'classroomStudent' => $classroomStudent,
-            'availableStudents' => $availableStudents,
-        ]);
-    }
+    //     return Inertia::render('protected/school-academic-years/classrooms/students/edit', [
+    //         'schoolAcademicYear' => $schoolAcademicYear,
+    //         'classroom' => $classroom,
+    //         'classroomStudent' => $classroomStudent,
+    //         'availableStudents' => $availableStudents,
+    //     ]);
+    // }
+
+    // /**
+    //  * Memperbarui data siswa di dalam kelas.
+    //  */
+    // public function update(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
+    // {
+    //     // Gate::authorize('update', $classroom);
+
+    //     $validated = $request->validate([
+    //         'student_id' => [
+    //             'required',
+    //             'ulid',
+    //             Rule::exists('students', 'id')->where('school_academic_year_id', $schoolAcademicYear->id),
+    //             // Pastikan siswa yang baru dipilih belum terdaftar di kelas ini, abaikan record saat ini
+    //             Rule::unique('classroom_students')->where('classroom_id', $classroom->id)->ignore($classroomStudent->id),
+    //         ],
+    //     ]);
+
+    //     $classroomStudent->update($validated);
+
+    //     return redirect()->route('protected.school-academic-years.classrooms.students.index', [$schoolAcademicYear, $classroom])
+    //         ->with('success', 'Data siswa di kelas berhasil diperbarui.');
+    // }
 
     public function destroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
     {
