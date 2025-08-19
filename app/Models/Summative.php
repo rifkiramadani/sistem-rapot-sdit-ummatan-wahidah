@@ -23,7 +23,7 @@ class Summative extends Model
     /**
      * Mendapatkan mata pelajaran (subject) dari sumatif ini.
      */
-    public function subject(): BelongsTo
+    public function subject(): BelongsTo // TODO: change to classroomSubject
     {
         return $this->belongsTo(Subject::class);
     }

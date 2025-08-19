@@ -66,8 +66,6 @@ export const columns: ColumnDef<SchoolAcademicYear>[] = [
             // 1. Ambil data tanggal dari relasi
             const startDate = row.original.academic_year?.start;
 
-            console.log(startDate);
-
             // 2. Lakukan pengecekan sebelum memformat
             if (!startDate) {
                 return 'N/A'; // Tampilkan fallback jika tanggal tidak ada
@@ -118,7 +116,7 @@ export const columns: ColumnDef<SchoolAcademicYear>[] = [
                             <Eye className="h-4 w-4" />
                         </Button>
                     </TableTooltipAction>
-                    {/* <TableTooltipAction info="Pengaturan">
+                    {/* <TableTooltipAction info="Edit">
                         <Button
                             variant="outline"
                             size="icon"

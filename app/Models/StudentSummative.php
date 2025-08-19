@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class StudentSummative extends Model
+class StudentSummative extends Model // TODO: SummativeStudent
 {
     use HasFactory, HasUlids;
 

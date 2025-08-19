@@ -1,20 +1,20 @@
-import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
-import { ClassroomStudentsPaginated } from '@/types/models/classroom-students';
+import { ClassroomStudent } from '@/types/models/classroom-students';
 import { Classroom } from '@/types/models/classrooms';
 import { SchoolAcademicYear } from '@/types/models/school-academic-years';
-import { Head, Link } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
-import { ClassroomStudentsTable } from './_components/classroom-students-table';
+import { Student } from '@/types/models/students';
+import { Head } from '@inertiajs/react';
+import ClassroomStudentForm from './_components/classroom-students-form';
 
-interface IndexProps {
-    classroomStudents: ClassroomStudentsPaginated;
+interface EditProps {
     schoolAcademicYear: SchoolAcademicYear;
     classroom: Classroom;
+    classroomStudent: ClassroomStudent;
+    availableStudents: Student[];
 }
 
-export default function Index({ classroomStudents, schoolAcademicYear, classroom }: IndexProps) {
+export default function Edit({ schoolAcademicYear, classroom, classroomStudent, availableStudents }: EditProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }) },
         { title: 'Kelas', href: route('protected.school-academic-years.classrooms.index', { schoolAcademicYear: schoolAcademicYear.id }) },
@@ -29,26 +29,20 @@ export default function Index({ classroomStudents, schoolAcademicYear, classroom
                 classroom: classroom.id,
             }),
         },
+        { title: 'Edit', href: '#' },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Siswa di Kelas ${classroom.name}`} />
+            <Head title={`Edit Siswa di Kelas ${classroom.name}`} />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex-1 space-y-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
-                    <Link
-                        href={route('protected.school-academic-years.classrooms.students.create', {
-                            schoolAcademicYear: schoolAcademicYear.id,
-                            classroom: classroom.id,
-                        })}
-                    >
-                        <Button>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Tambah Siswa ke Kelas {classroom.name}
-                        </Button>
-                    </Link>
-
-                    <ClassroomStudentsTable classroomStudents={classroomStudents} schoolAcademicYear={schoolAcademicYear} classroom={classroom} />
+                    <ClassroomStudentForm
+                        schoolAcademicYear={schoolAcademicYear}
+                        classroom={classroom}
+                        availableStudents={availableStudents}
+                        classroomStudent={classroomStudent}
+                    />
                 </div>
             </div>
         </AppLayout>

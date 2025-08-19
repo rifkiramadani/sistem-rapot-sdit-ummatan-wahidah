@@ -18,7 +18,6 @@ interface IndexProps {
 }
 
 export default function Index({ school, schoolAcademicYears }: IndexProps) {
-    console.log(schoolAcademicYears);
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Schools',

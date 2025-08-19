@@ -17,15 +17,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableMeta } from '@/types';
+import { ClassroomStudent, ClassroomStudentsPaginated } from '@/types/models/classroom-students';
 import { Classroom } from '@/types/models/classrooms';
 import { SchoolAcademicYear } from '@/types/models/school-academic-years';
-import { Student, StudentsPaginated } from '@/types/models/students';
 import { router } from '@inertiajs/react';
 import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
 import { Eye, Trash2 } from 'lucide-react';
 import { ClassroomStudentsTableFilters } from './classroom-students-table-filters';
 
-export const getColumns = (schoolAcademicYear: SchoolAcademicYear, classroom: Classroom): ColumnDef<Student>[] => [
+export const getColumns = (schoolAcademicYear: SchoolAcademicYear, classroom: Classroom): ColumnDef<ClassroomStudent>[] => [
     {
         id: 'select',
         header: ({ table }) => (
@@ -39,26 +39,49 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear, classroom: Cl
         enableHiding: false,
     },
     { id: 'no', header: 'No.', cell: ({ row, table }) => ((table.options.meta as TableMeta)?.from ?? 0) + row.index, enableSorting: false },
-    { accessorKey: 'nisn', header: ({ column }) => <DataTableColumnHeader column={column} title="NISN" /> },
-    { accessorKey: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Siswa" /> },
-    { accessorKey: 'gender', header: 'L/P', cell: ({ row }) => (row.original.gender === 'male' ? 'Laki-laki' : 'Perempuan') },
-    { accessorFn: (row) => row.guardian?.name ?? 'N/A', id: 'guardian_name', header: 'Nama Wali' },
+    {
+        accessorFn: (row) => row.student?.nisn ?? 'N/A',
+        id: 'nisn',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="NISN" />,
+    },
+    {
+        accessorFn: (row) => row.student?.name ?? 'N/A',
+        id: 'name',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Siswa" />,
+    },
+    {
+        accessorFn: (row) => row.student?.gender,
+        id: 'gender',
+        header: 'L/P',
+        cell: ({ row }) => {
+            const gender = row.original.student?.gender;
+            if (!gender) return 'N/A';
+            return gender === 'male' ? 'Laki-laki' : 'Perempuan';
+        },
+    },
+    {
+        // Rantai '?.' bisa digunakan berkali-kali untuk akses yang lebih dalam
+        accessorFn: (row) => row.student?.guardian?.name ?? 'N/A',
+        id: 'guardian_name',
+        header: 'Nama Wali',
+    },
     {
         id: 'actions',
         header: 'Aksi',
         cell: ({ row }) => {
-            const student = row.original;
+            const classroomStudent = row.original;
             return (
                 <div className="flex gap-2">
-                    <TableTooltipAction info="Lihat Profil Siswa">
+                    <TableTooltipAction info="Lihat">
                         <Button
                             variant="outline"
                             size="icon"
                             onClick={() =>
                                 router.get(
-                                    route('protected.school-academic-years.students.show', {
+                                    route('protected.school-academic-years.classrooms.students.show', {
                                         schoolAcademicYear: schoolAcademicYear.id,
-                                        student: student.id,
+                                        classroom: classroom.id,
+                                        classroomStudent: classroomStudent.id,
                                     }),
                                 )
                             }
@@ -66,6 +89,23 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear, classroom: Cl
                             <Eye className="h-4 w-4" />
                         </Button>
                     </TableTooltipAction>
+                    {/* <TableTooltipAction info="Edit">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                                router.get(
+                                    route('protected.school-academic-years.classrooms.students.edit', {
+                                                         schoolAcademicYear: schoolAcademicYear.id,
+                                                classroom: classroom.id,
+                                                classroomStudent: classroomStudent.id
+                                    }),
+                                )
+                            }
+                        >
+                            <Settings2 className="h-4 w-4" />
+                        </Button>
+                    </TableTooltipAction> */}
                     <AlertDialog>
                         <TableTooltipAction info="Keluarkan dari Kelas">
                             <AlertDialogTrigger asChild>
@@ -90,7 +130,7 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear, classroom: Cl
                                             route('protected.school-academic-years.classrooms.students.destroy', {
                                                 schoolAcademicYear: schoolAcademicYear.id,
                                                 classroom: classroom.id,
-                                                classroomStudent: student.id /* Ganti dengan ID ClassroomStudent jika ada */,
+                                                classroomStudent: classroomStudent.id,
                                             }),
                                         )
                                     }
@@ -107,20 +147,19 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear, classroom: Cl
 ];
 
 interface ClassroomStudentsTableProps {
-    students: StudentsPaginated;
+    // [UBAH] Gunakan tipe data paginasi yang baru
+    classroomStudents: ClassroomStudentsPaginated;
     schoolAcademicYear: SchoolAcademicYear;
     classroom: Classroom;
 }
 
-export function ClassroomStudentsTable({ students, schoolAcademicYear, classroom }: ClassroomStudentsTableProps) {
-    const handleBulkDelete = (table: TanstackTable<Student>) => {
+export function ClassroomStudentsTable({ classroomStudents, schoolAcademicYear, classroom }: ClassroomStudentsTableProps) {
+    const handleBulkDelete = (table: TanstackTable<ClassroomStudent>) => {
+        // ID yang diambil adalah ID dari record pivot
         const selectedIds = Object.keys(table.getState().rowSelection);
         router.post(
-            route('protected.school-academic-years.classrooms.students.bulk-destroy', {
-                schoolAcademicYear: schoolAcademicYear.id,
-                classroom: classroom.id,
-            }),
-            { student_ids: selectedIds },
+            route('protected.school-academic-years.classrooms.students.bulk-destroy', { schoolAcademicYear, classroom }),
+            { ids: selectedIds },
             { onSuccess: () => table.resetRowSelection(), preserveScroll: true },
         );
     };
@@ -129,7 +168,7 @@ export function ClassroomStudentsTable({ students, schoolAcademicYear, classroom
 
     return (
         <div className="space-y-4">
-            <DataTable columns={columns} data={students.data} meta={{ from: students.from }}>
+            <DataTable columns={columns} data={classroomStudents.data} meta={{ from: classroomStudents.from }}>
                 {(table) => (
                     <div className="flex w-full items-center gap-4">
                         <ClassroomStudentsTableFilters />
@@ -145,7 +184,7 @@ export function ClassroomStudentsTable({ students, schoolAcademicYear, classroom
                     </div>
                 )}
             </DataTable>
-            <InertiaPagination paginateItems={students} />
+            <InertiaPagination paginateItems={classroomStudents} />
         </div>
     );
 }
