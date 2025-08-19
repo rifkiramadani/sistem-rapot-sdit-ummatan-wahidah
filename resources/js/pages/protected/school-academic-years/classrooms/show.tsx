@@ -36,10 +36,18 @@ export default function Show({ schoolAcademicYear, classroom }: ShowProps) {
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div className="flex gap-2">
-                                <Button variant="outline" size="sm">
-                                    <Users className="mr-2 h-4 w-4" />
-                                    Daftar Siswa (Segera)
-                                </Button>
+                                <Link
+                                    href={route('protected.school-academic-years.classrooms.students.index', {
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                        classroom: classroom.id,
+                                    })}
+                                >
+                                    <Button variant="outline" size="sm">
+                                        <Users className="mr-2 h-4 w-4" />
+                                        Daftar Siswa (Segera)
+                                    </Button>
+                                </Link>
+
                                 <Button variant="outline" size="sm">
                                     <BookCopy className="mr-2 h-4 w-4" />
                                     Mata Pelajaran (Segera)

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Protected\ClassroomController;
+use App\Http\Controllers\Protected\ClassroomStudentController;
 use App\Http\Controllers\Protected\SchoolAcademicYearController;
 use App\Http\Controllers\Protected\SchoolController;
 use App\Http\Controllers\Protected\TeacherController;
@@ -48,8 +49,8 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
             Route::get('/create', [SchoolAcademicYearController::class, 'create'])->name('create');
             Route::post('', [SchoolAcademicYearController::class, 'store'])->name('store');
             Route::get('/{schoolAcademicYear}', [SchoolAcademicYearController::class, 'show'])->name('show');
-            Route::get('/{schoolAcademicYear}/edit', [SchoolAcademicYearController::class, 'edit'])->name('edit');
-            Route::put('/{schoolAcademicYear}', [SchoolAcademicYearController::class, 'update'])->name('update');
+            // Route::get('/{schoolAcademicYear}/edit', [SchoolAcademicYearController::class, 'edit'])->name('edit');
+            // Route::put('/{schoolAcademicYear}', [SchoolAcademicYearController::class, 'update'])->name('update');
             Route::delete('/{schoolAcademicYear}', [SchoolAcademicYearController::class, 'destroy'])->name('destroy');
             Route::post('/bulk-destroy', [SchoolAcademicYearController::class, 'bulkDestroy'])->name('bulk-destroy');
         });
@@ -82,6 +83,17 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
             Route::put('/{classroom}', [ClassroomController::class, 'update'])->name('update');
             Route::delete('/{classroom}', [ClassroomController::class, 'destroy'])->name('destroy');
             Route::post('/bulk-destroy', [ClassroomController::class, 'bulkDestroy'])->name('bulk-destroy');
+
+            Route::prefix('/{classroom}/students')->name('students.')->group(function () {
+                Route::get('', [ClassroomStudentController::class, 'index'])->name('index');
+                Route::get('/create', [ClassroomStudentController::class, 'create'])->name('create');
+                Route::post('', [ClassroomStudentController::class, 'store'])->name('store');
+                Route::get('/{classroomStudent}', [ClassroomStudentController::class, 'show'])->name('show');
+                // Route::get('/{classroomStudent}/edit', [ClassroomStudentController::class, 'edit'])->name('edit');
+                // Route::put('/{classroomStudent}', [ClassroomStudentController::class, 'update'])->name('update');
+                Route::delete('/{classroomStudent}', [ClassroomStudentController::class, 'destroy'])->name('destroy');
+                Route::post('/bulk-destroy', [ClassroomStudentController::class, 'bulkDestroy'])->name('bulk-destroy');
+            });
         });
 
         Route::prefix('/students')->name('students.')->group(function () {
