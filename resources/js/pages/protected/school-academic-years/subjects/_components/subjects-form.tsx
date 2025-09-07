@@ -29,7 +29,7 @@ export default function SubjectsForm({ subject, schoolAcademicYear }: SubjectsFo
         e.preventDefault();
         if (isEditMode) {
             put(
-                route('protected.school-academic-years.teachers.update', {
+                route('protected.school-academic-years.subjects.update', {
                     schoolAcademicYear: schoolAcademicYear.id,
                     subject: subject.id,
                 }),

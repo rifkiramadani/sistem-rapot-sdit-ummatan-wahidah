@@ -81,4 +81,21 @@ class SubjectController extends Controller
             'subject' => $subject
         ]);
     }
+
+    public function update(Request $request, SchoolAcademicYear $schoolAcademicYear, Subject $subject)
+    {
+        // Validasi data subject
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+        ]);
+
+        $subject->update([
+            'name' => $validated['name'],
+            'description' => $validated['description']
+        ]);
+
+        return redirect()->route('protected.school-academic-years.subjects.index', $schoolAcademicYear)
+            ->with('success', 'Subject berhasil diubah.');
+    }
 }
