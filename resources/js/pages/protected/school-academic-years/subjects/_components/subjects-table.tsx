@@ -64,7 +64,7 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear): ColumnDef<Su
         id: 'actions',
         header: 'Aksi',
         cell: ({ row }) => {
-            const teacher = row.original;
+            const subject = row.original;
             return (
                 <div className="flex gap-2">
                     <TableTooltipAction info="Lihat">
@@ -73,9 +73,9 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear): ColumnDef<Su
                             size="icon"
                             onClick={() =>
                                 router.get(
-                                    route('protected.school-academic-years.teachers.show', {
+                                    route('protected.school-academic-years.subjects.show', {
                                         schoolAcademicYear: schoolAcademicYear.id,
-                                        teacher: teacher.id,
+                                        subject: subject.id,
                                     }),
                                 )
                             }
@@ -89,9 +89,9 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear): ColumnDef<Su
                             size="icon"
                             onClick={() =>
                                 router.get(
-                                    route('protected.school-academic-years.teachers.edit', {
+                                    route('protected.school-academic-years.subjects.edit', {
                                         schoolAcademicYear: schoolAcademicYear.id,
-                                        teacher: teacher.id,
+                                        subject: subject.id,
                                     }),
                                 )
                             }
@@ -123,7 +123,7 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear): ColumnDef<Su
                                         router.delete(
                                             route('protected.school-academic-years.teachers.destroy', {
                                                 schoolAcademicYear: schoolAcademicYear.id,
-                                                teacher: teacher.id,
+                                                teacher: subject.id,
                                             }),
                                         )
                                     }

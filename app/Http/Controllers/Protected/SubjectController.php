@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Validation\Rule;
 use App\Enums\PerPageEnum;
 use App\Models\SchoolAcademicYear;
+use App\Models\Subject;
 use Inertia\Inertia;
 use App\QueryFilters\Filter;
 use App\QueryFilters\Sort;
@@ -38,6 +39,14 @@ class SubjectController extends Controller
         return Inertia::render('protected/school-academic-years/subjects/index', [
             'schoolAcademicYear' => $schoolAcademicYear,
             'subjects' => $subjects,
+        ]);
+    }
+
+    public function show(SchoolAcademicYear $schoolAcademicYear, Subject $subject)
+    {
+        return Inertia::render('protected/school-academic-years/subjects/show', [
+            'schoolAcademicYear' => $schoolAcademicYear,
+            'subject' => $subject,
         ]);
     }
 
