@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use App\QueryFilters\Filter;
 use App\QueryFilters\Sort;
 use App\Support\QueryBuilder;
+use Illuminate\Support\Facades\DB; // <-- Import DB
 
 class SubjectController extends Controller
 {
@@ -45,5 +46,22 @@ class SubjectController extends Controller
         return Inertia::render('protected/school-academic-years/subjects/create', [
             'schoolAcademicYear' => $schoolAcademicYear
         ]);
+    }
+
+    public function store(Request $request, SchoolAcademicYear $schoolAcademicYear)
+    {
+        // Validasi data subject
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+        ]);
+
+        $schoolAcademicYear->subjects()->create([
+            'name' => $validated['name'],
+            'description' => $validated['description']
+        ]);
+
+        return redirect()->route('protected.school-academic-years.subjects.index', $schoolAcademicYear)
+            ->with('success', 'Subject berhasil dibuat.');
     }
 }

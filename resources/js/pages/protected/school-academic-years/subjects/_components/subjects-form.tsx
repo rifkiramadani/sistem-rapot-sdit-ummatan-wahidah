@@ -35,7 +35,7 @@ export default function SubjectsForm({ subject, schoolAcademicYear }: SubjectsFo
                 }),
             );
         } else {
-            post(route('protected.school-academic-years.teachers.store', { schoolAcademicYear: schoolAcademicYear.id }));
+            post(route('protected.school-academic-years.subjects.store', { schoolAcademicYear: schoolAcademicYear.id }));
         }
     };
 
