@@ -98,4 +98,12 @@ class SubjectController extends Controller
         return redirect()->route('protected.school-academic-years.subjects.index', $schoolAcademicYear)
             ->with('success', 'Subject berhasil diubah.');
     }
+
+    public function destroy(SchoolAcademicYear $schoolAcademicYear, Subject $subject)
+    {
+        $subject->delete();
+
+        return redirect()->route('protected.school-academic-years.subjects.index', $schoolAcademicYear)
+            ->with('success', 'Subject berhasil dihapus.');
+    }
 }

@@ -84,6 +84,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
             Route::get('/{subject}', [SubjectController::class, 'show'])->name('show');
             Route::get('/{subject}/edit', [SubjectController::class, 'edit'])->name('edit');
             Route::put('/{subject}', [SubjectController::class, 'update'])->name('update');
+            Route::delete('/{subject}', [SubjectController::class, 'destroy'])->name('destroy');
         });
 
         Route::prefix('/classrooms')->name('classrooms.')->group(function () {

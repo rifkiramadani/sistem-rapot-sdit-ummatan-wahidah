@@ -121,9 +121,9 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear): ColumnDef<Su
                                     className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
                                     onClick={() =>
                                         router.delete(
-                                            route('protected.school-academic-years.teachers.destroy', {
+                                            route('protected.school-academic-years.subjects.destroy', {
                                                 schoolAcademicYear: schoolAcademicYear.id,
-                                                teacher: subject.id,
+                                                subject: subject.id,
                                             }),
                                         )
                                     }
