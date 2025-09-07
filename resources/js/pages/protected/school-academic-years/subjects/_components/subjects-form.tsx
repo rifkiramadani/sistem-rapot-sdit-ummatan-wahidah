@@ -45,7 +45,7 @@ export default function SubjectsForm({ subject, schoolAcademicYear }: SubjectsFo
                 <CardTitle>{isEditMode ? 'Edit Subject' : 'Tambah Subject Baru'}</CardTitle>
                 <CardDescription>
                     {isEditMode
-                        ? 'Lakukan perubahan pada data subject. Kosongkan password jika tidak ingin mengubahnya.'
+                        ? 'Lakukan perubahan pada data subject.'
                         : 'Formulir ini akan membuat data subject.'}
                 </CardDescription>
             </CardHeader>

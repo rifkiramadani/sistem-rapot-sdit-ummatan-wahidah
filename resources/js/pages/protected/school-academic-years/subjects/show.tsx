@@ -10,7 +10,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { type SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { type Subject } from '@/types/models/subjects';
-import { BookMarked, Pencil } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 
 // Definisikan props untuk halaman Show
 interface ShowProps {
@@ -50,7 +50,7 @@ export default function Show({ schoolAcademicYear, subject }: ShowProps) {
                             </div> */}
                             {/* Tombol Aksi di Kanan */}
                             <div className="flex gap-2">
-                                {/* <Link
+                                <Link
                                     href={route('protected.school-academic-years.subjects.edit', {
                                         schoolAcademicYear: schoolAcademicYear.id,
                                         subject: subject.id,
@@ -60,7 +60,7 @@ export default function Show({ schoolAcademicYear, subject }: ShowProps) {
                                         <Pencil className="mr-2 h-4 w-4" />
                                         Edit
                                     </Button>
-                                </Link> */}
+                                </Link>
                             </div>
                         </div>
                     </CardHeader>

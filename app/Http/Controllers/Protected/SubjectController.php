@@ -73,4 +73,12 @@ class SubjectController extends Controller
         return redirect()->route('protected.school-academic-years.subjects.index', $schoolAcademicYear)
             ->with('success', 'Subject berhasil dibuat.');
     }
+
+    public function edit(SchoolAcademicYear $schoolAcademicYear, Subject $subject)
+    {
+        return Inertia::render('protected/school-academic-years/subjects/edit', [
+            'schoolAcademicYear' => $schoolAcademicYear,
+            'subject' => $subject
+        ]);
+    }
 }
