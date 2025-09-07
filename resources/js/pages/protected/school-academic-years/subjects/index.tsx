@@ -37,7 +37,7 @@ export default function Index({ subjects, schoolAcademicYear }: IndexProps) {
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex-1 space-y-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
                     <Link
-                        href={route('protected.school-academic-years.teachers.create', {
+                        href={route('protected.school-academic-years.subjects.create', {
                             schoolAcademicYear: schoolAcademicYear.id,
                         })}
                     >

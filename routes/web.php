@@ -79,6 +79,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
         // ROUTE FOR SCHOOL ACADEMIC YEAR SUBJECTS
         Route::prefix('/subjects')->name('subjects.')->group(function () {
             Route::get('/', [SubjectController::class, 'index'])->name('index');
+            Route::get('/create', [SubjectController::class, 'create'])->name('create');
         });
 
         Route::prefix('/classrooms')->name('classrooms.')->group(function () {

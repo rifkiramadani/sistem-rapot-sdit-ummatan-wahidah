@@ -39,4 +39,11 @@ class SubjectController extends Controller
             'subjects' => $subjects,
         ]);
     }
+
+    public function create(SchoolAcademicYear $schoolAcademicYear)
+    {
+        return Inertia::render('protected/school-academic-years/subjects/create', [
+            'schoolAcademicYear' => $schoolAcademicYear
+        ]);
+    }
 }
