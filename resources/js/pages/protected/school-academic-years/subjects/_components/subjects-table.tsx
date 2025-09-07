@@ -151,7 +151,7 @@ export function SubjectsTable({ subjects, schoolAcademicYear }: SubjectsTablePro
         const selectedIds = Object.keys(table.getState().rowSelection);
 
         router.post(
-            route('protected.school-academic-years.teachers.bulk-destroy', { schoolAcademicYear: schoolAcademicYear.id }),
+            route('protected.school-academic-years.subjects.bulk-destroy', { schoolAcademicYear: schoolAcademicYear.id }),
             { ids: selectedIds },
             {
                 onSuccess: () => table.resetRowSelection(),

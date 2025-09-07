@@ -13,6 +13,7 @@ use App\QueryFilters\Filter;
 use App\QueryFilters\Sort;
 use App\Support\QueryBuilder;
 use Illuminate\Support\Facades\DB; // <-- Import DB
+use Spatie\Activitylog\Facades\LogBatch;
 
 class SubjectController extends Controller
 {
@@ -105,5 +106,36 @@ class SubjectController extends Controller
 
         return redirect()->route('protected.school-academic-years.subjects.index', $schoolAcademicYear)
             ->with('success', 'Subject berhasil dihapus.');
+    }
+
+    public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear)
+    {
+        // Validasi bahwa 'ids' ada, merupakan sebuah array, dan setiap ID ada di tabel subject
+        $request->validate([
+            'ids'   => ['required', 'array'],
+            'ids.*' => ['exists:subjects,id'],
+        ]);
+
+        LogBatch::startBatch();
+
+        DB::transaction(function () use ($request) {
+            // Ambil semua model teacher yang akan dihapus, beserta relasi user-nya
+            $subjects = Subject::whereIn('id', $request->input('ids'))->get();
+
+            // Lakukan perulangan dan hapus user yang terkait
+            foreach ($subjects as $subject) {
+                if ($subject) {
+                    $subject->delete();
+                } else {
+                    // hapus subject saja
+                    $subject->delete();
+                }
+            }
+        });
+
+        LogBatch::endBatch();
+
+        return redirect()->route('protected.school-academic-years.subjects.index', $schoolAcademicYear)
+            ->with('success', 'Data Subject yang dipilih berhasil dihapus.');
     }
 }
