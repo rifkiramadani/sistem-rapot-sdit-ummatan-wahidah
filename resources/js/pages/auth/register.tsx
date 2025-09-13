@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
+import { Card } from '@/components/ui/card';
 
 type RegisterForm = {
     name: string;
@@ -32,9 +33,10 @@ export default function Register() {
     };
 
     return (
-        <AuthLayout title="Create an account" description="Enter your details below to create your account">
+        <AuthLayout title="Silahkan Daftar" description="Masukkan detail dibawah untuk membuat akun">
             <Head title="Register" />
-            <form className="flex flex-col gap-6" onSubmit={submit}>
+            <Card className='p-10'>
+                <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
                         <Label htmlFor="name">Name</Label>
@@ -101,19 +103,20 @@ export default function Register() {
                         <InputError message={errors.password_confirmation} />
                     </div>
 
-                    <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
+                        <Button type="submit" className="mt-2 w-full hover:bg-gray-300 hover:text-black dark:hover:bg-gray-700 dark:hover:text-white" tabIndex={5} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                        Create account
+                            Buat akun
                     </Button>
                 </div>
 
                 <div className="text-center text-sm text-muted-foreground">
-                    Already have an account?{' '}
+                        Sudah punya akun?{' '}
                     <TextLink href={route('login')} tabIndex={6}>
-                        Log in
+                            Masuk
                     </TextLink>
                 </div>
             </form>
+            </Card>
         </AuthLayout>
     );
 }
