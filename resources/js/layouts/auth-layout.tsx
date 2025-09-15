@@ -36,11 +36,11 @@ const AuthLayout = ({ children }: PropsWithChildren) => {
     }, [api]);
 
     return (
-        <section className="bg-muted h-screen opacity-100 transition-opacity duration-750 starting:opacity-0 lg:grow">
+        <section className="bg-muted min-h-screen opacity-100 transition-opacity duration-750 starting:opacity-0 lg:grow">
             <div className="flex h-full items-center justify-center relative">
                 <div className="absolute inset-0 w-full h-full overflow-hidden">
                     <Carousel className="w-full h-full" setApi={setApi}>
-                        <CarouselContent className="w-[1550px] h-[700px]">
+                        <CarouselContent className="w-[1550px] h-[850px]">
                             {guruImages.map((imageSrc, index) => (
                                 <CarouselItem key={index} className="w-full h-full">
                                     <div
