@@ -74,7 +74,7 @@ const Welcome = () => {
             <div className="relative min-h-screen flex flex-col items-center justify-center opacity-100 transition-opacity duration-750 starting:opacity-0 lg:grow">
                 <div className="absolute inset-0 w-full h-full overflow-hidden">
                     <Carousel className="w-full h-full" setApi={setApi}>
-                        <CarouselContent className="w-[1600px] h-[1000px]">
+                        <CarouselContent className="w-[1550px] h-[800px]">
                             {guruImages.map((imageSrc, index) => (
                                 <CarouselItem key={index} className="w-full h-full">
                                     <div
