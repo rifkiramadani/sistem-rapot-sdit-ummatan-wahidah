@@ -121,11 +121,11 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     </form>
                 </Card>
 
-                <div className="text-muted-foreground flex justify-center gap-1 text-sm">
+                <div className="text-white flex justify-center gap-1 text-sm">
                     <p>Tidak punya akun?</p>
                     <TextLink
                         href={route('register')}
-                        className="text-primary font-medium hover:underline"
+                        className="text-white font-medium hover:underline"
                         tabIndex={6}
                     >
                         Daftar

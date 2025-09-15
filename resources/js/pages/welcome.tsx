@@ -107,7 +107,7 @@ const Welcome = () => {
                                 />
                             </div>
                             <div>
-                                <Badge className="mb-3" variant="outline">Yayasan As-salam Curup</Badge>
+                                <Badge className="mb-3" variant="outline"><span className="text-white">Yayasan As-salam Curup</span></Badge>
                                 <h1 className="text-5xl mb-3 font-extrabold uppercase bg-clip-text text-transparent bg-gradient-to-r from-[#1DF01A] from-30% to-[#0E9351] to-70%">
                                     Selamat Datang di Sistem Informasi <br /> Rapor SDIT Ummatan Wahidah
                                 </h1>
@@ -151,7 +151,7 @@ const Welcome = () => {
                             </main>
                         </div>
 
-                        <div className="mx-auto mt-10 flex max-w-5xl flex-col md:flex-row text-white dark:text-white">
+                        <div className="mx-auto mt-10 flex max-w-5xl flex-col md:flex-row text-black dark:text-white">
                             {features.map((feature, index) => (
                                 <React.Fragment key={feature.title}>
                                     {index > 0 && (
@@ -168,7 +168,7 @@ const Welcome = () => {
                                             {feature.icon}
                                         </div>
                                         <h3 className="mb-2 font-semibold">{feature.title}</h3>
-                                        <p className="text-sm text-gray-200 dark:text-gray-300">
+                                        <p className="text-sm text-black dark:text-gray-300">
                                             {feature.description}
                                         </p>
                                     </div>
