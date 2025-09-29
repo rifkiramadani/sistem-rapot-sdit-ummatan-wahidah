@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Protected;
+namespace App\Http\Controllers\Protected\SchoolAcademicYear;
 
 use App\Enums\GenderEnum;
 use App\Enums\PerPageEnum;

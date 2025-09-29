@@ -23,9 +23,9 @@ class DatabaseSeeder extends Seeder
             ClassroomSeeder::class,
             SubjectSeeder::class,
             SummativeTypeSeeder::class,
-            SummativeSeeder::class,
             ClassroomSubjectSeeder::class,
             ClassroomStudentSeeder::class,
+            SummativeSeeder::class,
             StudentSummativeSeeder::class,
         ]);
 

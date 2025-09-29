@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\DefaultSummativeTypeEnum;
-use App\Models\Subject;
+use App\Models\ClassroomSubject; // <-- [UBAH] Import ClassroomSubject
 use App\Models\Summative;
 use App\Models\SummativeType;
 use Illuminate\Database\Seeder;
@@ -15,18 +15,20 @@ class SummativeSeeder extends Seeder
      */
     public function run(): void
     {
-        $subjects = Subject::all();
-        if ($subjects->isEmpty()) {
-            $this->command->warn('Tidak ada data Subject. Jalankan SubjectSeeder terlebih dahulu.');
+        // [UBAH] Ambil semua data ClassroomSubject, bukan Subject
+        $classroomSubjects = ClassroomSubject::with('classroom')->get();
+        if ($classroomSubjects->isEmpty()) {
+            $this->command->warn('Tidak ada data ClassroomSubject. Jalankan ClassroomSubjectSeeder terlebih dahulu.');
             return;
         }
 
-        // Loop untuk setiap mata pelajaran
-        foreach ($subjects as $subject) {
-            // Counter direset menjadi 1 untuk setiap mata pelajaran baru
+        // [UBAH] Loop untuk setiap hubungan kelas-mapel
+        foreach ($classroomSubjects as $classroomSubject) {
+            // Counter direset untuk setiap hubungan baru
             $materiCounter = 1;
 
-            $schoolAcademicYearId = $subject->school_academic_year_id;
+            // [UBAH] Ambil school_academic_year_id dari kelas yang terkait
+            $schoolAcademicYearId = $classroomSubject->classroom->school_academic_year_id;
 
             // --- Handle Sumatif Materi ---
             $materiType = SummativeType::where('school_academic_year_id', $schoolAcademicYearId)
@@ -36,9 +38,10 @@ class SummativeSeeder extends Seeder
             if ($materiType) {
                 for ($i = 0; $i < 8; $i++) {
                     Summative::factory()
-                        ->asMateri($materiCounter++) // Gunakan counter lokal
+                        ->asMateri($materiCounter++)
                         ->create([
-                            'subject_id' => $subject->id,
+                            // [UBAH] Gunakan classroom_subject_id
+                            'classroom_subject_id' => $classroomSubject->id,
                             'summative_type_id' => $materiType->id,
                         ]);
                 }
@@ -54,7 +57,8 @@ class SummativeSeeder extends Seeder
                     Summative::factory()
                         ->asSTS($name)
                         ->create([
-                            'subject_id' => $subject->id,
+                            // [UBAH] Gunakan classroom_subject_id
+                            'classroom_subject_id' => $classroomSubject->id,
                             'summative_type_id' => $stsType->id,
                         ]);
                 }
@@ -70,13 +74,14 @@ class SummativeSeeder extends Seeder
                     Summative::factory()
                         ->asSAS($name)
                         ->create([
-                            'subject_id' => $subject->id,
+                            // [UBAH] Gunakan classroom_subject_id
+                            'classroom_subject_id' => $classroomSubject->id,
                             'summative_type_id' => $sasType->id,
                         ]);
                 }
             }
         }
 
-        $this->command->info('Berhasil membuat data summatives untuk setiap mata pelajaran.');
+        $this->command->info('Berhasil membuat data summatives untuk setiap mata pelajaran di setiap kelas.');
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Protected;
+namespace App\Http\Controllers\Protected\SchoolAcademicYear;
 
 use App\Enums\PerPageEnum;
 use App\Http\Controllers\Controller;
@@ -11,8 +11,10 @@ use App\QueryFilters\Filter;
 use App\QueryFilters\Sort;
 use App\Support\QueryBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Spatie\Activitylog\Facades\LogBatch;
 
 class ClassroomSubjectController extends Controller
 {
@@ -137,4 +139,49 @@ class ClassroomSubjectController extends Controller
     //     return redirect()->route('protected.school-academic-years.classrooms.subjects.index', [$schoolAcademicYear, $classroom])
     //         ->with('success', 'Mata pelajaran berhasil diperbarui.');
     // }
+
+    /**
+     * Menghapus (melepas tautan) mata pelajaran dari kelas.
+     */
+    public function destroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
+    {
+        // Gate::authorize('delete', $classroomSubject);
+
+        // Keamanan: pastikan record yang akan dihapus benar-benar milik kelas ini
+        if ($classroomSubject->classroom_id !== $classroom->id) {
+            abort(403);
+        }
+
+        $classroomSubject->delete();
+
+        return redirect()->route('protected.school-academic-years.classrooms.subjects.index', [$schoolAcademicYear, $classroom])
+            ->with('success', 'Mata pelajaran berhasil dihapus dari kelas.');
+    }
+
+    /**
+     * Menghapus beberapa mata pelajaran dari kelas sekaligus.
+     */
+    public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
+    {
+        // Gate::authorize('bulkDelete', ClassroomSubject::class);
+
+        $request->validate([
+            'ids'   => ['required', 'array'],
+            'ids.*' => ['exists:classroom_subjects,id'],
+        ]);
+
+        LogBatch::startBatch();
+
+        DB::transaction(function () use ($request, $classroom) {
+            ClassroomSubject::where('classroom_id', $classroom->id)
+                ->whereIn('id', $request->input('ids'))
+                ->get()
+                ->each->delete();
+        });
+
+        LogBatch::endBatch();
+
+        return redirect()->route('protected.school-academic-years.classrooms.subjects.index', [$schoolAcademicYear, $classroom])
+            ->with('success', 'Mata pelajaran yang dipilih berhasil dihapus dari kelas.');
+    }
 }

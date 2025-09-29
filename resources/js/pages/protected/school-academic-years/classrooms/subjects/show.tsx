@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
 import DetailItem from '@/components/detail-item';
 import SectionTitle from '@/components/section-title';
@@ -51,10 +51,19 @@ export default function Show({ schoolAcademicYear, classroom, classroomSubject }
                                         Edit Mata Pelajaran
                                     </Button>
                                 </Link> */}
-                                <Button variant="outline" size="sm">
-                                    <BookMarked className="mr-2 h-4 w-4" />
-                                    Sumatif (Segera)
-                                </Button>
+
+                                <Link
+                                    href={route('protected.school-academic-years.classrooms.subjects.summatives.index', {
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                        classroom: classroom.id,
+                                        classroomSubject: classroomSubject.id,
+                                    })}
+                                >
+                                    <Button variant="outline" size="sm">
+                                        <BookMarked className="mr-2 h-4 w-4" />
+                                        Sumatif (Segera)
+                                    </Button>
+                                </Link>
                             </div>
                             {/* <Link
                                 href={route('protected.school-academic-years.classrooms.subjects.edit', {

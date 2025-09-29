@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Protected;
+namespace App\Http\Controllers\Protected\SchoolAcademicYear;
 
 use App\Enums\PerPageEnum;
 use App\Enums\RoleEnum; // ++ 1. Import RoleEnum

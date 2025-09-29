@@ -1,18 +1,17 @@
 <?php
 
-use Inertia\Inertia;
-use App\Models\AcademicYear;
-use App\Models\SchoolAcademicYear;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Protected\SubjectController;
-use App\Http\Controllers\Protected\SchoolController;
-use App\Http\Controllers\Protected\StudentController;
-use App\Http\Controllers\Protected\TeacherController;
 use App\Http\Controllers\Protected\ClassroomController;
-use App\Http\Controllers\Protected\AcademicYearController;
 use App\Http\Controllers\Protected\ClassroomStudentController;
 use App\Http\Controllers\Protected\ClassroomSubjectController;
 use App\Http\Controllers\Protected\SchoolAcademicYearController;
+use App\Http\Controllers\Protected\SchoolController;
+use App\Http\Controllers\Protected\TeacherController;
+use App\Models\SchoolAcademicYear;
+use Inertia\Inertia;
+use App\Models\AcademicYear;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Protected\AcademicYearController;
+use App\Http\Controllers\Protected\StudentController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -118,6 +117,12 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
                 // Route::put('/{classroomSubject}', [ClassroomSubjectController::class, 'update'])->name('update');
                 Route::delete('/{classroomSubject}', [ClassroomSubjectController::class, 'destroy'])->name('destroy');
                 Route::post('/bulk-destroy', [ClassroomSubjectController::class, 'bulkDestroy'])->name('bulk-destroy');
+
+                Route::prefix('/{classroomSubject}/summatives')->name('summatives.')->group(function () {
+                    Route::get('', [SummativeController::class, 'index'])->name('index');
+                    Route::get('/create', [SummativeController::class, 'create'])->name('create');
+                    Route::post('', [SummativeController::class, 'store'])->name('store');
+                });
             });
         });
 

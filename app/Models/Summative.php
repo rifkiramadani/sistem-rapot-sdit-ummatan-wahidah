@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,16 +17,29 @@ class Summative extends Model
         'name',
         'description',
         'identifier',
-        'subject_id',
+        'classroom_subject_id',
         'summative_type_id',
     ];
+
+    public function scopeQ(Builder $query, string $search): Builder
+    {
+        $searchLower = strtolower($search);
+
+        return $query->where(function (Builder $subQuery) use ($searchLower) {
+            $subQuery->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"])
+                ->orWhereRaw('LOWER(identifier) LIKE ?', ["%{$searchLower}%"])
+                ->orWhereHas('summativeType', function ($typeQuery) use ($searchLower) {
+                    $typeQuery->whereRaw('LOWER(name) LIKE ?', ["%{$searchLower}%"]);
+                });
+        });
+    }
 
     /**
      * Mendapatkan mata pelajaran (subject) dari sumatif ini.
      */
-    public function subject(): BelongsTo // TODO: change to classroomSubject
+    public function classroomSubject(): BelongsTo // <-- Diubah
     {
-        return $this->belongsTo(Subject::class);
+        return $this->belongsTo(ClassroomSubject::class);
     }
 
     /**
