@@ -1,17 +1,19 @@
 <?php
 
-use App\Http\Controllers\Protected\ClassroomController;
-use App\Http\Controllers\Protected\ClassroomStudentController;
-use App\Http\Controllers\Protected\ClassroomSubjectController;
-use App\Http\Controllers\Protected\SchoolAcademicYearController;
-use App\Http\Controllers\Protected\SchoolController;
-use App\Http\Controllers\Protected\TeacherController;
-use App\Models\SchoolAcademicYear;
 use Inertia\Inertia;
 use App\Models\AcademicYear;
+use App\Models\SchoolAcademicYear;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Protected\SchoolController;
+use App\Http\Controllers\Protected\SchoolAcademicYear\StudentController;
+use App\Http\Controllers\Protected\SubjectController;
+use App\Http\Controllers\Protected\SchoolAcademicYear\TeacherController;
+use App\Http\Controllers\Protected\SchoolAcademicYear\ClassroomController;
 use App\Http\Controllers\Protected\AcademicYearController;
-use App\Http\Controllers\Protected\StudentController;
+use App\Http\Controllers\Protected\SchoolAcademicYear\ClassroomStudentController;
+use App\Http\Controllers\Protected\SchoolAcademicYear\ClassroomSubjectController;
+use App\Http\Controllers\Protected\SchoolAcademicYearController;
+use App\Http\Controllers\Protected\SchoolAcademicYear\SummativeController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
