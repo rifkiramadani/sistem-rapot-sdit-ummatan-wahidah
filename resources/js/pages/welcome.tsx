@@ -2,7 +2,6 @@ import * as React from "react";
 import { HandHelping, Users, Zap } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Button } from "@/components/ui/button";
@@ -71,76 +70,83 @@ const Welcome = () => {
         <>
             <Head title="Sistem Informasi Rapor SDIT Ummatan Wahidah" />
 
-            <div className="relative min-h-screen flex flex-col items-center justify-center opacity-100 transition-opacity duration-750 starting:opacity-0 lg:grow">
-                <div className="absolute inset-0 w-full h-full overflow-hidden">
+            <div className="relative min-h-screen flex flex-col items-center justify-center opacity-100 transition-opacity duration-750 starting:opacity-0">
+                {/* Background Carousel - Menggunakan min-h-screen untuk cover penuh */}
+                <div className="absolute inset-0 w-full min-h-screen overflow-hidden z-0">
                     <Carousel className="w-full h-full" setApi={setApi}>
-                        <CarouselContent className="w-[1550px] h-[800px]">
+                        <CarouselContent className="w-full h-full">
                             {guruImages.map((imageSrc, index) => (
                                 <CarouselItem key={index} className="w-full h-full">
-                                    <div
-                                        className="relative w-full h-full bg-cover bg-center"
-                                        style={{ backgroundImage: `url(${imageSrc})` }}
-                                    >
+                                    <div className="relative w-full h-full min-h-screen">
+                                        <img
+                                            src={imageSrc}
+                                            alt={`Background ${index + 1}`}
+                                            className="w-full h-full min-h-screen object-cover"
+                                        />
                                         <div className="absolute inset-0 bg-black opacity-50 md:opacity-60 lg:opacity-70"></div>
                                     </div>
                                 </CarouselItem>
                             ))}
                         </CarouselContent>
-                        <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-20" />
-                        <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-20" />
+                        <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white border-white hover:bg-white/20" />
+                        <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white border-white hover:bg-white/20" />
                     </Carousel>
                 </div>
 
-                <section className="relative z-10 py-10 text-white dark:text-white">
-                    <div className="container overflow-hidden">
+                {/* Content Section - Menggunakan min-h-screen dan padding yang cukup */}
+                <section className="relative z-10 w-full min-h-screen flex items-center py-10">
+                    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="flex flex-col items-center gap-6 text-center">
-                            <div className='flex flex-col md:flex-row justify-center items-center gap-5 mb-5'>
+                            <div className='flex flex-col md:flex-row justify-center items-center gap-5 mb-8'>
                                 <img
                                     src="/assets/logo/sdit_ummatan_wahidah_logo.png"
                                     alt="Logo SDIT Ummatan Wahidah"
-                                    className="w-45 h-45 object-contain"
+                                    className="w-32 h-32 md:w-45 md:h-45 object-contain"
                                 />
                                 <img
                                     src="/assets/logo/yayasan_assalam_logo.png"
                                     alt="Logo Yayasan Assalam"
-                                    className="w-40 h-40 object-contain mt-3"
+                                    className="w-28 h-28 md:w-40 md:h-40 object-contain"
                                 />
                             </div>
-                            <div>
-                                <Badge className="mb-3" variant="outline"><span className="text-white">Yayasan As-salam Curup</span></Badge>
-                                <h1 className="text-5xl mb-3 font-extrabold uppercase bg-clip-text text-transparent bg-gradient-to-r from-[#1DF01A] from-30% to-[#0E9351] to-70%">
-                                    Selamat Datang di Sistem Informasi <br /> Rapor SDIT Ummatan Wahidah
+                            <div className="max-w-4xl">
+                                <Badge className="mb-6 px-4 py-2" variant="outline">
+                                    <span className="text-white text-sm md:text-base">Yayasan As-salam Curup</span>
+                                </Badge>
+                                <h1 className="text-3xl md:text-4xl lg:text-5xl mb-6 font-extrabold uppercase bg-clip-text text-transparent bg-gradient-to-r from-[#1DF01A] from-30% to-[#0E9351] to-70%">
+                                    Selamat Datang di Sistem Informasi <br className="hidden" /> Rapor SDIT Ummatan Wahidah
                                 </h1>
-                                <p className="mb-5 text-center uppercase text-gray-200 dark:text-gray-300">
-                                    Sistem Informasi rapor SDIT Ummatan Wahidah adalah <br />
+                                <p className="mb-8 text-center uppercase text-gray-200 dark:text-gray-300 text-sm md:text-base lg:text-lg">
+                                    Sistem Informasi Rapor SDIT Ummatan Wahidah adalah <br className="hidden md:block" />
                                     aplikasi berbasis website untuk manajemen nilai sumatif akhir siswa.
                                 </p>
                             </div>
                         </div>
 
-                        <div className="flex w-full items-center justify-center">
-                            <main className="flex justify-center w-full max-w-[335px] flex-col-reverse lg:max-w-4xl lg:flex-row">
-                                <ul className="flex justify-center gap-3 text-sm leading-normal">
+                        {/* Buttons Section */}
+                        <div className="flex w-full items-center justify-center mt-8 mb-12">
+                            <div className="flex justify-center w-full max-w-md">
+                                <ul className="flex flex-col sm:flex-row justify-center gap-4 text-sm leading-normal w-full">
                                     {auth.user ? (
-                                        <li>
-                                            <Link href={route('protected.dashboard.index')}>
-                                                <Button className='hover:bg-gray-700 hover:text-white'>
+                                        <li className="w-full sm:w-auto">
+                                            <Link href={route('protected.dashboard.index')} className="w-full block">
+                                                <Button className='w-full hover:bg-gray-700 hover:text-white bg-[#773DCE] text-white py-2 px-6'>
                                                     Kembali Ke Dashboard
                                                 </Button>
                                             </Link>
                                         </li>
                                     ) : (
                                         <>
-                                            <li>
-                                                    <Link href={route('login')}>
-                                                        <Button className='w-50 bg-[#773DCE] text-white hover:bg-[#3D138C] hover:text-white dark:hover:bg-[#3D138C] dark:hover:text-white'>
+                                                <li className="w-full sm:w-auto">
+                                                    <Link href={route('login')} className="w-full block">
+                                                        <Button className='w-full bg-[#773DCE] text-white hover:bg-[#3D138C] hover:text-white dark:hover:bg-[#3D138C] dark:hover:text-white py-2 px-6'>
                                                         Masuk
                                                     </Button>
                                                 </Link>
                                             </li>
-                                            <li>
-                                                    <Link href={route('register')}>
-                                                        <Button className='w-50 bg-[#773DCE] text-white hover:bg-[#3D138C] hover:text-white dark:hover:bg-[#3D138C] dark:hover:text-white'>
+                                                <li className="w-full sm:w-auto">
+                                                    <Link href={route('register')} className="w-full block">
+                                                        <Button className='w-full bg-[#773DCE] text-white hover:bg-[#3D138C] hover:text-white dark:hover:bg-[#3D138C] dark:hover:text-white py-2 px-6'>
                                                         Daftar
                                                     </Button>
                                                 </Link>
@@ -148,31 +154,24 @@ const Welcome = () => {
                                         </>
                                     )}
                                 </ul>
-                            </main>
+                            </div>
                         </div>
 
-                        <div className="mx-auto mt-10 flex max-w-5xl flex-col md:flex-row text-black dark:text-white">
+                        {/* Features Section - Diposisikan lebih ke atas */}
+                        <div className="mx-auto max-w-6xl flex flex-col md:flex-row text-black dark:text-white gap-6 md:gap-6">
                             {features.map((feature, index) => (
-                                <React.Fragment key={feature.title}>
-                                    {index > 0 && (
-                                        <Separator
-                                            orientation="vertical"
-                                            className="mx-6 hidden h-auto w-[2px] bg-linear-to-b from-muted via-transparent to-muted md:block"
-                                        />
-                                    )}
-                                    <div
-                                        key={index}
-                                        className="flex grow basis-0 flex-col rounded-md bg-background/50 p-4"
-                                    >
-                                        <div className="mb-6 flex size-10 items-center justify-center rounded-full bg-background/50 drop-shadow-lg">
-                                            {feature.icon}
-                                        </div>
-                                        <h3 className="mb-2 font-semibold">{feature.title}</h3>
-                                        <p className="text-sm text-black dark:text-gray-300">
-                                            {feature.description}
-                                        </p>
+                                <div
+                                    key={index}
+                                    className="flex flex-col rounded-lg bg-background/80 backdrop-blur-sm p-6 flex-1 shadow-lg border border-white/20"
+                                >
+                                    <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-white/20 drop-shadow-lg">
+                                        {feature.icon}
                                     </div>
-                                </React.Fragment>
+                                    <h3 className="mb-3 font-semibold text-lg text-white">{feature.title}</h3>
+                                    <p className="text-sm text-gray-200 leading-relaxed">
+                                        {feature.description}
+                                    </p>
+                                </div>
                             ))}
                         </div>
                     </div>
