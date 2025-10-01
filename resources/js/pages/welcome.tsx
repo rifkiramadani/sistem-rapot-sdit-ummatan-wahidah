@@ -74,11 +74,8 @@ const Welcome = () => {
                             <div className="absolute inset-0 bg-black opacity-50 md:opacity-60 lg:opacity-70"></div>
                         </div>
                     ))}
-                    {/* HAPUS SEMUA TOMBOL CAROUSEL DI SINI */}
                 </div>
 
-                {/* Content Section | Z-index: z-10 */}
-                {/* Tidak perlu lagi pointer-events-none/auto karena tombol bermasalah sudah dihapus! */}
                 <div className="relative z-10 min-h-screen w-full flex items-center py-10">
                     <section className="w-full">
                         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -96,13 +93,13 @@ const Welcome = () => {
                                     />
                                 </div>
                                 <div className="max-w-4xl">
-                                    <Badge className="mb-6 px-4 py-2" variant="outline">
-                                        <span className="text-white text-sm md:text-base">Yayasan As-salam Curup</span>
+                                    <Badge className="mb-6 px-4 py-2" variant="default">
+                                        <span className="text-dark text-sm md:text-base">Yayasan As-salam Curup</span>
                                     </Badge>
                                     <h1 className="text-3xl md:text-4xl lg:text-5xl mb-6 font-extrabold uppercase bg-clip-text text-transparent bg-gradient-to-r from-[#1DF01A] from-30% to-[#0E9351] to-70%">
                                         Selamat Datang di Sistem Informasi Rapor SDIT Ummatan Wahidah
                                     </h1>
-                                    <p className="mb-8 text-center uppercase text-gray-200 dark:text-gray-300 text-sm md:text-base lg:text-lg">
+                                    <p className="mb-3 text-center uppercase text-gray-200 dark:text-gray-300 text-sm md:text-base lg:text-lg">
                                         Sistem Informasi Rapor SDIT Ummatan Wahidah adalah <br className="hidden md:block" />
                                         aplikasi berbasis website untuk manajemen nilai sumatif akhir siswa.
                                     </p>
@@ -125,14 +122,14 @@ const Welcome = () => {
                                             <>
                                                     <li className="w-full sm:w-auto">
                                                         <Link href={route('login')} className="w-full block">
-                                                            <Button className='w-full bg-[#773DCE] text-white hover:bg-[#3D138C] hover:text-white dark:hover:bg-[#3D138C] dark:hover:text-white py-2 px-6'>
+                                                            <Button className='w-full bg-[#773DCE] text-white hover:bg-[#3D138C] hover:text-white dark:hover:bg-[#3D138C] dark:hover:text-white py-2 px-15'>
                                                                 Masuk
                                                             </Button>
                                                         </Link>
                                                     </li>
                                                 <li className="w-full sm:w-auto">
                                                     <Link href={route('register')} className="w-full block">
-                                                        <Button className='w-full bg-[#773DCE] text-white hover:bg-[#3D138C] hover:text-white dark:hover:bg-[#3D138C] dark:hover:text-white py-2 px-6'>
+                                                            <Button className='w-full bg-[#773DCE] text-white hover:bg-[#3D138C] hover:text-white dark:hover:bg-[#3D138C] dark:hover:text-white py-2 px-15'>
                                                             Daftar
                                                         </Button>
                                                     </Link>
