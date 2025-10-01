@@ -8,14 +8,12 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Show the login page.
-     */
     public function create(Request $request): Response
     {
         return Inertia::render('auth/login', [
@@ -24,11 +22,15 @@ class AuthenticatedSessionController extends Controller
         ]);
     }
 
-    /**
-     * Handle an incoming authentication request.
-     */
     public function store(LoginRequest $request): RedirectResponse
     {
+        Log::info('Login attempt received', [
+            'email' => $request->email,
+            'role_selected' => $request->role,
+            'ip' => $request->ip(),
+        ]);
+
+        // Otentikasi dan pengecekan role terjadi di LoginRequest
         $request->authenticate();
 
         $request->session()->regenerate();
@@ -36,9 +38,6 @@ class AuthenticatedSessionController extends Controller
         return redirect()->intended(route('protected.dashboard.index', absolute: false));
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
