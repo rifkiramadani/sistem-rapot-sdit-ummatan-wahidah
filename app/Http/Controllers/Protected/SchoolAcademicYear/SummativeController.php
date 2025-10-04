@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Classroom;
 use App\Models\ClassroomSubject;
 use App\Models\SchoolAcademicYear;
+use App\Models\StudentSummative;
 use App\Models\Summative;
 use App\Models\SummativeType;
 use App\QueryFilters\Filter;
@@ -110,28 +111,117 @@ class SummativeController extends Controller
 
     public function values(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
     {
-        $request->validate([
-            'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
-            'sort_by' => 'sometimes|string|in:name,identifier',
-            'sort_direction' => 'sometimes|string|in:asc,desc',
-            'filter' => 'sometimes|array',
-            'filter.q' => 'sometimes|string|nullable',
-        ]);
-
         $classroomSubject->load('subject');
 
-        $summatives = QueryBuilder::for($classroomSubject->summatives()->with('summativeType'))
-            ->through([
-                Filter::class,
-                Sort::class,
-            ])
-            ->paginate();
+        // 1. Ambil semua siswa di kelas ini
+        $students = $classroom->classroomStudents()->with('student')->get()->pluck('student');
+
+        // 2. Ambil semua sumatif untuk mata pelajaran ini, diurutkan
+        $summatives = $classroomSubject->summatives()->with('summativeType')->orderBy('created_at', 'asc')->get();
+
+        // 3. Ambil semua nilai siswa yang relevan dalam satu query
+        $studentIds = $students->pluck('id');
+        $summativeIds = $summatives->pluck('id');
+
+        $scores = StudentSummative::whereIn('student_id', $studentIds)
+            ->whereIn('summative_id', $summativeIds)
+            ->get()
+            ->keyBy(function ($item) {
+                return $item->student_id . '-' . $item->summative_id;
+            });
+
+        // 4. Transformasi data menjadi struktur yang diinginkan frontend
+        $studentData = $students->map(function ($student) use ($summatives, $scores) {
+            $studentSummatives = [];
+            $allScores = []; // Untuk menghitung Nilai Rapor (NR)
+
+            // Kelompokkan sumatif berdasarkan jenisnya
+            $summativesByType = $summatives->groupBy('summativeType.name');
+
+            foreach ($summativesByType as $typeName => $typeSummatives) {
+                $values = $typeSummatives->map(function ($summative) use ($student, $scores) {
+                    $score = $scores->get($student->id . '-' . $summative->id);
+                    return [
+                        'id' => $summative->id,
+                        'name' => $summative->name,
+                        'identifier' => $summative->identifier,
+                        'score' => $score ? (int) $score->value : null,
+                    ];
+                });
+
+                $validScores = $values->pluck('score')->filter(fn($s) => !is_null($s));
+                $mean = $validScores->avg() ?? 0;
+                $allScores[] = $mean;
+
+                $studentSummatives[$typeName] = [
+                    'values' => $values,
+                    'mean' => round($mean, 1),
+                ];
+            }
+
+            // Menentukan deskripsi
+            $materiScores = collect($studentSummatives[DefaultSummativeTypeEnum::MATERI->value]['values'] ?? []);
+            $highestScore = $materiScores->whereNotNull('score')->sortByDesc('score')->first();
+            $lowestScore = $materiScores->whereNotNull('score')->sortBy('score')->first();
+
+            $highestSummative = $highestScore ? $summatives->find($highestScore['id']) : null;
+            $lowestSummative = $lowestScore ? $summatives->find($lowestScore['id']) : null;
+
+            return [
+                'id' => $student->id,
+                'nisn' => $student->nisn,
+                'nomorInduk' => $student->id_number,
+                'name' => $student->name,
+                'nr' => round(collect($allScores)->avg() ?? 0),
+                'summatives' => $studentSummatives,
+                'description' => [
+                    'Materi Unggul' => $highestSummative->name ?? null,
+                    'Materi Kurang' => $lowestSummative->name ?? null,
+                    'Materi Paling Menonjol' => $highestSummative->prominent ?? null,
+                    'Materi Yang Perlu Ditingkatkan' => $lowestSummative->improvement ?? null,
+                ],
+            ];
+        });
 
         return Inertia::render('protected/school-academic-years/classrooms/subjects/summatives/values', [
             'schoolAcademicYear' => $schoolAcademicYear,
             'classroom' => $classroom,
             'classroomSubject' => $classroomSubject,
-            'summatives' => $summatives,
+            'studentSummativeValues' => $studentData, // <-- Kirim data yang sudah di-transformasi
+        ]);
+    }
+
+    public function updateValue(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
+    {
+        // 1. Validasi data yang masuk
+        $validated = $request->validate([
+            'student_id' => ['required', 'ulid', Rule::exists('students', 'id')],
+            'summative_id' => [
+                'required',
+                'ulid',
+                // Pastikan summative_id yang dikirim benar-benar milik classroomSubject ini
+                Rule::exists('summatives', 'id')->where('classroom_subject_id', $classroomSubject->id)
+            ],
+            'value' => ['required', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        // 2. Gunakan updateOrCreate untuk efisiensi
+        // Mencari berdasarkan student_id dan summative_id
+        // Memperbarui atau membuat dengan 'value' yang baru
+        $studentSummative = StudentSummative::updateOrCreate(
+            [
+                'student_id' => $validated['student_id'],
+                'summative_id' => $validated['summative_id'],
+            ],
+            [
+                'value' => $validated['value'],
+            ]
+        );
+
+        // 3. Kirim respons JSON yang berhasil
+        return response()->json([
+            'message' => 'Nilai berhasil disimpan.',
+            'data' => $studentSummative,
         ]);
     }
 

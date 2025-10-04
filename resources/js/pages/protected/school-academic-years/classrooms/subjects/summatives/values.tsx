@@ -8,16 +8,43 @@ import { SummativesPaginated } from '@/types/models/summatives';
 import { Head, Link } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { SummativesTable } from './_components/summatives-table';
-import App from './_components/student-summatives-value';
+import { buildTableDefinitionFromData, StudentSummativeValues } from './_components/student-summatives-value';
+
+type SummativeValue = {
+    id: string;
+    name: string;
+    identifier: string | null;
+    score: number | null;
+};
+
+type SummativeCategory = {
+    values: SummativeValue[];
+    mean: number;
+};
+
+export type StudentData = {
+    id: string;
+    nisn: string;
+    nomorInduk: string;
+    name: string;
+    nr: number;
+    summatives: {
+        [key: string]: SummativeCategory;
+    };
+    description: {
+        [key: string]: string;
+    };
+};
 
 interface IndexProps {
     summatives: SummativesPaginated;
     classroomSubject: ClassroomSubject;
     schoolAcademicYear: SchoolAcademicYear;
     classroom: Classroom;
+    studentSummativeValues: StudentData[]
 }
 
-export default function Index({ summatives, classroomSubject, schoolAcademicYear, classroom }: IndexProps) {
+export default function Index({ summatives, classroomSubject, schoolAcademicYear, classroom, studentSummativeValues }: IndexProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Dashboard',
@@ -58,6 +85,18 @@ export default function Index({ summatives, classroomSubject, schoolAcademicYear
         },
     ];
 
+    const routeParams = {
+        schoolAcademicYear: schoolAcademicYear.id, // atau schoolAcademicYear saja, sesuaikan dengan data Anda
+        classroom: classroom.id, // atau classroom saja
+        classroomSubject: classroomSubject.id, // atau classroomSubject saja
+    };
+
+    // Panggil buildTableDefinitionFromData dengan parameter tambahan
+    const { headerRows, dataColumns } = buildTableDefinitionFromData(
+        studentSummativeValues[0],
+        routeParams
+    );
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Mapel di Kelas ${classroom.name}`} />
@@ -77,7 +116,7 @@ export default function Index({ summatives, classroomSubject, schoolAcademicYear
                             </Button>
                         </Link>
 
-                        <App />
+                        <StudentSummativeValues studentData={studentSummativeValues} headerRows={headerRows} dataColumns={dataColumns} />
                     </div>
                 </div>
             </div>

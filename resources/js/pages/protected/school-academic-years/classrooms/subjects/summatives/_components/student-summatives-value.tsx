@@ -1,9 +1,7 @@
-import React, { FC, useState, useMemo, ReactNode } from 'react';
+import React, { FC, useState, useMemo } from 'react';
 import { Edit } from "lucide-react";
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
-
-// --- Komponen UI dari ShadCN ---
 import {
     Table,
     TableBody,
@@ -37,39 +35,19 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { StudentData } from '../values';
+import { cn } from '@/lib/utils';
+import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
+import { toast } from 'sonner';
+import { router } from '@inertiajs/react';
 
-
-// --- Utility Function (biasanya dari lib/utils) ---
-export function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs))
+// Tipe untuk parameter route
+type RouteParams = {
+    schoolAcademicYear: number | string;
+    classroom: number | string;
+    classroomSubject: number | string;
 }
-
-// --- Definisi Tipe Data ---
-type SummativeValue = {
-    id: string;
-    name: string;
-    identifier: string | null;
-    score: number | null;
-};
-
-type SummativeCategory = {
-    values: SummativeValue[];
-    mean: number;
-};
-
-type StudentData = {
-    id: string;
-    nisn: string;
-    nomorInduk: string;
-    name: string;
-    nr: number;
-    summatives: {
-        [key: string]: SummativeCategory;
-    };
-    description: {
-        [key: string]: string;
-    };
-};
 
 type HeaderCell = {
     id: string;
@@ -91,24 +69,46 @@ type DataColumn = {
 };
 
 // --- Komponen Sel Tambahan ---
-const EditableCell: FC<{ student: StudentData; summativeKey: string; valueIndex: number; }> = ({ student, summativeKey, valueIndex }) => {
+const EditableCell: FC<{
+    student: StudentData;
+    summativeKey: string;
+    valueIndex: number;
+    // Tambahkan props untuk parameter route
+    routeParams: RouteParams;
+}> = ({ student, summativeKey, valueIndex, routeParams }) => {
+
     const summativeValue = student.summatives[summativeKey].values[valueIndex];
     const initialValue = summativeValue.score;
     const [open, setOpen] = useState(false);
     const [currentValue, setCurrentValue] = useState(initialValue?.toString() ?? "");
 
+    // Gunakan parameter dari props untuk membuat URL
+    const routeUrl = route(
+        'protected.school-academic-years.classrooms.subjects.summatives.update-value',
+        routeParams
+    );
+
+    const mutation = useMutation({
+        mutationFn: (newValue: string) => {
+            return axios.post(routeUrl, {
+                student_id: student.id,
+                summative_id: summativeValue.id,
+                value: newValue,
+            });
+        },
+        onSuccess: () => {
+            setOpen(false);
+            toast.success('Nilai berhasil diperbarui!');
+            router.reload(); // Gunakan preserveState agar tidak kehilangan state seperti pencarian
+        },
+        onError: (error) => {
+            console.error("Gagal memperbarui nilai:", error);
+            toast.error("Terjadi kesalahan saat menyimpan nilai.");
+        }
+    });
+
     const handleUpdate = () => {
-        alert(
-            `Data Diperbarui (Simulasi):
---------------------------
-Siswa ID: ${student.id}
-Nama Siswa: ${student.name}
-Sumatif: ${summativeKey}
-Nilai ID: ${summativeValue.id}
-Materi/Tipe: ${summativeValue.name}
-Nilai Baru: ${currentValue}`
-        );
-        setOpen(false); // Menutup dialog setelah simpan
+        mutation.mutate(currentValue);
     };
 
     return (
@@ -122,9 +122,9 @@ Nilai Baru: ${currentValue}`
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Ubah Nilai</DialogTitle>
+                    <DialogTitle>Edit Nilai: {student.name}</DialogTitle>
                     <DialogDescription>
-                        Mengubah nilai untuk siswa <strong>{student.name}</strong> pada materi <strong>{summativeValue.name}</strong> ({summativeKey}).
+                        Anda sedang mengubah nilai untuk {summativeKey} - {summativeValue.name}.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
@@ -134,55 +134,28 @@ Nilai Baru: ${currentValue}`
                         </Label>
                         <Input
                             id="score"
-                            type="number"
                             value={currentValue}
                             onChange={(e) => setCurrentValue(e.target.value)}
                             className="col-span-3"
-                            onKeyDown={(e) => e.key === 'Enter' && handleUpdate()}
+                            autoFocus
                         />
                     </div>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setOpen(false)}>Batal</Button>
-                    <Button onClick={handleUpdate}>Simpan Perubahan</Button>
+                    <Button onClick={handleUpdate} disabled={mutation.isPending}>
+                        {mutation.isPending ? 'Menyimpan...' : 'Simpan Perubahan'}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 };
 
-// --- DATA UTAMA (Single Source of Truth) ---
-const initialStudentData: StudentData[] = [
-    {
-        id: 'student-1',
-        nisn: '',
-        nomorInduk: '13131097134',
-        name: 'Aisyah Aqila Ahda',
-        nr: 78,
-        summatives: {
-            'Sumatif Materi': {
-                values: [
-                    { id: 'm1', name: 'M1', identifier: 'ISLAM', score: 69 }, { id: 'm2', name: 'M2', identifier: 'ISLAM', score: 75 }, { id: 'm3', name: 'M3', identifier: 'ISLAM', score: 88 }, { id: 'm4', name: 'M4', identifier: 'ISLAM', score: 69 }, { id: 'm5', name: 'M5', identifier: 'ISLAM', score: 88 },
-                    { id: 'm6', name: 'M6', identifier: 'KRISTEN', score: null }, { id: 'm7', name: 'M7', identifier: 'KRISTEN', score: null }, { id: 'm8', name: 'M8', identifier: 'KRISTEN', score: null }, { id: 'm9', name: 'M9', identifier: 'KRISTEN', score: null }, { id: 'm10', name: 'M10', identifier: 'KRISTEN', score: null },
-                    { id: 'm11', name: 'M11', identifier: 'KATOLIK', score: null }, { id: 'm12', name: 'M12', identifier: 'KATOLIK', score: null }, { id: 'm13', name: 'M13', identifier: 'KATOLIK', score: null }, { id: 'm14', name: 'M14', identifier: 'KATOLIK', score: null }, { id: 'm15', name: 'M15', identifier: 'KATOLIK', score: null }, { id: 'm16', name: 'M16', identifier: 'KATOLIK', score: null }
-                ],
-                mean: 77.8
-            },
-            'Sumatif Tengah Semester': {
-                values: [{ id: 'sts-tes', name: 'TES', identifier: null, score: 69 }, { id: 'sts-nontes', name: 'NONTES', identifier: null, score: 69 }],
-                mean: 69
-            },
-            'Sumatif Akhir Semester': {
-                values: [{ id: 'sas-tes', name: 'TES', identifier: null, score: 88 }, { id: 'sas-nontes', name: 'NONTES', identifier: null, score: 88 }],
-                mean: 88
-            }
-        },
-        description: { 'Materi Unggul': 'M3', 'Materi Kurang': 'M1', 'Materi Paling Menonjol': 'Menunjukkan penguasaan yang baik tentang memahami makna menghargai berbagai perbedaan (suku, agama, dan pendapat)', 'Materi Yang Perlu Ditingkatkan': "Perlu bantuan pemahaman mengenai memahami makna isi pokok surah al-'Alaq dengan benar" }
-    },
-];
 
 // --- FUNGSI UNTUK MEMBUAT DEFINISI TABEL SECARA DINAMIS ---
-const buildTableDefinitionFromData = (sampleStudent: StudentData | undefined): { headerRows: HeaderCell[][]; dataColumns: DataColumn[] } => {
+// Tambahkan parameter `routeParams` di sini
+export const buildTableDefinitionFromData = (sampleStudent: StudentData | undefined, routeParams: RouteParams): { headerRows: HeaderCell[][]; dataColumns: DataColumn[] } => {
     if (!sampleStudent) return { headerRows: [], dataColumns: [] };
 
     const summativeKeys = Object.keys(sampleStudent.summatives);
@@ -191,6 +164,7 @@ const buildTableDefinitionFromData = (sampleStudent: StudentData | undefined): {
     const dataColumns: DataColumn[] = [];
     let dataColumnIndex = 0;
 
+    // ... (kode untuk 'no', 'nomorInduk', 'namaSiswa' tetap sama) ...
     headerRows[0].push(
         { id: 'no', label: 'No', rowSpan: 3, isSticky: true, position: 'left-0', width: 'w-[40px]', minWidth: 'min-w-[40px]' },
         { id: 'nomorInduk', label: 'Nomor Induk', rowSpan: 3, isSticky: true, position: 'left-[40px]', width: 'w-[150px]', minWidth: 'min-w-[150px]' },
@@ -225,7 +199,8 @@ const buildTableDefinitionFromData = (sampleStudent: StudentData | undefined): {
                 headerRows[2].push({ id: m.name, label: m.name, className: 'text-center font-normal' });
                 dataColumns.push({
                     id: `${key}-${m.name}`, dataIndex: dataColumnIndex++,
-                    renderCell: (s: StudentData) => <EditableCell student={s} summativeKey={key} valueIndex={i} />
+                    // Teruskan `routeParams` ke EditableCell
+                    renderCell: (s: StudentData) => <EditableCell student={s} summativeKey={key} valueIndex={i} routeParams={routeParams} />
                 });
             });
         } else {
@@ -233,11 +208,12 @@ const buildTableDefinitionFromData = (sampleStudent: StudentData | undefined): {
                 headerRows[1].push({ id: `${key}${v.name}`, label: v.name.toUpperCase(), rowSpan: 2, className: 'text-center align-middle' });
                 dataColumns.push({
                     id: `${key}-${v.name}`, dataIndex: dataColumnIndex++,
-                    renderCell: (s: StudentData) => <EditableCell student={s} summativeKey={key} valueIndex={i} />
+                    // Teruskan `routeParams` ke EditableCell
+                    renderCell: (s: StudentData) => <EditableCell student={s} summativeKey={key} valueIndex={i} routeParams={routeParams} />
                 });
             });
         }
-
+        // ... (sisa kode buildTableDefinitionFromData tetap sama) ...
         const meanLabel = isMateri ? '(S)' : 'NA';
         headerRows[1].push({ id: `${key}Mean`, label: meanLabel, rowSpan: 2, tooltip: `Rata-rata ${key}`, className: 'text-center font-bold align-middle' });
         dataColumns.push({
@@ -279,10 +255,9 @@ const buildTableDefinitionFromData = (sampleStudent: StudentData | undefined): {
 };
 
 
-const { headerRows, dataColumns } = buildTableDefinitionFromData(initialStudentData[0]);
-
-const App: FC = () => {
-    const [studentData, setStudentData] = useState<StudentData[]>(initialStudentData);
+// Komponen StudentSummativeValues tidak perlu diubah sama sekali
+export const StudentSummativeValues = ({ studentData, headerRows, dataColumns }: { studentData: StudentData[], headerRows: HeaderCell[][], dataColumns: DataColumn[] }) => {
+    // ... (kode di dalam komponen ini tetap sama) ...
     const [searchTerm, setSearchTerm] = useState<string>('');
 
     const filteredData = useMemo(() => {
@@ -373,6 +348,3 @@ const App: FC = () => {
         </div>
     );
 };
-
-export default App;
-
