@@ -12,7 +12,7 @@ import { SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { Summative, SummativesPaginated } from '@/types/models/summatives';
 import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
 import { Pencil, Trash2, Trophy } from 'lucide-react';
-import { SummativesTableFilters } from './summatibes-table-filters';
+import { SummativesTableFilters } from './summatives-table-filters';
 
 export const getColumns = (
     schoolAcademicYear: SchoolAcademicYear,

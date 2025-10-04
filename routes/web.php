@@ -123,6 +123,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
                     Route::get('', [SummativeController::class, 'index'])->name('index');
                     Route::get('/create', [SummativeController::class, 'create'])->name('create');
                     Route::post('', [SummativeController::class, 'store'])->name('store');
+                    Route::get('/values', [SummativeController::class, 'values'])->name('values');
                 });
             });
         });

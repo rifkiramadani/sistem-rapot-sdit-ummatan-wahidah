@@ -85,6 +85,36 @@ class SummativeController extends Controller
             ->with('success', 'Sumatif berhasil dibuat.');
     }
 
+    public function values(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
+    {
+        $request->validate([
+            'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
+            'sort_by' => 'sometimes|string|in:name,identifier',
+            'sort_direction' => 'sometimes|string|in:asc,desc',
+            'filter' => 'sometimes|array',
+            'filter.q' => 'sometimes|string|nullable',
+        ]);
+
+        $classroomSubject->load('subject');
+
+        // Sekarang, query summatives dari model Subject yang benar
+        $summatives = QueryBuilder::for($classroomSubject->summatives()->with('summativeType'))
+            ->through([
+                Filter::class,
+                Sort::class,
+            ])
+            ->paginate();
+
+        return Inertia::render('protected/school-academic-years/classrooms/subjects/summatives/values', [
+            'schoolAcademicYear' => $schoolAcademicYear,
+            'classroom' => $classroom,
+            'classroomSubject' => $classroomSubject,
+            'summatives' => $summatives,
+        ]);
+    }
+
+    // 
+
     public function destroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject, Summative $summative)
     {
         // Gate::authorize('delete', $summative);
