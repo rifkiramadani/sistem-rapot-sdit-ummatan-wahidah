@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/tooltip';
 
 // --- Komponen Tambahan untuk Sel yang Bisa Diciutkan ---
-const CollapsibleCell = ({ text }) => {
+const CollapsibleCell = ({ text }: { text: string }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const maxLength = 50; // Jumlah karakter sebelum disembunyikan
 

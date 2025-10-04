@@ -16,6 +16,9 @@ class SummativeFactory extends Factory
         return [
             // Deskripsi tetap menjadi data dasar dari factory.
             'description' => $this->faker->paragraph(),
+            // Menambahkan data palsu untuk kolom baru.
+            'prominent' => 'Menunjukkan penguasaan yang baik tentang ' . $this->faker->sentence(5),
+            'improvement' => 'Perlu bantuan pemahaman mengenai ' . $this->faker->sentence(5),
         ];
     }
 
@@ -38,6 +41,9 @@ class SummativeFactory extends Factory
         return $this->state(fn(array $attributes) => [
             'name' => $name,
             'identifier' => null,
+            // Kosongkan deskripsi prominent/improvement untuk STS
+            'prominent' => null,
+            'improvement' => null,
         ]);
     }
 
@@ -49,6 +55,9 @@ class SummativeFactory extends Factory
         return $this->state(fn(array $attributes) => [
             'name' => $name,
             'identifier' => null,
+            // Kosongkan deskripsi prominent/improvement untuk SAS
+            'prominent' => null,
+            'improvement' => null,
         ]);
     }
 }
