@@ -53,7 +53,7 @@ class SummativeSeeder extends Seeder
                 ->first();
 
             if ($stsType) {
-                foreach (['NONTES', 'TES', 'NA (STS)'] as $name) {
+                foreach (['NONTES', 'TES'] as $name) {
                     Summative::factory()
                         ->asSTS($name)
                         ->create([
@@ -70,7 +70,7 @@ class SummativeSeeder extends Seeder
                 ->first();
 
             if ($sasType) {
-                foreach (['NONTES', 'TES', 'NA (SAS)'] as $name) {
+                foreach (['NONTES', 'TES'] as $name) {
                     Summative::factory()
                         ->asSAS($name)
                         ->create([

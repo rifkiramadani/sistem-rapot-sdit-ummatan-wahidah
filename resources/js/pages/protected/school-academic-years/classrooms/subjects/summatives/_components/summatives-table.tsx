@@ -1,60 +1,76 @@
-import { BulkDeleteAlertDialog } from '@/components/bulk-delete-alert-dialog';
-import { DataTable } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
-import InertiaPagination from '@/components/inertia-pagination';
 import TableTooltipAction from '@/components/table-tooltip-action';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TableMeta } from '@/types';
 import { ClassroomSubject } from '@/types/models/classroom-subjects';
 import { Classroom } from '@/types/models/classrooms';
 import { SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { Summative, SummativesPaginated } from '@/types/models/summatives';
-import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
-import { Pencil, Trash2, Trophy } from 'lucide-react';
+import { ColumnDef, Table as TanstackTable, flexRender, getCoreRowModel, useReactTable, RowSelectionState } from '@tanstack/react-table';
+import { Eye, Pencil, Trash2, Trophy } from 'lucide-react';
+import React, { FC, ReactNode, useState } from 'react';
 import { SummativesTableFilters } from './summatives-table-filters';
+import { BulkDeleteAlertDialog } from '@/components/bulk-delete-alert-dialog';
+import InertiaPagination from '@/components/inertia-pagination';
+import { DataTable } from '@/components/data-table';
+import { router } from '@inertiajs/react';
+
+// --- Komponen Utama ---
 
 export const getColumns = (
     schoolAcademicYear: SchoolAcademicYear,
     classroom: Classroom,
     classroomSubject: ClassroomSubject,
 ): ColumnDef<Summative>[] => [
-    {
-        id: 'select',
-        header: ({ table }) => (
-            <Checkbox
-                checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
-                onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            />
-        ),
-        cell: ({ row }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} />,
-    },
-    { id: 'no', header: 'No.', cell: ({ row, table }) => ((table.options.meta as TableMeta)?.from ?? 0) + row.index },
-    { accessorKey: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Sumatif" /> },
-    { accessorKey: 'identifier', header: ({ column }) => <DataTableColumnHeader column={column} title="Identifier" /> },
-    { accessorFn: (row) => row.summative_type?.name ?? 'N/A', id: 'summative_type', header: 'Jenis' },
-    {
-        id: 'actions',
-        header: 'Aksi',
-        cell: ({ row }) => {
-            const summative = row.original;
-            return (
-                <div className="flex gap-2">
-                    <TableTooltipAction info="Lihat Nilai">
-                        <Button variant="outline" size="icon" onClick={() => alert('Fitur Lihat Nilai akan segera hadir!')}>
-                            <Trophy className="h-4 w-4" />
-                        </Button>
-                    </TableTooltipAction>
-                    <TableTooltipAction info="Edit">
-                        <Button variant="outline" size="icon" onClick={() => alert('Fitur Edit Sumatif akan segera hadir!')}>
-                            <Pencil className="h-4 w-4" />
-                        </Button>
-                    </TableTooltipAction>
-                </div>
-            );
+        {
+            id: 'select',
+            header: ({ table }) => (
+                <Checkbox
+                    checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                />
+            ),
+            cell: ({ row }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} />,
         },
-    },
-];
+        // { id: 'no', header: 'No.', cell: ({ row, table }) => ((table.options.meta as TableMeta)?.from ?? 0) + row.index + 1 },
+        { accessorKey: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Sumatif" /> },
+        { accessorKey: 'identifier', header: ({ column }) => <DataTableColumnHeader column={column} title="Identifier" /> },
+        { accessorFn: (row) => row.summative_type?.name ?? 'N/A', id: 'summative_type', header: 'Jenis' },
+        { accessorKey: 'prominent', header: ({ column }) => <DataTableColumnHeader column={column} title="Menonjol" />, cell: ({ row }) => <div className="w-[200px] truncate">{row.original.prominent}</div> },
+        { accessorKey: 'improvement', header: ({ column }) => <DataTableColumnHeader column={column} title="Peningkatan" />, cell: ({ row }) => <div className="w-[200px] truncate">{row.original.improvement}</div> },
+        {
+            id: 'actions',
+            header: 'Aksi',
+            cell: ({ row }) => {
+                const summative = row.original;
+                return (
+                    <div className="flex gap-2">
+                        <TableTooltipAction info="Lihat Nilai">
+                            <Button variant="outline" size="icon" onClick={() => alert('Fitur Lihat Nilai akan segera hadir!')}>
+                                <Eye className="h-4 w-4" />
+                            </Button>
+                        </TableTooltipAction>
+                        <TableTooltipAction info="Edit">
+                            <Button variant="outline" size="icon" onClick={() =>
+                                router.get(
+                                    route('protected.school-academic-years.classrooms.subjects.summatives.edit', {
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                        classroom: classroom.id,
+                                        classroomSubject: classroomSubject.id,
+                                        summative: summative.id
+                                    }),
+                                )
+                            }>
+                                <Pencil className="h-4 w-4" />
+                            </Button>
+                        </TableTooltipAction>
+                    </div>
+                );
+            },
+        },
+    ];
 
 interface SummativesTableProps {
     summatives: SummativesPaginated;
@@ -66,7 +82,8 @@ interface SummativesTableProps {
 export function SummativesTable({ summatives, schoolAcademicYear, classroom, classroomSubject }: SummativesTableProps) {
     const handleBulkDelete = (table: TanstackTable<Summative>) => {
         const selectedIds = Object.keys(table.getState().rowSelection);
-        // router.post(route('...'), { ids: selectedIds }, { ... });
+        console.log("Menghapus ID:", selectedIds);
+        alert(`Simulasi penghapusan ${selectedIds.length} data sumatif.`);
     };
 
     const columns = getColumns(schoolAcademicYear, classroom, classroomSubject);
@@ -93,3 +110,4 @@ export function SummativesTable({ summatives, schoolAcademicYear, classroom, cla
         </div>
     );
 }
+

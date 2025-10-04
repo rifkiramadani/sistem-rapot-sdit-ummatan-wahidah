@@ -38,7 +38,7 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear, classroom: Cl
         enableSorting: false,
         enableHiding: false,
     },
-    { id: 'no', header: 'No.', cell: ({ row, table }) => ((table.options.meta as TableMeta)?.from ?? 0) + row.index, enableSorting: false },
+    // { id: 'no', header: 'No.', cell: ({ row, table }) => ((table.options.meta as TableMeta)?.from ?? 0) + row.index, enableSorting: false },
     {
         accessorFn: (row) => row.student?.nisn ?? 'N/A',
         id: 'nisn',

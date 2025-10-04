@@ -19,6 +19,8 @@ class Summative extends Model
         'identifier',
         'classroom_subject_id',
         'summative_type_id',
+        'prominent',
+        'improvement',
     ];
 
     public function scopeQ(Builder $query, string $search): Builder

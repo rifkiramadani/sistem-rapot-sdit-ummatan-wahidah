@@ -123,6 +123,9 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
                     Route::get('', [SummativeController::class, 'index'])->name('index');
                     Route::get('/create', [SummativeController::class, 'create'])->name('create');
                     Route::post('', [SummativeController::class, 'store'])->name('store');
+                    // Route::get('/{summative}', [SummativeController::class, 'show'])->name('show');
+                    Route::get('/{summative}/edit', [SummativeController::class, 'edit'])->name('edit');
+                    Route::put('/{summative}', [SummativeController::class, 'update'])->name('update');
                     Route::get('/values', [SummativeController::class, 'values'])->name('values');
                 });
             });

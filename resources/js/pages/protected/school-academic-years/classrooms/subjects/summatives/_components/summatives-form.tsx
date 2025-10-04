@@ -14,7 +14,7 @@ import { Subject } from '@/types/models/subjects';
 import { SummativeType } from '@/types/models/summative-types';
 import { Summative } from '@/types/models/summatives';
 import { useForm } from '@inertiajs/react';
-import { type FormEvent } from 'react';
+import React, { type FormEvent, useState, useEffect, useMemo } from 'react';
 
 interface SummativeFormProps {
     schoolAcademicYear: SchoolAcademicYear;
@@ -33,19 +33,48 @@ export default function SummativeForm({ schoolAcademicYear, classroom, classroom
         identifier: summative?.identifier ?? '',
         description: summative?.description ?? '',
         summative_type_id: summative?.summative_type_id ?? '',
+        prominent: summative?.prominent ?? '',
+        improvement: summative?.improvement ?? '',
     });
+
+    // Tentukan apakah jenis sumatif yang dipilih adalah 'Sumatif Materi'
+    const isMateriType = useMemo(() => {
+        const selectedType = summativeTypes.find(type => type.id === data.summative_type_id);
+        return selectedType?.name === 'Sumatif Materi';
+    }, [data.summative_type_id, summativeTypes]);
+
+    // Hapus data untuk input yang disembunyikan ketika jenis sumatif berubah
+    useEffect(() => {
+        // Hanya jalankan di mode tambah, bukan di mode edit
+        if (!isEditMode && !isMateriType) {
+            setData({
+                ...data,
+                identifier: '',
+                prominent: '',
+                improvement: ''
+            });
+        }
+    }, [isMateriType, isEditMode, setData]);
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
-        if (isEditMode) {
-            // Logika update
+
+        if (isEditMode && summative) {
+            put(
+                route('protected.school-academic-years.classrooms.subjects.summatives.update', {
+                    schoolAcademicYear,
+                    classroom,
+                    classroomSubject,
+                    summative,
+                })
+            );
         } else {
             post(
                 route('protected.school-academic-years.classrooms.subjects.summatives.store', {
                     schoolAcademicYear,
                     classroom,
-                    classroomSubject: classroomSubject,
-                }),
+                    classroomSubject,
+                })
             );
         }
     };
@@ -60,25 +89,13 @@ export default function SummativeForm({ schoolAcademicYear, classroom, classroom
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-2 md:col-span-2">
                         <Label>
-                            Nama Sumatif <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            placeholder="Contoh: Ujian Tengah Semester Ganjil"
-                        />
-                        <InputError message={errors.name} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>Identifier (Opsional)</Label>
-                        <Input value={data.identifier} onChange={(e) => setData('identifier', e.target.value)} placeholder="Contoh: UTS_GANJIL_24" />
-                        <InputError message={errors.identifier} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label>
                             Jenis Sumatif <span className="text-red-500">*</span>
                         </Label>
-                        <Select value={data.summative_type_id} onValueChange={(value) => setData('summative_type_id', value)}>
+                        <Select
+                            value={data.summative_type_id}
+                            onValueChange={(value) => setData('summative_type_id', value)}
+                            disabled={isEditMode}
+                        >
                             <SelectTrigger>
                                 <SelectValue placeholder="Pilih jenis sumatif..." />
                             </SelectTrigger>
@@ -92,6 +109,57 @@ export default function SummativeForm({ schoolAcademicYear, classroom, classroom
                         </Select>
                         <InputError message={errors.summative_type_id} />
                     </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                        <Label>
+                            Nama Sumatif <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                            value={data.name}
+                            onChange={(e) => setData('name', e.target.value)}
+                            placeholder="Contoh: Ujian Tengah Semester Ganjil"
+                        />
+                        <InputError message={errors.name} />
+                    </div>
+
+                    {isMateriType && (
+                        <>
+                            <div className="space-y-2">
+                                <Label>
+                                    Identifier {isMateriType && <span className="text-red-500">*</span>}
+                                </Label>
+                                <Input value={data.identifier ?? ''} onChange={(e) => setData('identifier', e.target.value)} placeholder="Contoh: M1" />
+                                <InputError message={errors.identifier} />
+                            </div>
+
+                            <div className="space-y-2"></div>
+
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>
+                                    Materi Paling Menonjol {isMateriType && <span className="text-red-500">*</span>}
+                                </Label>
+                                <Textarea
+                                    value={data.prominent || ''}
+                                    onChange={(e) => setData('prominent', e.target.value)}
+                                    placeholder="Contoh: Menunjukkan penguasaan yang baik tentang..."
+                                />
+                                <InputError message={errors.prominent} />
+                            </div>
+
+                            <div className="space-y-2 md:col-span-2">
+                                <Label>
+                                    Materi Yang Perlu Ditingkatkan {isMateriType && <span className="text-red-500">*</span>}
+                                </Label>
+                                <Textarea
+                                    value={data.improvement || ''}
+                                    onChange={(e) => setData('improvement', e.target.value)}
+                                    placeholder="Contoh: Perlu bantuan pemahaman mengenai..."
+                                />
+                                <InputError message={errors.improvement} />
+                            </div>
+                        </>
+                    )}
+
                     <div className="space-y-2 md:col-span-2">
                         <Label>Deskripsi (Opsional)</Label>
                         <Textarea
@@ -101,6 +169,7 @@ export default function SummativeForm({ schoolAcademicYear, classroom, classroom
                         />
                         <InputError message={errors.description} />
                     </div>
+
                     <div className="flex justify-end md:col-span-2">
                         <Button type="submit" disabled={processing}>
                             {processing ? 'Menyimpan...' : isEditMode ? 'Simpan Perubahan' : 'Buat Sumatif'}

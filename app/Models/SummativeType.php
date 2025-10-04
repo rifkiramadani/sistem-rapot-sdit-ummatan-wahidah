@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class SummativeType extends Model
 {
@@ -25,8 +26,8 @@ class SummativeType extends Model
         return $this->belongsTo(SchoolAcademicYear::class);
     }
 
-    public function summatives(): HasMany
+    public function summatives(): HasOne
     {
-        return $this->hasMany(Summative::class);
+        return $this->hasOne(Summative::class);
     }
 }
