@@ -13,8 +13,7 @@ import { BookCopy, Pencil, Users } from 'lucide-react';
 interface ShowProps {
     schoolAcademicYear: SchoolAcademicYear;
     classroom: Classroom & {
-        student_classrooms_count: number;
-        student_classrooms: { student: { id: string; name: string } }[];
+        classroom_students: { student: { id: string; name: string } }[];
     };
 }
 
@@ -27,6 +26,7 @@ export default function Show({ schoolAcademicYear, classroom }: ShowProps) {
             href: route('protected.school-academic-years.classrooms.show', { schoolAcademicYear: schoolAcademicYear.id, classroom: classroom.id }),
         },
     ];
+
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -79,7 +79,7 @@ export default function Show({ schoolAcademicYear, classroom }: ShowProps) {
                             <SectionTitle title="Detail Kelas" />
                             <DetailItem label="Nama Kelas" value={classroom.name} className="md:col-span-2" />
                             <DetailItem label="Wali Kelas" value={classroom.teacher?.name} />
-                            <DetailItem label="Jumlah Siswa" value={`${classroom.student_classrooms_count} siswa`} />
+                            <DetailItem label="Jumlah Siswa" value={`${classroom.classroom_students.length} siswa`} />
                         </div>
                     </CardContent>
                 </Card>
