@@ -97,6 +97,8 @@ export default function Index({ summatives, classroomSubject, schoolAcademicYear
         routeParams
     );
 
+    console.log(studentSummativeValues)
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Mapel di Kelas ${classroom.name}`} />

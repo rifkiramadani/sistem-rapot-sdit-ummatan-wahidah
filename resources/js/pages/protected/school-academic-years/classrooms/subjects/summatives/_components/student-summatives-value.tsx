@@ -1,7 +1,6 @@
-import React, { FC, useState, useMemo } from 'react';
-import { Edit } from "lucide-react";
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import React, { FC, useState, useMemo, useRef } from 'react';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 import {
     Table,
     TableBody,
@@ -41,6 +40,7 @@ import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { router } from '@inertiajs/react';
+import { DownloadCloud } from 'lucide-react';
 
 // Tipe untuk parameter route
 type RouteParams = {
@@ -172,7 +172,7 @@ export const buildTableDefinitionFromData = (sampleStudent: StudentData | undefi
     );
     dataColumns.push(
         { id: 'no', dataIndex: dataColumnIndex++, renderCell: (s: StudentData, index: number) => <TableCell className="sticky left-0 bg-white dark:bg-slate-950 z-20 text-center font-medium border-b border-r w-[40px] p-2">{index + 1}</TableCell> },
-        { id: 'nomorInduk', dataIndex: dataColumnIndex++, renderCell: (s: StudentData) => <TableCell className="sticky left-[40px] bg-white dark:bg-slate-950 z-20 border-b border-r min-w-[150px] w-[150px] p-2">{s.nomorInduk}</TableCell> },
+        { id: 'nomorInduk', dataIndex: dataColumnIndex++, renderCell: (s: StudentData) => <TableCell className="sticky left-[40px] bg-white dark:bg-slate-950 z-20 border-b border-r min-w-[150px] w-[150px] p-2">{s.nisn}</TableCell> },
         { id: 'namaSiswa', dataIndex: dataColumnIndex++, renderCell: (s: StudentData) => <TableCell className="sticky left-[190px] bg-white dark:bg-slate-950 z-20 font-semibold text-gray-800 dark:text-gray-200 border-b border-r min-w-[250px] w-[250px] p-2">{s.name}</TableCell> }
     );
 
@@ -213,7 +213,6 @@ export const buildTableDefinitionFromData = (sampleStudent: StudentData | undefi
                 });
             });
         }
-        // ... (sisa kode buildTableDefinitionFromData tetap sama) ...
         const meanLabel = isMateri ? '(S)' : 'NA';
         headerRows[1].push({ id: `${key}Mean`, label: meanLabel, rowSpan: 2, tooltip: `Rata-rata ${key}`, className: 'text-center font-bold align-middle' });
         dataColumns.push({
@@ -259,14 +258,34 @@ export const buildTableDefinitionFromData = (sampleStudent: StudentData | undefi
 export const StudentSummativeValues = ({ studentData, headerRows, dataColumns }: { studentData: StudentData[], headerRows: HeaderCell[][], dataColumns: DataColumn[] }) => {
     // ... (kode di dalam komponen ini tetap sama) ...
     const [searchTerm, setSearchTerm] = useState<string>('');
+    const tableRef = useRef<HTMLTableElement>(null);
 
     const filteredData = useMemo(() => {
         if (!searchTerm) return studentData;
         return studentData.filter(student =>
             student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.nomorInduk.includes(searchTerm)
+            student.nisn.includes(searchTerm)
         );
     }, [searchTerm, studentData]);
+
+    const handleExport = () => {
+        // Pastikan tabel sudah ada di DOM
+        if (!tableRef.current) {
+            toast.error("Tabel tidak ditemukan untuk diekspor.");
+            return;
+        }
+
+        // 1. Konversi elemen tabel HTML langsung menjadi workbook
+        // Fungsi ini secara otomatis menghargai rowspan dan colspan!
+        const workbook = XLSX.utils.table_to_book(tableRef.current, { sheet: "Nilai Siswa" });
+
+        // 2. Buat file buffer dan trigger download (sama seperti sebelumnya)
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8" });
+
+        saveAs(blob, "rekap_nilai_siswa.xlsx");
+        toast.success("Data berhasil diekspor sesuai tampilan!");
+    };
 
     return (
         <div className="bg-gray-50 dark:bg-slate-900 min-h-screen p-4 sm:p-6 lg:p-8">
@@ -284,8 +303,8 @@ export const StudentSummativeValues = ({ studentData, headerRows, dataColumns }:
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
-                            <Button className="w-full sm:w-auto">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-4 w-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
+                            <Button className="w-full sm:w-auto" onClick={handleExport}>
+                                <DownloadCloud />
                                 Ekspor Data
                             </Button>
                         </div>
@@ -293,7 +312,7 @@ export const StudentSummativeValues = ({ studentData, headerRows, dataColumns }:
                     <CardContent>
                         <TooltipProvider>
                             <div className="relative overflow-x-auto border rounded-md">
-                                <Table>
+                                <Table ref={tableRef}>
                                     <TableHeader>
                                         {headerRows.map((row, rowIndex) => (
                                             <TableRow key={`header-row-${rowIndex}`} className="bg-gray-50 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700 border-none">

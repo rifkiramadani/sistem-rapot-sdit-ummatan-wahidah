@@ -170,7 +170,6 @@ class SummativeController extends Controller
             return [
                 'id' => $student->id,
                 'nisn' => $student->nisn,
-                'nomorInduk' => $student->id_number,
                 'name' => $student->name,
                 'nr' => round(collect($allScores)->avg() ?? 0),
                 'summatives' => $studentSummatives,
