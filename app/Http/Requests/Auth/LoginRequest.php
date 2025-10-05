@@ -29,6 +29,8 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            //NEW RULE: Wajib diisi dan harus ada di kolom 'id' tabel 'academic_years'
+            'academic_year' => ['required', 'string', 'exists:academic_years,id'],
         ];
     }
 
