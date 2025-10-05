@@ -291,6 +291,9 @@ class SummativeController extends Controller
     /**
      * Fungsi private yang fokus hanya untuk membuat dokumen Word.
      */
+    /**
+     * Fungsi private yang fokus hanya untuk membuat dokumen Word.
+     */
     private function generateRekapNilaiDocument($studentData, $classroomSubject, $classroom, $schoolAcademicYear)
     {
         try {
@@ -312,24 +315,43 @@ class SummativeController extends Controller
             $classroomSubject->load('subject');
             $templateProcessor->setValue('nama_mapel', $classroomSubject->subject->name);
             $templateProcessor->setValue('nama_kelas', $classroom->name);
-            $templateProcessor->setValue('tahun_ajaran', $schoolAcademicYear->year . ' Semester ' . $schoolAcademicYear->semester);
+            $templateProcessor->setValue('tahun_ajaran', $schoolAcademicYear->year . ' Semester ' . $schoolAcademicYear->academicYear->name);
 
             // 3. Persiapan Tabel PhpWord
             $tablePhpWord = new PhpWord();
             $section = $tablePhpWord->addSection();
-            $headerStyle = ['bold' => true, 'bgColor' => 'F2F2F2', 'size' => 10];
+
+            // Gaya Font
+            $headerStyle = ['bold' => true, 'bgColor' => 'F2F2F2', 'size' => 8]; // FONT HEADER (8)
+            $bodyStyle = ['size' => 8]; // FONT BODY STANDAR (8)
+            $descStyle = ['size' => 7]; // FONT DESKRIPSI LEBIH KECIL (7)
+            $nrStyle = ['bold' => true, 'size' => 9]; // FONT NR (9)
+
+            // Gaya Sel
             $cellVCentered = ['valign' => 'center'];
             $cellCentered = ['alignment' => 'center', 'valign' => 'center'];
             $cellMerge = ['vMerge' => 'restart', 'valign' => 'center'];
             $cellMergeContinue = ['vMerge' => 'continue'];
+
             $wordTable = $section->addTable([
                 'borderSize'  => 6,
                 'borderColor' => '000000',
-                'cellMargin'  => 80,
+                'cellMargin'  => 50, // Margin Sel Dikecilkan
                 'alignment'   => 'center',
                 'width'       => 10000,
-                'unit'        => 'pct'
+                'unit'        => 'pct',
+                'allowOverlap' => true,
+                'cellSpacing' => 0,
             ]);
+
+            // Lebar Kolom yang Dioptimalkan (dalam TWIP, 1000 TWIP = 1 inci)
+            $colWidth_No = 500;
+            $colWidth_NISN = 1000;
+            $colWidth_Name = 2000;
+            $colWidth_Score = 800; // Untuk Nilai Individual (S1, S2, dst.)
+            $colWidth_Mean = 800;  // Untuk Rata-rata (NA, (S))
+            $colWidth_NR = 800;
+            $colWidth_Desc = 3500; // Untuk Deskripsi
 
             // Data untuk dinamisasi header
             $sampleStudent = $studentData->first();
@@ -365,23 +387,24 @@ class SummativeController extends Controller
 
 
             // --- Baris Header 1: Jenis Sumatif & Deskripsi Umum ---
-            $wordTable->addRow(500);
-            $wordTable->addCell(1000, $cellMerge)->addText('No', $headerStyle, $cellCentered);
-            $wordTable->addCell(2000, $cellMerge)->addText('Nomor Induk', $headerStyle, $cellCentered);
-            $wordTable->addCell(4000, $cellMerge)->addText('Nama Siswa', $headerStyle, $cellCentered);
+            $wordTable->addRow(400); // Tinggi baris dikurangi
+            $wordTable->addCell($colWidth_No, $cellMerge)->addText('No', $headerStyle, $cellCentered);
+            $wordTable->addCell($colWidth_NISN, $cellMerge)->addText('Nomor Induk', $headerStyle, $cellCentered);
+            $wordTable->addCell($colWidth_Name, $cellMerge)->addText('Nama Siswa', $headerStyle, $cellCentered);
 
+            // Kolom Dinamis (Sumatif)
             foreach ($summativeKeys as $key) {
                 $summative = $sampleStudent->summatives->$key;
                 $colSpan = count($summative['values']) + 1;
                 $wordTable->addCell(null, ['gridSpan' => $colSpan, 'valign' => 'center'])->addText(strtoupper($key), $headerStyle, $cellCentered);
             }
 
-            $wordTable->addCell(1000, $cellMerge)->addText('NR', $headerStyle, $cellCentered);
+            $wordTable->addCell($colWidth_NR, $cellMerge)->addText('NR', $headerStyle, $cellCentered);
             $wordTable->addCell(null, ['gridSpan' => count($descriptionKeys), 'valign' => 'center'])->addText('Deskripsi', $headerStyle, $cellCentered);
 
 
-            // --- Baris Header 2: Sub-Pengelompokan (Identifier/Nama Sumatif non-Materi) & Nama Deskripsi ---
-            $wordTable->addRow(500);
+            // --- Baris Header 2: Sub-Pengelompokan & Nama Deskripsi ---
+            $wordTable->addRow(400); // Tinggi baris dikurangi
             $wordTable->addCell(null, $cellMergeContinue);
             $wordTable->addCell(null, $cellMergeContinue);
             $wordTable->addCell(null, $cellMergeContinue);
@@ -389,19 +412,21 @@ class SummativeController extends Controller
             foreach ($summativeKeys as $key) {
                 foreach ($detailedSummatives[$key]['groups'] as $group) {
                     $isFinalCol = str_ends_with($group->label, ')');
-                    $cellOptions = $isFinalCol ? $cellMerge : ['gridSpan' => $group->span, 'valign' => 'center'];
-                    $wordTable->addCell(null, $cellOptions)->addText($group->label, $headerStyle, $cellCentered);
+                    // Hitung lebar berdasarkan jumlah kolom skor yang dicakup
+                    $colWidth = $isFinalCol ? $colWidth_Mean : ($colWidth_Score * $group->span);
+                    $cellOptions = $isFinalCol ? $cellMerge : ['gridSpan' => $group->span, 'valign' => 'center', 'width' => $colWidth];
+                    $wordTable->addCell($colWidth, $cellOptions)->addText($group->label, $headerStyle, $cellCentered);
                 }
             }
 
             $wordTable->addCell(null, $cellMergeContinue);
             foreach ($descriptionKeys as $key) {
-                $wordTable->addCell(3000, $cellMerge)->addText($key, $headerStyle, $cellCentered);
+                $wordTable->addCell($colWidth_Desc, $cellMerge)->addText($key, $headerStyle, $cellCentered);
             }
 
 
             // --- Baris Header 3: Nama Sumatif Individual (Hanya untuk Jenis MATERI) ---
-            $wordTable->addRow(500);
+            $wordTable->addRow(400); // Tinggi baris dikurangi
             $wordTable->addCell(null, $cellMergeContinue);
             $wordTable->addCell(null, $cellMergeContinue);
             $wordTable->addCell(null, $cellMergeContinue);
@@ -410,7 +435,7 @@ class SummativeController extends Controller
                 $isMateri = str_contains($key, DefaultSummativeTypeEnum::MATERI->value);
                 foreach ($detailedSummatives[$key]['cols'] as $colName) {
                     if ($isMateri) {
-                        $wordTable->addCell(1000)->addText($colName, $headerStyle, $cellCentered);
+                        $wordTable->addCell($colWidth_Score)->addText($colName, $headerStyle, $cellCentered);
                     } else {
                         $wordTable->addCell(null, $cellMergeContinue);
                     }
@@ -427,30 +452,33 @@ class SummativeController extends Controller
             // --- Baris Data (Body Rows) ---
             foreach ($studentData as $index => $student) {
                 $wordTable->addRow();
-                $wordTable->addCell()->addText($index + 1, [], $cellCentered);
-                $wordTable->addCell()->addText($student->nisn, [], $cellVCentered);
-                $wordTable->addCell()->addText($student->name, [], $cellVCentered);
+                $wordTable->addCell($colWidth_No)->addText($index + 1, $bodyStyle, $cellCentered);
+                $wordTable->addCell($colWidth_NISN)->addText($student->nisn, $bodyStyle, $cellVCentered);
+                $wordTable->addCell($colWidth_Name)->addText($student->name, $bodyStyle, $cellVCentered);
 
                 foreach ($summativeKeys as $key) {
                     $summativeData = $student->summatives->$key;
                     // Nilai sumatif individu
                     foreach ($summativeData['values'] as $value) {
-                        $wordTable->addCell()->addText($value['score'] ?? '-', [], $cellCentered);
+                        $wordTable->addCell($colWidth_Score)->addText($value['score'] ?? '-', $bodyStyle, $cellCentered);
                     }
                     // Nilai rata-rata per jenis
-                    $wordTable->addCell()->addText($summativeData['mean'], ['bold' => true], $cellCentered);
+                    $wordTable->addCell($colWidth_Mean)->addText($summativeData['mean'], $nrStyle, $cellCentered);
                 }
 
                 // Nilai Rapor (NR)
-                $wordTable->addCell()->addText($student->nr, ['bold' => true, 'size' => 12], $cellCentered);
+                $wordTable->addCell($colWidth_NR)->addText($student->nr, $nrStyle, $cellCentered);
 
                 // Deskripsi
                 foreach ($descriptionKeys as $key) {
                     $deskripsiText = $student->description->$key ?? '-';
-                    $wordTable->addCell(3000)->addText($deskripsiText, ['size' => 9], $cellVCentered);
+                    // Pastikan sel deskripsi menggunakan lebar khusus
+                    $wordTable->addCell($colWidth_Desc)->addText($deskripsiText, $descStyle, $cellVCentered);
                 }
             }
 
+
+            // LOG 4: Mencatat akhir dari pembuatan tabel
             Log::info('Tabel nilai berhasil dibuat. Memproses ke XML dengan ekstraksi file zip.');
 
             // 4. Proses tabel ke XML dan set nilai placeholder
@@ -462,10 +490,9 @@ class SummativeController extends Controller
 
             $zip = new \ZipArchive();
             if ($zip->open($tempTableFile) === true) {
-                // Dokumen XML utama selalu berada di word/document.xml
                 $fullXml = $zip->getFromName('word/document.xml');
                 $zip->close();
-                unlink($tempTableFile); // Hapus file zip sementara
+                unlink($tempTableFile);
             } else {
                 Log::error('Gagal membuka file Word sementara sebagai zip.');
                 throw new \Exception('Gagal memproses XML tabel untuk injeksi. File zip Word corrupt.');
@@ -476,7 +503,8 @@ class SummativeController extends Controller
                 throw new \Exception('Gagal memproses XML tabel untuk injeksi. Konten XML kosong.');
             }
 
-            // Ekstraksi konten antara <w:body> dan </w:body> (Ini jauh lebih andal di sini)
+            // Ekstraksi konten antara <w:body> dan </w:body>
+            $tableXml = '';
             if (preg_match('/<w:body(.*?)>(.*)<\/w:body>/s', $fullXml, $matches)) {
                 $bodyContent = $matches[2];
 
@@ -493,8 +521,9 @@ class SummativeController extends Controller
             }
 
             // Set nilai placeholder dengan XML tabel yang sudah diekstrak dan dibersihkan
-            // Penting: Gunakan parameter kedua (true) untuk injeksi raw XML
             $templateProcessor->setValue('tabel_nilai', $tableXml);
+
+            // --- AKHIR KODE EKSTRAKSI FILE ZIP ---
 
             // 5. Simpan ke file sementara
             $filename = 'rekap-nilai-' . str_replace(' ', '_', $classroomSubject->subject->name) . '-' . str_replace(' ', '_', $classroom->name) . '.docx';
