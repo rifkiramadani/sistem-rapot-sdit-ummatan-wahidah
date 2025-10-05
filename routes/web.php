@@ -10,6 +10,7 @@ use App\Http\Controllers\Protected\SchoolAcademicYear\TeacherController;
 use App\Http\Controllers\Protected\SchoolAcademicYearController;
 use App\Http\Controllers\Protected\SchoolController;
 use App\Http\Controllers\Protected\SubjectController;
+use App\Http\Controllers\PublicAcademicYearController; //Import PublicAcademicYearController
 use App\Models\SchoolAcademicYear;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,10 @@ Route::get('/', function () {
     return Inertia::render('welcome');
     // return redirect('/login');
 })->name('home');
+
+//PUBLIC ROUTE FOR ACADEMIC YEARS LIST
+Route::get('/academic-years-list', [PublicAcademicYearController::class, 'listForLogin'])
+    ->name('academic-years.list');
 
 Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(function () {
     Route::get('', function () {

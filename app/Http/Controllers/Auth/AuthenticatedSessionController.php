@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Models\AcademicYear; //Import Model AcademicYear
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,9 +19,16 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(Request $request): Response
     {
+
+        // Ambil data Academic Year dan kirim ke frontend
+        $academicYears = AcademicYear::orderBy('start', 'desc')
+            ->select('id', 'name')
+            ->get();
+
         return Inertia::render('auth/login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => $request->session()->get('status'),
+            'academicYears' => $academicYears, //kirim data academic year ke frontend untuk dropdown
         ]);
     }
 
