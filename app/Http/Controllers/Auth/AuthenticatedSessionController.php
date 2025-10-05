@@ -8,7 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Log; //IMPORT FACADE LOG DITAMBAHKAN
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,22 +22,25 @@ class AuthenticatedSessionController extends Controller
         ]);
     }
 
+    /**
+     * Handle an incoming authentication request.
+     */
     public function store(LoginRequest $request): RedirectResponse
     {
-        Log::info('Login attempt received', [
-            'email' => $request->email,
-            'role_selected' => $request->role,
-            'ip' => $request->ip(),
-        ]);
+        //BARIS LOGGING BARU DARI CONTROLLER
+        Log::info("Login attempt received {Email: $request->email` | Role Selected: $request->role");
 
-        // Otentikasi dan pengecekan role terjadi di LoginRequest
+        // Lakukan otentikasi dan pengecekan role yang kini ada di LoginRequest.php
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('protected.dashboard.index', absolute: false));
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
+    /**
+     * Destroy an authenticated session.
+     */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();

@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Enums\RoleEnum;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Log; // <-- IMPORT FACADE LOG DITAMBAHKAN
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -19,8 +21,13 @@ class LoginRequest extends FormRequest
 
     public function rules(): array
     {
-        $validRoles = ['admin', 'guru'];
+        // Mendefinisikan role yang valid berdasarkan nilai yang dikirim dari frontend (HTML/TS)
+        $validRoles = [
+            'admin',
+            'guru', // Nilai yang dikirim oleh TabsTrigger di frontend
+        ];
 
+        // Wrap the "Super Admin" option in a conditional statement (Backend Validation)
         if (!app()->isProduction()) {
             $validRoles[] = 'superadmin';
         }
@@ -36,8 +43,9 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        // 1. Coba otentikasi dasar.
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+
+        // 1. Otentikasi Email & Password
+        if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -49,10 +57,17 @@ class LoginRequest extends FormRequest
         $user = Auth::user();
         $selectedRole = $this->role;
 
-        // ASUMSI: Model User memiliki kolom 'role'
-        if ($user->role !== $selectedRole) {
+        // LOGIKA KONVERSI KRITIS: Mapping nilai role dari Frontend ke nilai RoleEnum (Database)
+        $expectedRoleInDb = match ($selectedRole) {
+            'admin' => RoleEnum::ADMIN->value,      // 'admin' -> 'admin'
+            'guru' => RoleEnum::TEACHER->value,     // 'guru' -> 'teacher'
+            'superadmin' => RoleEnum::SUPERADMIN->value, // 'superadmin' -> 'superadmin'
+            default => null,
+        };
 
-            // LOGIKA PEMBERSIHAN EKSPlisit: Logout dan invalidasi sesi saat role salah
+        if ($user->role !== $expectedRoleInDb) {
+
+            // Logout, invalidasi sesi, dan regenerate token saat role salah
             Auth::logout();
             $this->session()->invalidate();
             $this->session()->regenerateToken();
@@ -60,15 +75,14 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'role' => 'Peran yang Anda pilih tidak cocok dengan peran akun ini.',
+                'role' => 'Peran yang Anda pilih tidak cocok dengan akun ini.',
             ]);
         }
 
-        // 3. Jika role cocok.
+        // 3. Role cocok
         RateLimiter::clear($this->throttleKey());
     }
 
-    // ... (ensureIsNotRateLimited() dan throttleKey() tetap sama)
     public function ensureIsNotRateLimited(): void
     {
         if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
@@ -80,7 +94,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => __('auth.throttle', [
+            'email' => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
@@ -89,6 +103,6 @@ class LoginRequest extends FormRequest
 
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }

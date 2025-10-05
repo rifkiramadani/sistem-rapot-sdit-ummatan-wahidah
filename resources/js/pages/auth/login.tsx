@@ -1,4 +1,5 @@
-import { Head, useForm, usePage, PageProps } from '@inertiajs/react';
+// resources/js/Pages/Auth/Login.tsx
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
@@ -12,14 +13,21 @@ import AuthLayout from '@/layouts/auth-layout';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// PERBAIKAN: Perluas PageProps untuk mengatasi error TypeScript
-interface SharedData extends PageProps {
+interface LoginPageProps {
+    roles: string[];
+    canResetPassword: boolean;
+    status?: string;
+}
+
+// PERBAIKAN: Perluas PageProps untuk mengatasi error TypeScript dan mendapatkan user object
+interface SharedData extends LoginPageProps {
     app: {
         env: string;
     }
     auth: {
         user: {
             id: number;
+            role: string; // Tambahkan role untuk akses di frontend
         } | null;
     }
 }
@@ -38,7 +46,8 @@ interface LoginProps {
 }
 
 export default function Login({ status, canResetPassword }: LoginProps) {
-    const { props: { app } } = usePage<SharedData>();
+    //  AMBIL app.env DARI usePage
+    const { props: { app, auth } } = usePage<SharedData>(); // Menggunakan SharedData yang diperluas
     const isDevelopment = app.env !== 'production';
 
     // TAMBAHKAN clearErrors
@@ -52,23 +61,25 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        // 1. Bersihkan error dari percobaan sebelumnya sebelum submit baru
+        // Pastikan error form di klien dibersihkan SEBELUM permintaan dikirim
         clearErrors();
 
         post(route('login'), {
             onSuccess: () => {
-                // 2. Membersihkan error lagi jika berhasil sebelum redirect
-                clearErrors();
+                // Ketika otentikasi berhasil, redirect akan terjadi.
+                clearErrors(); // Bersihkan semua error
                 reset('password');
             },
-            onFinish: () => {
-                // Pastikan password direset setelah selesai
-                reset('password');
-            },
+
             onError: (errors) => {
-                // Saat error, reset password saja
+                // Jika ada error (baik role, email, atau password salah)
                 reset('password');
-            }
+            },
+
+            onFinish: () => {
+                // Memastikan password direset setelah form submission selesai
+                reset('password');
+            },
         });
     };
 
@@ -86,6 +97,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     <img
                         src="/assets/logo/yayasan_assalam_logo.png"
                         alt="Logo Yayasan Assalam"
+                        title="Yayasan Assalam"
                         className="w-40 h-40 object-contain mt-5"
                     />
                 </a>
@@ -107,7 +119,12 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                 onValueChange={(value) => setData('role', value as 'admin' | 'guru' | 'superadmin')}
                                 className="w-full"
                             >
-                                <TabsList className="grid w-full grid-cols-[repeat(auto-fit,minmax(0,1fr))] h-10">
+                                {/* PENTING: Mengubah grid-cols untuk mengakomodasi 3 opsi saat dev */}
+                                <TabsList
+                                    className={`grid w-full
+                                        ${isDevelopment ? 'grid-cols-3' : 'grid-cols-2'}
+                                        h-10`}
+                                >
                                     <TabsTrigger
                                         className='text-sm'
                                         value="admin"
@@ -121,6 +138,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     >
                                         Guru
                                     </TabsTrigger>
+                                    {/*  KONDISIONAL UNTUK SUPER ADMIN */}
                                     {isDevelopment && (
                                         <TabsTrigger
                                             className='text-sm'
@@ -131,7 +149,8 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                     )}
                                 </TabsList>
                             </Tabs>
-                            <InputError message={errors.role} />
+                            {/*  PERBAIKAN KRITIS: Abaikan error role jika user sudah terotentikasi */}
+                            <InputError message={auth.user ? undefined : errors.role} />
                         </div>
                         {/* END FIELD PEMILIHAN ROLE BARU */}
 
