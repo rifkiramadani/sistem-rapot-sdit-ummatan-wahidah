@@ -6,7 +6,7 @@ import { Classroom } from '@/types/models/classrooms';
 import { SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { SummativesPaginated } from '@/types/models/summatives';
 import { Head, Link } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { FileText, Plus } from 'lucide-react';
 import { SummativesTable } from './_components/summatives-table';
 import { buildTableDefinitionFromData, StudentSummativeValues } from './_components/student-summatives-value';
 
@@ -76,7 +76,7 @@ export default function Index({ summatives, classroomSubject, schoolAcademicYear
         },
         {
             // Breadcrumb ini adalah halaman saat ini
-            title: 'Sumatif',
+            title: 'Nilai Sumatif',
             href: route('protected.school-academic-years.classrooms.subjects.summatives.index', {
                 schoolAcademicYear: schoolAcademicYear.id,
                 classroom: classroom.id,
@@ -91,30 +91,27 @@ export default function Index({ summatives, classroomSubject, schoolAcademicYear
         classroomSubject: classroomSubject.id, // atau classroomSubject saja
     };
 
-    // Panggil buildTableDefinitionFromData dengan parameter tambahan
     const { headerRows, dataColumns } = buildTableDefinitionFromData(
         studentSummativeValues[0],
         routeParams
     );
-
-    console.log(studentSummativeValues)
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Mapel di Kelas ${classroom.name}`} />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex-1 space-y-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
-                    <div className="flex-1 space-y-4 rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
+                    {/* 2. Tambahkan div pembungkus untuk menata tombol */}
+                    <div className="">
+
+                        {/* 3. INI TOMBOL BARU ANDA */}
                         <Link
-                            href={route('protected.school-academic-years.classrooms.subjects.summatives.create', {
-                                schoolAcademicYear: schoolAcademicYear.id,
-                                classroom: classroom.id,
-                                classroomSubject: classroomSubject.id,
-                            })}
+                            href={route('protected.school-academic-years.classrooms.subjects.summatives.export-word', routeParams)}
+                        // `as="a"` dan `target="_blank"` bersifat opsional jika Anda ingin membuka di tab baru
                         >
-                            <Button>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Tambah Sumatif
+                            <Button variant="outline">
+                                <FileText className="mr-2 h-4 w-4" />
+                                Ekspor Word
                             </Button>
                         </Link>
 

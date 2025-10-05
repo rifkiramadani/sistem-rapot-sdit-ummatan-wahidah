@@ -129,6 +129,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
                     Route::get('/values', [SummativeController::class, 'values'])->name('values');
                     Route::post('update-value', [SummativeController::class, 'updateValue'])
                         ->name('update-value');
+                    Route::get('/export-word', [SummativeController::class, 'exportWord'])->name('export-word');
                 });
             });
         });

@@ -16,9 +16,14 @@ use App\QueryFilters\Sort;
 use App\Support\QueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log; // <-- PASTIKAN INI ADA
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Spatie\Activitylog\Facades\LogBatch;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\TemplateProcessor;
+use PhpOffice\PhpWord\IOFactory;
 
 class SummativeController extends Controller
 {
@@ -188,6 +193,369 @@ class SummativeController extends Controller
             'classroomSubject' => $classroomSubject,
             'studentSummativeValues' => $studentData, // <-- Kirim data yang sudah di-transformasi
         ]);
+    }
+
+    private function getStudentSummativeData(Classroom $classroom, ClassroomSubject $classroomSubject)
+    {
+        $students = $classroom->classroomStudents()->with('student')->get()->pluck('student');
+        $summatives = $classroomSubject->summatives()->with('summativeType')->orderBy('created_at', 'asc')->get();
+        $studentIds = $students->pluck('id');
+        $summativeIds = $summatives->pluck('id');
+
+        $scores = StudentSummative::whereIn('student_id', $studentIds)
+            ->whereIn('summative_id', $summativeIds)
+            ->get()
+            ->keyBy(fn($item) => $item->student_id . '-' . $item->summative_id);
+
+        return $students->map(function ($student) use ($summatives, $scores) {
+            $studentSummatives = [];
+            $allScores = [];
+            $summativesByType = $summatives->groupBy('summativeType.name');
+
+            foreach ($summativesByType as $typeName => $typeSummatives) {
+                $values = $typeSummatives->map(function ($summative) use ($student, $scores) {
+                    $score = $scores->get($student->id . '-' . $summative->id);
+                    return [
+                        'id' => $summative->id,
+                        'name' => $summative->name,
+                        'identifier' => $summative->identifier,
+                        'score' => $score ? (int) $score->value : null,
+                    ];
+                });
+
+                $validScores = $values->pluck('score')->filter(fn($s) => !is_null($s));
+                $mean = $validScores->avg() ?? 0;
+                $allScores[] = $mean;
+
+                $studentSummatives[$typeName] = [
+                    'values' => $values,
+                    'mean' => round($mean, 1),
+                ];
+            }
+
+            $materiScores = collect($studentSummatives[DefaultSummativeTypeEnum::MATERI->value]['values'] ?? []);
+            $highestScore = $materiScores->whereNotNull('score')->sortByDesc('score')->first();
+            $lowestScore = $materiScores->whereNotNull('score')->sortBy('score')->first();
+            $highestSummative = $highestScore ? $summatives->find($highestScore['id']) : null;
+            $lowestSummative = $lowestScore ? $summatives->find($lowestScore['id']) : null;
+
+            return (object) [ // Menggunakan object agar lebih mudah diakses
+                'id' => $student->id,
+                'nisn' => $student->nisn,
+                'name' => $student->name,
+                'nr' => round(collect($allScores)->avg() ?? 0),
+                'summatives' => (object) $studentSummatives,
+                'description' => (object) [
+                    'Materi Unggul' => $highestSummative->name ?? null,
+                    'Materi Kurang' => $lowestSummative->name ?? null,
+                    'Materi Paling Menonjol' => $highestSummative->prominent ?? null,
+                    'Materi Yang Perlu Ditingkatkan' => $lowestSummative->improvement ?? null,
+                ],
+            ];
+        });
+    }
+
+
+    /**
+     * Mengambil data dan memanggil generator dokumen.
+     */
+    public function exportWord(SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
+    {
+        // LOG 1: Mencatat dimulainya proses ekspor
+        Log::info('Memulai ekspor Word sumatif.', [
+            'classroomSubjectId' => $classroomSubject->id,
+            'className' => $classroom->name,
+        ]);
+
+        // 1. Ambil data
+        $studentData = $this->getStudentSummativeData($classroom, $classroomSubject);
+
+        // Cek jika data kosong, kembalikan dengan pesan error
+        if ($studentData->isEmpty()) {
+            Log::warning('Ekspor Word dibatalkan: Tidak ada data siswa yang ditemukan.', [
+                'classroomSubjectId' => $classroomSubject->id,
+            ]);
+            return redirect()->route('protected.school-academic-years.classrooms.subjects.summatives.values', [$schoolAcademicYear, $classroom, $classroomSubject])
+                ->with('error', 'Tidak ada data siswa untuk diekspor.');
+        }
+
+        // 2. Panggil fungsi private untuk membuat dan mengembalikan dokumen
+        return $this->generateRekapNilaiDocument(
+            $studentData,
+            $classroomSubject,
+            $classroom,
+            $schoolAcademicYear
+        );
+    }
+
+    /**
+     * Fungsi private yang fokus hanya untuk membuat dokumen Word.
+     */
+    private function generateRekapNilaiDocument($studentData, $classroomSubject, $classroom, $schoolAcademicYear)
+    {
+        try {
+            // LOG 2: Mencatat dimulainya pembuatan dokumen
+            Log::info('Memulai pembuatan dokumen Word dengan PHPWord.', [
+                'totalStudents' => $studentData->count(),
+            ]);
+
+            // 1. Muat template
+            $templatePath = storage_path('app/templates/template_rekap_nilai.docx');
+            if (!file_exists($templatePath)) {
+                // LOG 3: Mencatat kegagalan file template
+                Log::error('Template Word tidak ditemukan!', ['path' => $templatePath]);
+                throw new \Exception('File template Word tidak ditemukan di server.');
+            }
+            $templateProcessor = new TemplateProcessor($templatePath);
+
+            // 2. Isi placeholder sederhana
+            $classroomSubject->load('subject');
+            $templateProcessor->setValue('nama_mapel', $classroomSubject->subject->name);
+            $templateProcessor->setValue('nama_kelas', $classroom->name);
+            $templateProcessor->setValue('tahun_ajaran', $schoolAcademicYear->year . ' Semester ' . $schoolAcademicYear->semester);
+
+            // 3. Persiapan Tabel PhpWord
+            $tablePhpWord = new PhpWord();
+            $section = $tablePhpWord->addSection();
+            $headerStyle = ['bold' => true, 'bgColor' => 'F2F2F2', 'size' => 10];
+            $cellVCentered = ['valign' => 'center'];
+            $cellCentered = ['alignment' => 'center', 'valign' => 'center'];
+            $cellMerge = ['vMerge' => 'restart', 'valign' => 'center'];
+            $cellMergeContinue = ['vMerge' => 'continue'];
+            $wordTable = $section->addTable([
+                'borderSize'  => 6,
+                'borderColor' => '000000',
+                'cellMargin'  => 80,
+                'alignment'   => 'center',
+                'width'       => 10000,
+                'unit'        => 'pct'
+            ]);
+
+            // Data untuk dinamisasi header
+            $sampleStudent = $studentData->first();
+            $summativeKeys = array_keys((array)$sampleStudent->summatives);
+            $descriptionKeys = array_keys((array)$sampleStudent->description);
+
+            // Ambil data detail sumatif (untuk Baris Header 2 & 3)
+            $detailedSummatives = [];
+            foreach ($summativeKeys as $key) {
+                $summative = $sampleStudent->summatives->$key;
+                $isMateri = str_contains($key, DefaultSummativeTypeEnum::MATERI->value);
+
+                if ($isMateri) {
+                    // Untuk MATERI, kelompokkan berdasarkan identifier
+                    $materiGroups = collect($summative['values'])->groupBy('identifier');
+                    foreach ($materiGroups as $label => $values) {
+                        $detailedSummatives[$key]['groups'][] = (object)['label' => ucfirst($label), 'span' => $values->count()];
+                        foreach ($values as $value) {
+                            $detailedSummatives[$key]['cols'][] = $value['name']; // Nama sumatif individual
+                        }
+                    }
+                } else {
+                    // Untuk non-MATERI, setiap item adalah kolom
+                    foreach ($summative['values'] as $value) {
+                        $detailedSummatives[$key]['groups'][] = (object)['label' => strtoupper($value['name']), 'span' => 1];
+                        $detailedSummatives[$key]['cols'][] = null; // Tidak ada sub-header di Baris 3
+                    }
+                }
+                // Tambahkan kolom rata-rata/nilai akhir (NA/S)
+                $detailedSummatives[$key]['groups'][] = (object)['label' => $isMateri ? '(S)' : 'NA', 'span' => 1];
+                $detailedSummatives[$key]['cols'][] = null; // Tidak ada sub-header di Baris 3
+            }
+
+
+            // --- Baris Header 1: Jenis Sumatif & Deskripsi Umum ---
+            $wordTable->addRow(500);
+            $wordTable->addCell(1000, $cellMerge)->addText('No', $headerStyle, $cellCentered);
+            $wordTable->addCell(2000, $cellMerge)->addText('Nomor Induk', $headerStyle, $cellCentered);
+            $wordTable->addCell(4000, $cellMerge)->addText('Nama Siswa', $headerStyle, $cellCentered);
+
+            foreach ($summativeKeys as $key) {
+                $summative = $sampleStudent->summatives->$key;
+                $colSpan = count($summative['values']) + 1;
+                $wordTable->addCell(null, ['gridSpan' => $colSpan, 'valign' => 'center'])->addText(strtoupper($key), $headerStyle, $cellCentered);
+            }
+
+            $wordTable->addCell(1000, $cellMerge)->addText('NR', $headerStyle, $cellCentered);
+            $wordTable->addCell(null, ['gridSpan' => count($descriptionKeys), 'valign' => 'center'])->addText('Deskripsi', $headerStyle, $cellCentered);
+
+
+            // --- Baris Header 2: Sub-Pengelompokan (Identifier/Nama Sumatif non-Materi) & Nama Deskripsi ---
+            $wordTable->addRow(500);
+            $wordTable->addCell(null, $cellMergeContinue);
+            $wordTable->addCell(null, $cellMergeContinue);
+            $wordTable->addCell(null, $cellMergeContinue);
+
+            foreach ($summativeKeys as $key) {
+                foreach ($detailedSummatives[$key]['groups'] as $group) {
+                    $isFinalCol = str_ends_with($group->label, ')');
+                    $cellOptions = $isFinalCol ? $cellMerge : ['gridSpan' => $group->span, 'valign' => 'center'];
+                    $wordTable->addCell(null, $cellOptions)->addText($group->label, $headerStyle, $cellCentered);
+                }
+            }
+
+            $wordTable->addCell(null, $cellMergeContinue);
+            foreach ($descriptionKeys as $key) {
+                $wordTable->addCell(3000, $cellMerge)->addText($key, $headerStyle, $cellCentered);
+            }
+
+
+            // --- Baris Header 3: Nama Sumatif Individual (Hanya untuk Jenis MATERI) ---
+            $wordTable->addRow(500);
+            $wordTable->addCell(null, $cellMergeContinue);
+            $wordTable->addCell(null, $cellMergeContinue);
+            $wordTable->addCell(null, $cellMergeContinue);
+
+            foreach ($summativeKeys as $key) {
+                $isMateri = str_contains($key, DefaultSummativeTypeEnum::MATERI->value);
+                foreach ($detailedSummatives[$key]['cols'] as $colName) {
+                    if ($isMateri) {
+                        $wordTable->addCell(1000)->addText($colName, $headerStyle, $cellCentered);
+                    } else {
+                        $wordTable->addCell(null, $cellMergeContinue);
+                    }
+                }
+                $wordTable->addCell(null, $cellMergeContinue);
+            }
+
+            $wordTable->addCell(null, $cellMergeContinue);
+            foreach ($descriptionKeys as $key) {
+                $wordTable->addCell(null, $cellMergeContinue);
+            }
+
+
+            // --- Baris Data (Body Rows) ---
+            foreach ($studentData as $index => $student) {
+                $wordTable->addRow();
+                $wordTable->addCell()->addText($index + 1, [], $cellCentered);
+                $wordTable->addCell()->addText($student->nisn, [], $cellVCentered);
+                $wordTable->addCell()->addText($student->name, [], $cellVCentered);
+
+                foreach ($summativeKeys as $key) {
+                    $summativeData = $student->summatives->$key;
+                    // Nilai sumatif individu
+                    foreach ($summativeData['values'] as $value) {
+                        $wordTable->addCell()->addText($value['score'] ?? '-', [], $cellCentered);
+                    }
+                    // Nilai rata-rata per jenis
+                    $wordTable->addCell()->addText($summativeData['mean'], ['bold' => true], $cellCentered);
+                }
+
+                // Nilai Rapor (NR)
+                $wordTable->addCell()->addText($student->nr, ['bold' => true, 'size' => 12], $cellCentered);
+
+                // Deskripsi
+                foreach ($descriptionKeys as $key) {
+                    $deskripsiText = $student->description->$key ?? '-';
+                    $wordTable->addCell(3000)->addText($deskripsiText, ['size' => 9], $cellVCentered);
+                }
+            }
+
+            Log::info('Tabel nilai berhasil dibuat. Memproses ke XML dengan ekstraksi file zip.');
+
+            // 4. Proses tabel ke XML dan set nilai placeholder
+            // --- AWAL KODE EKSTRAKSI FILE ZIP (PALING ANDAL) ---
+
+            $tempTableFile = tempnam(sys_get_temp_dir(), 'phpword_table');
+            $xmlWriter = IOFactory::createWriter($tablePhpWord, 'Word2007');
+            $xmlWriter->save($tempTableFile);
+
+            $zip = new \ZipArchive();
+            if ($zip->open($tempTableFile) === true) {
+                // Dokumen XML utama selalu berada di word/document.xml
+                $fullXml = $zip->getFromName('word/document.xml');
+                $zip->close();
+                unlink($tempTableFile); // Hapus file zip sementara
+            } else {
+                Log::error('Gagal membuka file Word sementara sebagai zip.');
+                throw new \Exception('Gagal memproses XML tabel untuk injeksi. File zip Word corrupt.');
+            }
+
+            if (!$fullXml) {
+                Log::error('Gagal membaca word/document.xml dari file zip.');
+                throw new \Exception('Gagal memproses XML tabel untuk injeksi. Konten XML kosong.');
+            }
+
+            // Ekstraksi konten antara <w:body> dan </w:body> (Ini jauh lebih andal di sini)
+            if (preg_match('/<w:body(.*?)>(.*)<\/w:body>/s', $fullXml, $matches)) {
+                $bodyContent = $matches[2];
+
+                // 1. Hapus Section Properties yang pasti merusak template.
+                $tableXml = preg_replace('/<w:sectPr\s*.*?\s*\/w:sectPr>/s', '', $bodyContent);
+
+                // 2. Hapus tag <w:lastRenderedPageBreak/> yang tidak perlu
+                $tableXml = preg_replace('/<w:lastRenderedPageBreak\s*\/>/', '', $tableXml);
+
+                $tableXml = trim($tableXml);
+            } else {
+                Log::error('Gagal mengekstrak body XML dari document.xml menggunakan zip. Pola masih gagal.');
+                throw new \Exception('Gagal memproses XML tabel untuk injeksi. Struktur body XML tidak terdeteksi.');
+            }
+
+            // Set nilai placeholder dengan XML tabel yang sudah diekstrak dan dibersihkan
+            // Penting: Gunakan parameter kedua (true) untuk injeksi raw XML
+            $templateProcessor->setValue('tabel_nilai', $tableXml);
+
+            // 5. Simpan ke file sementara
+            $filename = 'rekap-nilai-' . str_replace(' ', '_', $classroomSubject->subject->name) . '-' . str_replace(' ', '_', $classroom->name) . '.docx';
+            $tempPath = storage_path('app/temp');
+            File::ensureDirectoryExists($tempPath);
+            $tempFilePath = $tempPath . '/' . uniqid('rekap_nilai_', true) . '.docx';
+            $templateProcessor->saveAs($tempFilePath);
+
+            // LOG 5: Mencatat file sementara berhasil disimpan
+            Log::info('Dokumen sementara berhasil disimpan. Mempersiapkan respons download.', [
+                'tempFilePath' => $tempFilePath,
+                'filename' => $filename
+            ]);
+
+            // 6. Kembalikan sebagai response download
+            return response()
+                ->download($tempFilePath, $filename)
+                ->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            // LOG 6: Mencatat pengecualian
+            Log::error('Gagal membuat dokumen Word!', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'classroomSubjectId' => $classroomSubject->id,
+            ]);
+
+            report($e);
+            return redirect()->back()->with('error', 'Gagal membuat dokumen: ' . $e->getMessage());
+        }
+    }
+
+    private function getTableXmlContent(PhpWord $phpWordInstance): string
+    {
+        // Gunakan TemplateProcessor untuk membaca output writer
+        $tempFile = tempnam(sys_get_temp_dir(), 'phpword');
+        $xmlWriter = IOFactory::createWriter($phpWordInstance, 'Word2007');
+        $xmlWriter->save($tempFile);
+
+        // Muat file yang dihasilkan ke dalam TemplateProcessor
+        $templateProcessor = new TemplateProcessor($tempFile);
+
+        // TemplateProcessor secara internal menyimpan XML konten body sebagai properti,
+        // kita bisa mengaksesnya melalui metode yang sudah ada di library PhpWord, yaitu getXml().
+        $fullXml = $templateProcessor->get = $templateProcessor->getXml();
+
+        // Hapus file temporary
+        unlink($tempFile);
+
+        // Ekstraksi konten <w:body> (lebih andal dengan XML yang dimuat PhpWord)
+        if (preg_match('/<w:body(.*?)>(.*)<\/w:body>/s', $fullXml, $matches)) {
+            $bodyContent = $matches[2];
+
+            // Membersihkan tag konflik (<w:sectPr> dan <w:lastRenderedPageBreak/>)
+            $tableXml = preg_replace('/<w:sectPr\s*.*?\s*\/w:sectPr>/s', '', $bodyContent);
+            $tableXml = preg_replace('/<w:lastRenderedPageBreak\s*\/>/', '', $tableXml);
+
+            return trim($tableXml);
+        }
+
+        return '';
     }
 
     public function updateValue(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
