@@ -10,7 +10,7 @@ export const mainNavItems: NavItem[] = [
     },
     {
         title: 'Schools',
-        href: route('protected.schools.index'),
+        href: route('protected.schools.detail'),
         icon: School,
     },
     {

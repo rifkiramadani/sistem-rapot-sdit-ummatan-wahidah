@@ -37,6 +37,11 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
     });
 
     Route::prefix('schools')->name('schools.')->group(function () {
+        // [BARU] Rute untuk School Detail Page yang baru
+        Route::get('/detail', [SchoolController::class, 'showMainSchool'])->name('detail');
+        Route::put('/detail', [SchoolController::class, 'updateMainSchool'])->name('update.detail');
+
+        // DEPRECATED
         Route::get('', [SchoolController::class, 'index'])->name('index');
         Route::get('/create', [SchoolController::class, 'create'])->name('create');
         Route::post('', [SchoolController::class, 'store'])->name('store');
