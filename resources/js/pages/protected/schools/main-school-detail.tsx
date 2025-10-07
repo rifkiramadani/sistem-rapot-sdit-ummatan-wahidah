@@ -93,8 +93,8 @@ export default function MainSchoolDetail({ school }: MainSchoolDetailProps) {
     return (
         <AppLayout
             breadcrumbs={[
-                { title: 'Sekolah', href: route('protected.schools.detail') },
-                { title: 'Detail Sekolah Utama', href: route('protected.schools.detail') }
+                { title: 'School', href: route('protected.schools.detail') },
+                { title: 'Main School Detail', href: route('protected.schools.detail') }
             ]}
         >
             <Head title="Detail Sekolah Utama" />
