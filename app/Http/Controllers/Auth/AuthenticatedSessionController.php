@@ -8,14 +8,12 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log; //IMPORT FACADE LOG DITAMBAHKAN
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Show the login page.
-     */
     public function create(Request $request): Response
     {
         return Inertia::render('auth/login', [
@@ -29,11 +27,15 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
+        //BARIS LOGGING BARU DARI CONTROLLER
+        Log::info("Login attempt received {Email: $request->email` | Role Selected: $request->role");
+
+        // Lakukan otentikasi dan pengecekan role yang kini ada di LoginRequest.php
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('protected.dashboard.index', absolute: false));
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**

@@ -106,15 +106,30 @@ const Welcome = () => {
                                 </div>
                             </div>
 
-                            {/* Buttons Section */}
-                            <div className="flex w-full items-center justify-center mt-8 mb-12">
-                                <div className="flex justify-center w-full max-w-md">
-                                    <ul className="flex flex-col sm:flex-row justify-center gap-4 text-sm leading-normal w-full">
-                                        {auth.user ? (
-                                            <li className="w-full sm:w-auto">
-                                                <Link href={route('protected.dashboard.index')} className="w-full block">
-                                                    <Button className='w-full hover:bg-gray-700 hover:text-white bg-[#773DCE] text-white py-2 px-6'>
-                                                        Kembali Ke Dashboard
+                        <div className="flex w-full items-center justify-center">
+                            <main className="flex justify-center w-full max-w-[335px] flex-col-reverse lg:max-w-4xl lg:flex-row">
+                                <ul className="flex justify-center gap-3 text-sm leading-normal">
+                                    {auth.user ? (
+                                        <li>
+                                            <Link href={route('protected.dashboard.index')}>
+                                                <Button className='hover:bg-gray-700 hover:text-white'>
+                                                    Kembali Ke Dashboard
+                                                </Button>
+                                            </Link>
+                                        </li>
+                                    ) : (
+                                        <>
+                                                <li>
+                                                    <Link href={route('login')}>
+                                                        <Button className='w-50 bg-[#773DCE] text-white hover:bg-[#3D138C] hover:text-white dark:hover:bg-[#3D138C] dark:hover:text-white'>
+                                                        Masuk
+                                                    </Button>
+                                                </Link>
+                                            </li>
+                                                <li>
+                                                    <Link href={route('register')}>
+                                                        <Button className='w-50 bg-[#773DCE] text-white hover:bg-[#3D138C] hover:text-white dark:hover:bg-[#3D138C] dark:hover:text-white'>
+                                                        Daftar
                                                     </Button>
                                                 </Link>
                                             </li>
