@@ -9,7 +9,7 @@ export const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Schools',
+        title: 'School',
         href: route('protected.schools.detail'),
         icon: School,
     },
