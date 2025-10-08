@@ -1,17 +1,14 @@
 import * as React from "react";
-import { HandHelping, Users, Zap } from "lucide-react"; // Hapus ChevronLeft/Right
+import { HandHelping, Users, Zap } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { Button } from "@/components/ui/button";
 
-// Hapus import komponen Carousel Shadcn UI
-
 const Welcome = () => {
     const { auth } = usePage<SharedData>().props;
 
-    // State untuk mengontrol slide (fade)
     const [currentSlide, setCurrentSlide] = React.useState(0);
 
     const features = [
@@ -38,13 +35,14 @@ const Welcome = () => {
         '/assets/images/foto_guru_3.jpg',
     ];
 
-    // Auto slide effect (fade) yang stabil
     React.useEffect(() => {
+        // Mengurangi interval menjadi 1500ms agar slide lebih cepat.
+        // Transisi opacity 500ms akan memberikan efek cepat "fade to black".
         const timer = setInterval(() => {
             setCurrentSlide((prev) =>
                 prev === guruImages.length - 1 ? 0 : prev + 1
             );
-        }, 2000); // Ganti waktu sesuai kebutuhan
+        }, 1500);
 
         return () => clearInterval(timer);
     }, [guruImages.length]);
@@ -55,14 +53,19 @@ const Welcome = () => {
 
             <div className="relative min-h-screen w-full">
 
-                {/* Background Auto-Sliding (Fade) | Z-index: z-0 */}
-                {/* Menggunakan 'fixed' untuk menempel di seluruh viewport dengan stabil */}
-                <div className="fixed inset-0 w-screen h-screen z-0 overflow-hidden">
+                {/* Background Auto-Sliding (Fade to Black) | Z-index: z-0 */}
+                <div
+                    // ✅ PENYESUAIAN PENTING: Tambahkan 'bg-black' sebagai latar belakang dasar.
+                    // Saat gambar transisi dari opacity 100 ke 0, yang terlihat adalah warna hitam ini.
+                    className="fixed inset-0 w-screen h-screen z-0 overflow-hidden bg-black"
+                >
                     {/* Slides */}
                     {guruImages.map((imageSrc, index) => (
                         <div
                             key={index}
-                            className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100' : 'opacity-0'
+                            // ✅ PENYESUAIAN PENTING: Durasi Transisi Dipercepat (duration-500)
+                            // Ini membuat gambar cepat menghilang (fade) ke latar belakang hitam.
+                            className={`absolute inset-0 transition-opacity duration-500 ${index === currentSlide ? 'opacity-100' : 'opacity-0'
                                 }`}
                         >
                             <img
@@ -70,12 +73,13 @@ const Welcome = () => {
                                 alt={`Background ${index + 1}`}
                                 className="w-full h-full object-cover"
                             />
-                            {/* Overlay gelap */}
+                            {/* Overlay gelap (dipertahankan untuk kontras teks) */}
                             <div className="absolute inset-0 bg-black opacity-50 md:opacity-60 lg:opacity-70"></div>
                         </div>
                     ))}
                 </div>
 
+                {/* Konten Utama | Z-index: z-10 */}
                 <div className="relative z-10 min-h-screen w-full flex items-center py-10">
                     <section className="w-full">
                         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -93,13 +97,14 @@ const Welcome = () => {
                                     />
                                 </div>
                                 <div className="max-w-4xl">
-                                    <Badge className="mb-6 px-4 py-2" variant="default">
-                                        <span className="text-dark text-sm md:text-base">Yayasan As-salam Curup</span>
+                                    {/* Badge tetap disesuaikan untuk kontras di Dark/Light Mode */}
+                                    <Badge className="mb-6 px-4 py-2 bg-white dark:bg-black" variant="default">
+                                        <span className="text-black dark:text-white text-sm md:text-base">Yayasan As-salam Curup</span>
                                     </Badge>
                                     <h1 className="text-3xl md:text-4xl lg:text-5xl mb-6 font-extrabold uppercase bg-clip-text text-transparent bg-gradient-to-r from-[#1DF01A] from-30% to-[#0E9351] to-70%">
                                         Selamat Datang di Sistem Informasi Rapor SDIT Ummatan Wahidah
                                     </h1>
-                                    <p className="mb-3 text-center uppercase text-gray-200 dark:text-gray-300 text-sm md:text-base lg:text-lg">
+                                    <p className="mb-3 text-center uppercase text-gray-200 text-sm md:text-base lg:text-lg">
                                         Sistem Informasi Rapor SDIT Ummatan Wahidah adalah <br className="hidden md:block" />
                                         aplikasi berbasis website untuk manajemen nilai sumatif akhir siswa.
                                     </p>
@@ -155,18 +160,29 @@ const Welcome = () => {
                                 </div>
                             </div>
 
-                            {/* Features Section */}
-                            <div className="mx-auto max-w-6xl flex flex-col md:flex-row text-black dark:text-white gap-6 md:gap-6">
+                            {/* Features Section - KARTU DIOOPTIMALKAN UNTUK DARK/LIGHT MODE */}
+                            <div className="mx-auto max-w-6xl flex flex-col md:flex-row gap-6 md:gap-6">
                                 {features.map((feature, index) => (
                                     <div
                                         key={index}
-                                        className="flex flex-col rounded-lg bg-background/80 backdrop-blur-sm p-6 flex-1 shadow-lg border border-white/20"
+                                        // Background Card yang buram dan adaptif Dark/Light Mode
+                                        className="flex flex-col rounded-lg
+                                                   bg-white/60 backdrop-blur-sm dark:bg-black/40
+                                                   p-6 flex-1 shadow-lg
+                                                   border border-gray-300/50 dark:border-white/20"
                                     >
-                                        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-white/20 drop-shadow-lg">
+                                        <div
+                                            //PERBAIKAN PENTING: Latar belakang ikon harus selalu putih (light mode)
+                                            // atau abu-abu/hitam terang (dark mode) agar ikonnya (hitam) kontras.
+                                            // Kita buat latar belakang ikon selalu putih, dan ikon di dalamnya hitam.
+                                            className="mb-4 flex size-12 items-center justify-center rounded-full bg-white dark:bg-black drop-shadow-lg"
+                                        >
+                                            {/* Ikon secara default berwarna hitam/dark-gray di `lucide-react` kecuali diberi warna spesifik */}
                                             {feature.icon}
                                         </div>
-                                        <h3 className="mb-3 font-semibold text-lg text-white">{feature.title}</h3>
-                                        <p className="text-sm text-gray-200 leading-relaxed">
+                                        {/* Teks Judul dan Deskripsi yang adaptif Dark/Light Mode */}
+                                        <h3 className="mb-3 font-semibold text-lg text-gray-900 dark:text-white">{feature.title}</h3>
+                                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                                             {feature.description}
                                         </p>
                                     </div>
