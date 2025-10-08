@@ -2,23 +2,75 @@
 
 namespace App\Http\Controllers\Protected;
 
-use App\Enums\PerPageEnum;
-use App\Http\Controllers\Controller;
-use App\Models\School;
-use Illuminate\Database\Eloquent\Builder; // Import the Builder class
-use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Redirect;
+use App\Models\School;
+use App\Enums\PerPageEnum;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\DB; // Impor DB facade untuk transaksi
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
-use App\Support\QueryBuilder; // <-- Import QueryBuilder
-use App\QueryFilters\Filter;   // <-- Import Filter pipe
-use App\QueryFilters\Sort;     // <-- Import Sort pipe
+use Illuminate\Support\Facades\Redirect;
 use Spatie\Activitylog\Facades\LogBatch;
+use App\Http\Requests\UpdateSchoolRequest;
+use App\QueryFilters\Sort;     // <-- Import Sort pipe
+use App\QueryFilters\Filter;   // <-- Import Filter pipe
+use App\Support\QueryBuilder; // <-- Import QueryBuilder
+use Illuminate\Database\Eloquent\Builder; // Import the Builder class
+use Illuminate\Support\Facades\DB; // Impor DB facade untuk transaksi
 
 class SchoolController extends Controller
 {
+
+    /**
+     * Helper untuk mendapatkan Sekolah Utama (data pertama).
+     */
+    private function getMainSchool(): School
+    {
+        // Ambil sekolah pertama, atau buat jika tidak ada (untuk dev/testing)
+        // Gunakan findOrNew() atau first()
+        return School::first() ?? School::factory()->create();
+    }
+
+    /**
+     * [BARU] Menampilkan halaman detail sekolah utama.
+     */
+    public function showMainSchool()
+    {
+        // Hanya ambil data sekolah. Tidak perlu memuat currentAcademicYear lagi.
+        $school = $this->getMainSchool();
+
+        // Mengarahkan ke komponen React/Inertia baru
+        return Inertia::render('protected/schools/main-school-detail', [
+            'school' => $school->only([
+                'id',
+                'name',
+                'npsn',
+                'address',
+                'postal_code',
+                'website',
+                'email',
+                'place_date_raport',
+                'place_date_sts',
+            ]),
+        ]);
+    }
+
+    /**
+     * [BARU] Mengupdate data sekolah utama.
+     */
+    public function updateMainSchool(UpdateSchoolRequest $request)
+    {
+        $school = $this->getMainSchool();
+
+        $school->update($request->validated());
+
+        return to_route('protected.schools.detail')
+            ->with('success', 'Informasi Sekolah Utama berhasil diperbarui.');
+    }
+
+
+
+    // DEPRECATED
     public function index(Request $request)
     {
         Gate::authorize('viewAny', School::class);

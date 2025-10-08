@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\AcademicYear;
 use App\Models\School;
-use App\Models\SchoolAcademicYear;
 use Illuminate\Database\Seeder;
 
 class SchoolAcademicYearSeeder extends Seeder
@@ -16,6 +15,7 @@ class SchoolAcademicYearSeeder extends Seeder
     {
         AcademicYear::factory()->count(5)->create();
 
-        School::factory()->count(2)->create();
+        // [UBAH] Hanya buat SATU data School
+        School::factory()->create();
     }
 }

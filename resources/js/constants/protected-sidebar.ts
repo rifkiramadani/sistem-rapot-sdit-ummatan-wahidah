@@ -9,8 +9,8 @@ export const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Schools',
-        href: route('protected.schools.index'),
+        title: 'School',
+        href: route('protected.schools.detail'),
         icon: School,
     },
     {

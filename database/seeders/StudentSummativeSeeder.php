@@ -31,27 +31,33 @@ class StudentSummativeSeeder extends Seeder
                 continue; // Skip if the student isn't in a class.
             }
 
-            // 2. Get all subject IDs for that specific classroom.
-            $subjectIdsInClass = DB::table('class_subjects')
-                ->where('classroom_id', $classroomStudent->classroom_id)
-                ->pluck('subject_id');
+            // Dapatkan ID kelas tempat siswa berada
+            $classroomId = $classroomStudent->classroom_id;
 
-            if ($subjectIdsInClass->isEmpty()) {
+            // 2. [UBAH] Dapatkan SEMUA ClassroomSubject ID untuk kelas ini
+            $classroomSubjectIds = DB::table('classroom_subjects') // Perhatikan nama tabel di sini
+                ->where('classroom_id', $classroomId)
+                ->pluck('id'); // Ambil ID dari tabel pivot (ClassroomSubject)
+
+            if ($classroomSubjectIds->isEmpty()) {
                 continue; // Skip if the class has no subjects.
             }
 
-            // 3. Find summatives that are for the class subjects AND match the student's school year.
-            $relevantSummatives = Summative::whereIn('subject_id', $subjectIdsInClass)
+            // 3. [UBAH] Cari summatives yang terhubung dengan ClassroomSubject ID yang relevan
+            $relevantSummatives = Summative::whereIn('classroom_subject_id', $classroomSubjectIds)
                 ->whereHas('summativeType', function ($query) use ($student) {
-                    $query->where('school_academic_year_id', $student->school_academic_year_id);
+                // Pastikan SumatifType terkait dengan tahun ajaran sekolah siswa
+                $query->where('school_academic_year_id', $student->school_academic_year_id);
                 })
                 ->get();
 
             // 4. Create a score record for the student for each relevant summative.
             foreach ($relevantSummatives as $summative) {
-                StudentSummative::factory()->create([
+                StudentSummative::firstOrCreate([
                     'student_id' => $student->id,
                     'summative_id' => $summative->id,
+                ], [
+                    'value' => rand(60, 100) // Nilai untuk created, jika belum ada
                 ]);
             }
         }
