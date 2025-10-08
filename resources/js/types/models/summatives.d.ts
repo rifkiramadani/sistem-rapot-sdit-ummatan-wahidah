@@ -7,6 +7,8 @@ export type Summative = {
     name: string;
     description: string | null;
     identifier: string | null;
+    prominent: string | null;
+    improvement: string | null;
     subject_id: string;
     summative_type_id: string;
     created_at: string;

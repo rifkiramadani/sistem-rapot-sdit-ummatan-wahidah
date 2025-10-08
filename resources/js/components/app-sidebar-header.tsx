@@ -7,7 +7,7 @@ import * as React from 'react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
     const page = usePage<SharedData>();
-    const { auth } = page.props;
+    // const { auth } = page.props;
     // Dummy data in local state (so delete/read updates the UI immediately)
     const [notifications, setNotifications] = React.useState<Notification[]>([]);
 

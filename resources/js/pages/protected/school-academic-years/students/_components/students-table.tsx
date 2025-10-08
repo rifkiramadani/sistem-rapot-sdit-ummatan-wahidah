@@ -40,7 +40,7 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear): ColumnDef<St
         enableSorting: false,
         enableHiding: false,
     },
-    { id: 'no', header: 'No.', cell: ({ row, table }) => ((table.options.meta as TableMeta)?.from ?? 0) + row.index, enableSorting: false },
+    // { id: 'no', header: 'No.', cell: ({ row, table }) => ((table.options.meta as TableMeta)?.from ?? 0) + row.index, enableSorting: false },
     { accessorKey: 'nisn', header: ({ column }) => <DataTableColumnHeader column={column} title="NISN" /> },
     { accessorKey: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Siswa" /> },
     { accessorKey: 'gender', header: 'L/P', cell: ({ row }) => (row.original.gender === 'male' ? 'Laki-laki' : 'Perempuan') },

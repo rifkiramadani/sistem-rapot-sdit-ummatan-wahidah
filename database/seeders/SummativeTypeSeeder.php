@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\DefaultSummativeTypeEnum;
 use App\Models\SchoolAcademicYear;
 use App\Models\SummativeType;
 use Illuminate\Database\Seeder;
@@ -19,20 +20,13 @@ class SummativeTypeSeeder extends Seeder
             return;
         }
 
-        // Definisikan jenis-jenis sumatif yang akan dibuat.
-        $summativeNames = [
-            'Sumatif Materi',
-            'Sumatif Tengah Semester',
-            'Sumatif Akhir Semester',
-        ];
-
         // Ambil semua data tahun ajaran sekolah.
         $schoolAcademicYears = SchoolAcademicYear::all();
 
         // Loop untuk setiap tahun ajaran sekolah.
         foreach ($schoolAcademicYears as $schoolAcademicYear) {
-            // Loop untuk setiap nama sumatif.
-            foreach ($summativeNames as $name) {
+            // Loop untuk setiap nama sumatif dari Enum.
+            foreach (DefaultSummativeTypeEnum::values() as $name) {
                 // Gunakan firstOrCreate untuk menghindari duplikat data.
                 SummativeType::firstOrCreate(
                     [

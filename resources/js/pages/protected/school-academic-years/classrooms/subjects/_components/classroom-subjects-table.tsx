@@ -38,7 +38,7 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear, classroom: Cl
         ),
         cell: ({ row }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} />,
     },
-    { id: 'no', header: 'No.', cell: ({ row, table }) => ((table.options.meta as TableMeta)?.from ?? 0) + row.index },
+    // { id: 'no', header: 'No.', cell: ({ row, table }) => ((table.options.meta as TableMeta)?.from ?? 0) + row.index },
     {
         accessorFn: (row) => row.subject?.name ?? 'N/A',
         id: 'name',

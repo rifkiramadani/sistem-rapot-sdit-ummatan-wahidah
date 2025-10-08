@@ -61,7 +61,20 @@ export default function Show({ schoolAcademicYear, classroom, classroomSubject }
                                 >
                                     <Button variant="outline" size="sm">
                                         <BookMarked className="mr-2 h-4 w-4" />
-                                        Sumatif (Segera)
+                                        Data Sumatif
+                                    </Button>
+                                </Link>
+
+                                <Link
+                                    href={route('protected.school-academic-years.classrooms.subjects.summatives.values', {
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                        classroom: classroom.id,
+                                        classroomSubject: classroomSubject.id,
+                                    })}
+                                >
+                                    <Button variant="outline" size="sm">
+                                        <BookMarked className="mr-2 h-4 w-4" />
+                                        Nilai Sumatif
                                     </Button>
                                 </Link>
                             </div>

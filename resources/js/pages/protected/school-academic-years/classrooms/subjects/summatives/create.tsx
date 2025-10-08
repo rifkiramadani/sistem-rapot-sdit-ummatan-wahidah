@@ -20,7 +20,34 @@ export default function Create({ schoolAcademicYear, classroom, classroomSubject
     const subject = classroomSubject.subject!;
 
     const breadcrumbs: BreadcrumbItem[] = [
-        // ... (buat breadcrumbs yang sesuai)
+        {
+            title: 'Dashboard',
+            href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }),
+        },
+        {
+            title: 'Kelas',
+            href: route('protected.school-academic-years.classrooms.index', { schoolAcademicYear: schoolAcademicYear.id }),
+        },
+        {
+            title: classroom.name,
+            href: route('protected.school-academic-years.classrooms.show', { schoolAcademicYear: schoolAcademicYear.id, classroom: classroom.id }),
+        },
+        {
+            title: 'Mata Pelajaran',
+            href: route('protected.school-academic-years.classrooms.subjects.index', {
+                schoolAcademicYear: schoolAcademicYear.id,
+                classroom: classroom.id,
+            }),
+        },
+        {
+            // Breadcrumb ini mengarah ke halaman detail mata pelajaran
+            title: classroomSubject.subject!.name,
+            href: route('protected.school-academic-years.classrooms.subjects.show', {
+                schoolAcademicYear: schoolAcademicYear.id,
+                classroom: classroom.id,
+                classroomSubject: classroomSubject.id,
+            }),
+        },
         {
             title: 'Sumatif',
             href: route('protected.school-academic-years.classrooms.subjects.summatives.index', { schoolAcademicYear, classroom, classroomSubject }),
