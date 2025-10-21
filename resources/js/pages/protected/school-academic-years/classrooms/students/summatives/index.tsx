@@ -69,7 +69,7 @@ export default function Index({ schoolAcademicYear, classroom, classroomStudent,
             }),
         },
         {
-            title: 'Nilai Sumatif',
+            title: 'Nilai Sumatifs',
             href: '#', // Current page
         },
     ];

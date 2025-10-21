@@ -24,13 +24,8 @@ const footerNavItems: NavItem[] = [
 export function AppSidebar() {
     const { props } = usePage<SharedData>();
     const { schoolAcademicYear } = props;
-    let navItems: NavItem[];
 
-    if (schoolAcademicYear && route().current()?.startsWith('protected.school-academic-years.')) {
-        navItems = getSchoolAcademicYearNavItems(schoolAcademicYear);
-    } else {
-        navItems = mainNavItems;
-    }
+    const isSchoolAcademicYearContext = schoolAcademicYear && route().current()?.startsWith('protected.school-academic-years.');
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -56,35 +51,50 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                {/* Dashboard Section */}
-                <SidebarGroup>
-                    <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <NavMain items={navItems.filter(item => item.href.includes('dashboard'))} />
-                    </SidebarGroupContent>
-                </SidebarGroup>
+                {isSchoolAcademicYearContext ? (
+                    // School Academic Year Sidebar Structure
+                    <>
+                        {/* Dashboard Section */}
+                        <SidebarGroup>
+                            <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
+                            <SidebarGroupContent>
+                                <NavMain items={getSchoolAcademicYearNavItems(schoolAcademicYear).filter(item => item.href.includes('dashboard'))} />
+                            </SidebarGroupContent>
+                        </SidebarGroup>
 
-                {/* Master Data Group */}
-                <SidebarGroup>
-                    <SidebarGroupLabel>Data Master</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <NavMain items={navItems.filter(item =>
-                            item.href.includes('teachers') ||
-                            item.href.includes('students')
-                        )} />
-                    </SidebarGroupContent>
-                </SidebarGroup>
+                        {/* Data Master Group - Guru, Siswa */}
+                        <SidebarGroup>
+                            <SidebarGroupLabel>Data Master</SidebarGroupLabel>
+                            <SidebarGroupContent>
+                                <NavMain items={getSchoolAcademicYearNavItems(schoolAcademicYear).filter(item =>
+                                    item.href.includes('teachers') ||
+                                    item.href.includes('students') ||
+                                    item.href.includes('subjects')
+                                )} />
+                            </SidebarGroupContent>
+                        </SidebarGroup>
 
-                {/* Academic Structure Group */}
-                <SidebarGroup>
-                    <SidebarGroupLabel>Struktur Akademik</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <NavMain items={navItems.filter(item =>
-                            item.href.includes('classrooms') ||
-                            item.href.includes('subjects')
-                        )} />
-                    </SidebarGroupContent>
-                </SidebarGroup>
+                        {/* Struktur Akademik Group - Kelas, Mata Pelajaran */}
+                        <SidebarGroup>
+                            <SidebarGroupLabel>Struktur Akademik</SidebarGroupLabel>
+                            <SidebarGroupContent>
+                                <NavMain items={getSchoolAcademicYearNavItems(schoolAcademicYear).filter(item =>
+                                    item.href.includes('classrooms')
+                                )} />
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    </>
+                ) : (
+                    // Main Sidebar Structure
+                    <>
+                        <SidebarGroup>
+                            <SidebarGroupLabel>Menu Utama</SidebarGroupLabel>
+                            <SidebarGroupContent>
+                                <NavMain items={mainNavItems} />
+                            </SidebarGroupContent>
+                        </SidebarGroup>
+                    </>
+                )}
             </SidebarContent>
 
             <SidebarFooter>
