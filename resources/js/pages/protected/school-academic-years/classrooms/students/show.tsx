@@ -162,30 +162,36 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
                                         Edit Profil Siswa
                                     </Button>
                                 </Link>
-                                <Link
-                                    href={route('protected.school-academic-years.classrooms.students.summatives', {
-                                        schoolAcademicYear: schoolAcademicYear.id,
-                                        classroom: classroom.id,
-                                        classroomStudent: classroomStudent.id,
-                                    })}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const url = route('protected.school-academic-years.classrooms.students.summatives', {
+                                            schoolAcademicYear: schoolAcademicYear.id,
+                                            classroom: classroom.id,
+                                            classroomStudent: classroomStudent.id,
+                                        });
+                                        window.location.href = url;
+                                    }}
                                 >
-                                    <Button variant="outline" size="sm">
-                                        <BookCopy className="mr-2 h-4 w-4" />
-                                        Lihat Sumatif
-                                    </Button>
-                                </Link>
-                                <Link
-                                    href={route('protected.school-academic-years.classrooms.students.export-cover', {
-                                        schoolAcademicYear: schoolAcademicYear.id,
-                                        classroom: classroom.id,
-                                        classroomStudent: classroomStudent.id,
-                                    })}
+                                    <BookCopy className="mr-2 h-4 w-4" />
+                                    Lihat Sumatif
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const url = route('protected.school-academic-years.classrooms.students.export-cover', {
+                                            schoolAcademicYear: schoolAcademicYear.id,
+                                            classroom: classroom.id,
+                                            classroomStudent: classroomStudent.id,
+                                        });
+                                        window.open(url, '_blank');
+                                    }}
                                 >
-                                    <Button variant="outline" size="sm">
-                                        <FileText className="mr-2 h-4 w-4" />
-                                        Export Sampul Rapor
-                                    </Button>
-                                </Link>
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Export Sampul Rapor
+                                </Button>
 
                                 {/* Transfer Certificate Dialog (Sudah diperbaiki) */}
                                 {/* Transfer Certificate Dialog (SUDAH DIPERBAIKI) */}
