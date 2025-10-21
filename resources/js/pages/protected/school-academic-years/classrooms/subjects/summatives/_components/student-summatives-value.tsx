@@ -291,24 +291,6 @@ export const StudentSummativeValues = ({ studentData, headerRows, dataColumns }:
         <div className="bg-gray-50 dark:bg-slate-900 min-h-screen p-4 sm:p-6 lg:p-8">
             <div className="max-w-full mx-auto">
                 <Card className="w-full">
-                    <CardHeader>
-                        <CardTitle>Rekapitulasi Nilai Siswa</CardTitle>
-                        <CardDescription>
-                            Menampilkan rekap nilai sumatif, tengah semester, dan akhir semester untuk seluruh siswa.
-                        </CardDescription>
-                        <div className="mt-4 flex flex-col sm:flex-row items-center gap-2">
-                            <Input
-                                placeholder="Cari nama atau nomor induk..."
-                                className="w-full sm:w-72"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                            <Button className="w-full sm:w-auto" onClick={handleExport}>
-                                <DownloadCloud />
-                                Ekspor Data
-                            </Button>
-                        </div>
-                    </CardHeader>
                     <CardContent>
                         <TooltipProvider>
                             <div className="relative overflow-x-auto border rounded-md">

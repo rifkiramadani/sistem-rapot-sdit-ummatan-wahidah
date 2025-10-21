@@ -115,6 +115,10 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
                 Route::post('/bulk-destroy', [ClassroomStudentController::class, 'bulkDestroy'])->name('bulk-destroy');
                 Route::get('/{classroomStudent}/summatives', [ClassroomStudentController::class, 'summatives'])->name('summatives');
                 Route::get('/{classroomStudent}/summatives/export-word', [ClassroomStudentController::class, 'exportSummativesWord'])->name('summatives.export-word');
+                Route::get('/{classroomStudent}/export-cover', [ClassroomStudentController::class, 'exportReportCover'])->name('export-cover');
+                Route::get('/{classroomStudent}/export-transfer-certificate', [ClassroomStudentController::class, 'exportTransferCertificate'])->name('export-transfer-certificate');
+                Route::get('/{classroomStudent}/export-report-card', [ClassroomStudentController::class, 'exportReportCard'])->name('export-report-card');
+                Route::get('/{classroomStudent}/export-sts', [ClassroomStudentController::class, 'exportSts'])->name('export-sts');
             });
 
             Route::prefix('/{classroom}/subjects')->name('subjects.')->group(function () {

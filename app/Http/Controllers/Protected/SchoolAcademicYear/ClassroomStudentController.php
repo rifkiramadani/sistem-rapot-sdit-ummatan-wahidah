@@ -6,6 +6,7 @@ use App\Enums\PerPageEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Classroom;
 use App\Models\ClassroomStudent;
+use App\Models\School;
 use App\Models\SchoolAcademicYear;
 use App\Models\Student;
 use App\QueryFilters\Filter;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use PhpOffice\PhpWord\TemplateProcessor;
@@ -360,96 +362,78 @@ class ClassroomStudentController extends Controller
             ]);
 
             // 1. Muat template
-            $templatePath = storage_path('app/templates/template_rekap_nilai_siswa.docx');
+            $templatePath = storage_path('app/templates/Template_Rapor.docx');
 
             // Jika template tidak ada, buat template sederhana
             if (!file_exists($templatePath)) {
-                Log::info('Template tidak ditemukan, membuat template sederhana.');
-                $this->createSimpleStudentTemplate($templatePath);
+                Log::error('Template Rapor tidak ditemukan!', ['path' => $templatePath]);
+                throw new \Exception('File template Template_Rapor.docx tidak ditemukan di server.');
             }
 
             $templateProcessor = new TemplateProcessor($templatePath);
 
-            // 2. Isi placeholder
-            $templateProcessor->setValue('nama_siswa', $classroomStudent->student->name);
-            $templateProcessor->setValue('nisn', $classroomStudent->student->nisn);
-            $templateProcessor->setValue('nama_kelas', $classroom->name);
-            $templateProcessor->setValue('tahun_ajaran', $schoolAcademicYear->year . ' Semester ' . $schoolAcademicYear->academicYear->name);
+            // 2. Isi placeholder data sekolah
+            $school = $schoolAcademicYear->school;
+            $school->load('principal');
+            $templateProcessor->setValue('nama_sekolah', $school->name ?? '');
+            $templateProcessor->setValue('npsn', $school->npsn ?? '');
+            $templateProcessor->setValue('alamat_sekolah', $school->address ?? '');
 
-            // 3. Buat tabel untuk nilai
-            $tablePhpWord = new PhpWord();
-            $section = $tablePhpWord->addSection();
+            // 3. Isi placeholder data siswa
+            $student = $classroomStudent->student;
+            $parent = $student->parent;
+            $genderLabels = [
+                \App\Enums\GenderEnum::MALE->value => 'Laki-laki',
+                \App\Enums\GenderEnum::FEMALE->value => 'Perempuan',
+            ];
+            $religionLabels = [
+                \App\Enums\ReligionEnum::MUSLIM->value => 'Islam',
+                \App\Enums\ReligionEnum::CHRISTIAN->value => 'Kristen Protestan',
+                \App\Enums\ReligionEnum::CATHOLIC->value => 'Kristen Katolik',
+                \App\Enums\ReligionEnum::HINDU->value => 'Hindu',
+                \App\Enums\ReligionEnum::BUDDHIST->value => 'Buddha',
+                \App\Enums\ReligionEnum::OTHER->value => 'Lainnya',
+            ];
+            $birthDate = \Carbon\Carbon::parse($student->birth_date)->locale('id')->translatedFormat('d F Y');
 
-            // Gaya
-            $headerStyle = ['bold' => true, 'bgColor' => 'F2F2F2', 'size' => 10];
-            $bodyStyle = ['size' => 10];
+            $templateProcessor->setValue('nama_siswa', $student->name ?? '');
+            $templateProcessor->setValue('nisn', $student->nisn ?? '');
+            $templateProcessor->setValue('jenis_kelamin', $genderLabels[$student->gender->value] ?? '');
+            $templateProcessor->setValue('tempat_lahir', $student->birth_place ?? '');
+            $templateProcessor->setValue('tanggal_lahir', $birthDate);
+            $templateProcessor->setValue('agama', $religionLabels[$student->religion->value] ?? '');
 
-            $wordTable = $section->addTable([
-                'borderSize' => 6,
-                'borderColor' => '000000',
-                'cellMargin' => 50,
-                'alignment' => 'center',
-                'width' => 10000,
-                'unit' => 'pct',
-            ]);
+            // 4. Isi placeholder data akademik
+            $templateProcessor->setValue('nama_kelas', $classroom->name ?? '');
+            $templateProcessor->setValue('semester', $schoolAcademicYear->academicYear->name ?? '');
+            $templateProcessor->setValue('tahun_ajaran', $schoolAcademicYear->year);
 
-            // Header tabel
-            $wordTable->addRow();
-            $wordTable->addCell(2000)->addText('Mata Pelajaran', $headerStyle, ['alignment' => 'center']);
-            $wordTable->addCell(3000)->addText('Nama Penilaian', $headerStyle, ['alignment' => 'center']);
-            $wordTable->addCell(1500)->addText('Identitas', $headerStyle, ['alignment' => 'center']);
-            $wordTable->addCell(1500)->addText('Tipe', $headerStyle, ['alignment' => 'center']);
-            $wordTable->addCell(1000)->addText('Nilai', $headerStyle, ['alignment' => 'center']);
-            $wordTable->addCell(2000)->addText('Keterangan', $headerStyle, ['alignment' => 'center']);
+            // 5. Process nilai-nilai untuk semester yang dipilih
+            $this->processSummativeGradesForRapor($templateProcessor, $summatives, $classroomStudent, $classroom, $schoolAcademicYear->academicYear);
 
-            // Data tabel
-            foreach ($summatives as $summative) {
-                $wordTable->addRow();
-                $wordTable->addCell(2000)->addText($summative['subject'], $bodyStyle);
-                $wordTable->addCell(3000)->addText($summative['name'], $bodyStyle);
-                $wordTable->addCell(1500)->addText($summative['identifier'] ?: '-', $bodyStyle, ['alignment' => 'center']);
-                $wordTable->addCell(1500)->addText($summative['type'], $bodyStyle, ['alignment' => 'center']);
-                $wordTable->addCell(1000)->addText($summative['student_value'] !== null ? (string) $summative['student_value'] : '-', $bodyStyle, ['alignment' => 'center']);
-                $wordTable->addCell(2000)->addText($summative['description'] ?: '-', $bodyStyle);
-            }
+            // 6. Isi placeholder data orang tua
+            $templateProcessor->setValue('nama_ayah', $parent->father_name ?? '');
+            $templateProcessor->setValue('pekerjaan_ayah', $parent->father_job ?? '');
+            $templateProcessor->setValue('nama_ibu', $parent->mother_name ?? '');
+            $templateProcessor->setValue('pekerjaan_ibu', $parent->mother_job ?? '');
 
-            // 4. Proses tabel ke XML
-            $tempTableFile = tempnam(sys_get_temp_dir(), 'phpword_student_table');
-            $xmlWriter = IOFactory::createWriter($tablePhpWord, 'Word2007');
-            $xmlWriter->save($tempTableFile);
-
-            $zip = new \ZipArchive();
-            if ($zip->open($tempTableFile) === true) {
-                $fullXml = $zip->getFromName('word/document.xml');
-                $zip->close();
-                unlink($tempTableFile);
+            // 7. Isi placeholder data kepala sekolah
+            $principal = $school->principal;
+            if ($principal) {
+                $templateProcessor->setValue('nama_kepala_sekolah', $principal->name ?? '');
+                $templateProcessor->setValue('nip_kepala_sekolah', $principal->employee_id ?? $principal->nip ?? '');
             } else {
-                Log::error('Gagal membuka file Word sementara sebagai zip.');
-                throw new \Exception('Gagal memproses XML tabel untuk injeksi.');
+                $templateProcessor->setValue('nama_kepala_sekolah', '');
+                $templateProcessor->setValue('nip_kepala_sekolah', '');
             }
 
-            if (!$fullXml) {
-                Log::error('Gagal membaca word/document.xml dari file zip.');
-                throw new \Exception('Gagal memproses XML tabel untuk injeksi.');
-            }
+            // Note: Using Template_Rapor.docx which has predefined table structure
+            // The table will be populated by the processSummativeGradesForRapor method
 
-            // Ekstraksi konten body
-            $tableXml = '';
-            if (preg_match('/<w:body(.*?)>(.*)<\/w:body>/s', $fullXml, $matches)) {
-                $bodyContent = $matches[2];
-                $tableXml = preg_replace('/<w:sectPr\s*.*?\s*\/w:sectPr>/s', '', $bodyContent);
-                $tableXml = preg_replace('/<w:lastRenderedPageBreak\s*\/>/', '', $tableXml);
-                $tableXml = trim($tableXml);
-            } else {
-                Log::error('Gagal mengekstrak body XML dari document.xml.');
-                throw new \Exception('Gagal memproses XML tabel untuk injeksi.');
-            }
-
-            // Set placeholder dengan XML tabel
-            $templateProcessor->setValue('tabel_nilai', $tableXml);
-
-            // 5. Simpan dan download
-            $filename = 'nilai-sumatif-' . str_replace(' ', '_', $classroomStudent->student->name) . '-' . str_replace(' ', '_', $classroom->name) . '.docx';
+            // 8. Simpan dan download
+            $studentName = str_replace([' ', '/', '\\'], '_', $classroomStudent->student->name);
+            $semesterName = str_replace([' ', '/', '\\'], '_', $schoolAcademicYear->academicYear->name);
+            $filename = 'Rapor_Nilai_' . $studentName . '_' . $semesterName . '.docx';
             $tempPath = storage_path('app/temp');
             File::ensureDirectoryExists($tempPath);
             $tempFilePath = $tempPath . '/' . uniqid('nilai_sumatif_siswa_', true) . '.docx';
@@ -512,5 +496,685 @@ class ClassroomStudentController extends Controller
 
         $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
         $objWriter->save($templatePath);
+    }
+
+    /**
+     * Export student report card cover page.
+     */
+    public function exportReportCover(SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
+    {
+        try {
+            Log::info('Memulai ekspor Sampul Rapor.', [
+                'classroomStudentId' => $classroomStudent->id,
+                'studentName' => $classroomStudent->student->name,
+                'className' => $classroom->name,
+            ]);
+
+            // Load data yang dibutuhkan
+            $schoolAcademicYear->load(['academicYear', 'school']);
+            $classroomStudent->load(['student.parent', 'student.guardian']);
+
+            // Get school data
+            $school = $schoolAcademicYear->school;
+            $school->load('principal');
+
+            // Generate Word document
+            return $this->generateReportCoverDocument(
+                $classroomStudent,
+                $classroom,
+                $schoolAcademicYear,
+                $school
+            );
+
+        } catch (\Exception $e) {
+            Log::error('Gagal membuat Sampul Rapor!', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'classroomStudentId' => $classroomStudent->id,
+            ]);
+
+            report($e);
+            return redirect()->back()->with('error', 'Gagal membuat Sampul Rapor: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate Word document for report card cover.
+     */
+    private function generateReportCoverDocument($classroomStudent, $classroom, $schoolAcademicYear, $school)
+    {
+        try {
+            Log::info('Memulai pembuatan dokumen Sampul Rapor.');
+
+            // 1. Muat template
+            $templatePath = storage_path('app/templates/Sampul_Rapor.docx');
+
+            if (!file_exists($templatePath)) {
+                Log::error('Template Sampul Rapor tidak ditemukan!', ['path' => $templatePath]);
+                throw new \Exception('File template Sampul Rapor tidak ditemukan di server.');
+            }
+
+            $templateProcessor = new TemplateProcessor($templatePath);
+
+            // 2. Siapkan data siswa
+            $student = $classroomStudent->student;
+            $parent = $student->parent;
+            $guardian = $student->guardian;
+
+            // Gender labels - handle enum properly
+            $genderLabels = [
+                \App\Enums\GenderEnum::MALE->value => 'Laki-laki',
+                \App\Enums\GenderEnum::FEMALE->value => 'Perempuan',
+            ];
+            $religionLabels = [
+                \App\Enums\ReligionEnum::MUSLIM->value => 'Islam',
+                \App\Enums\ReligionEnum::CHRISTIAN->value => 'Kristen Protestan',
+                \App\Enums\ReligionEnum::CATHOLIC->value => 'Kristen Katolik',
+                \App\Enums\ReligionEnum::HINDU->value => 'Hindu',
+                \App\Enums\ReligionEnum::BUDDHIST->value => 'Buddha',
+                \App\Enums\ReligionEnum::OTHER->value => 'Lainnya',
+            ];
+
+            // Format tanggal lahir
+            $birthDate = \Carbon\Carbon::parse($student->birth_date)->locale('id')->translatedFormat('d F Y');
+
+            // 3. Isi placeholder data sekolah
+            $templateProcessor->setValue('nama_sekolah', $school->name ?? '');
+            $templateProcessor->setValue('npsn', $school->npsn ?? '');
+            $templateProcessor->setValue('alamat_sekolah', $school->address ?? '');
+            $templateProcessor->setValue('kode_pos', $school->postal_code ?? '');
+            $templateProcessor->setValue('website', $school->website ?? '');
+            $templateProcessor->setValue('email', $school->email ?? '');
+
+            // 4. Isi placeholder data siswa
+            $templateProcessor->setValue('nama_siswa', $student->name ?? '');
+            $templateProcessor->setValue('nisn', $student->nisn ?? '');
+            $templateProcessor->setValue('nis', '-'); // NIS jika ada
+            $templateProcessor->setValue('jenis_kelamin', $genderLabels[$student->gender->value] ?? '');
+            $templateProcessor->setValue('tempat_lahir', $student->birth_place ?? '');
+            $templateProcessor->setValue('tanggal_lahir', $birthDate);
+            $templateProcessor->setValue('agama', $religionLabels[$student->religion->value] ?? '');
+            $templateProcessor->setValue('alamat_siswa', $student->address ?? '');
+
+            // 5. Isi placeholder data orang tua
+            $templateProcessor->setValue('nama_ayah', $parent->father_name ?? '');
+            $templateProcessor->setValue('pekerjaan_ayah', $parent->father_job ?? '');
+            $templateProcessor->setValue('nama_ibu', $parent->mother_name ?? '');
+            $templateProcessor->setValue('pekerjaan_ibu', $parent->mother_job ?? '');
+            $templateProcessor->setValue('alamat_orang_tua', $parent->address ?? '');
+
+            // 6. Isi placeholder data wali
+            $templateProcessor->setValue('nama_wali', $guardian->name ?? '');
+            $templateProcessor->setValue('pekerjaan_wali', $guardian->job ?? '');
+            $templateProcessor->setValue('no_telp_wali', $guardian->phone_number ?? '');
+            $templateProcessor->setValue('alamat_wali', $guardian->address ?? '');
+
+            // 7. Isi placeholder data akademik
+            $templateProcessor->setValue('nama_kelas', $classroom->name ?? '');
+            $templateProcessor->setValue('tahun_ajaran', $schoolAcademicYear->year . ' Semester ' . $schoolAcademicYear->academicYear->name);
+
+            // 8. Isi placeholder data kepala sekolah
+            $principal = $school->principal;
+            if ($principal) {
+                $templateProcessor->setValue('nama_kepala_sekolah', $principal->name ?? '');
+                $templateProcessor->setValue('nip_kepala_sekolah', $principal->employee_id ?? $principal->nip ?? '');
+            } else {
+                $templateProcessor->setValue('nama_kepala_sekolah', '');
+                $templateProcessor->setValue('nip_kepala_sekolah', '');
+            }
+
+            // 9. Handle foto siswa (jika ada)
+            $this->handleStudentPhoto($templateProcessor, $student);
+
+            // 10. Handle tanda tangan kepala sekolah (placeholder)
+            $templateProcessor->setValue('tanda_tangan_kepala_sekolah', '[Tanda Tangan Kepala Sekolah]');
+
+            // 11. Generate nama file
+            $studentName = str_replace([' ', '/', '\\'], '_', $student->name);
+            $yearName = str_replace([' ', '/', '\\'], '_', $schoolAcademicYear->year);
+            $filename = 'Sampul_Rapor_' . $studentName . '_' . $yearName . '.docx';
+            $tempPath = storage_path('app/temp');
+            File::ensureDirectoryExists($tempPath);
+            $tempFilePath = $tempPath . '/' . uniqid('sampul_rapor_', true) . '.docx';
+            $templateProcessor->saveAs($tempFilePath);
+
+            Log::info('Sampul Rapor berhasil disimpan.', [
+                'tempFilePath' => $tempFilePath,
+                'filename' => $filename
+            ]);
+
+            return response()
+                ->download($tempFilePath, $filename)
+                ->deleteFileAfterSend(true);
+
+        } catch (\Exception $e) {
+            Log::error('Gagal membuat Sampul Rapor!', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Handle student photo embedding in template.
+     */
+    private function handleStudentPhoto($templateProcessor, $student)
+    {
+        try {
+            // Check if student has photo path
+            $photoPath = null;
+
+            // Try different possible photo field names
+            $possiblePhotoFields = ['photo', 'avatar', 'picture', 'image'];
+            foreach ($possiblePhotoFields as $field) {
+                if (isset($student->$field) && !empty($student->$field)) {
+                    $photoPath = $student->$field;
+                    break;
+                }
+            }
+
+            if ($photoPath) {
+                $fullPhotoPath = storage_path("app/public/{$photoPath}");
+
+                if (file_exists($fullPhotoPath)) {
+                    // Embed photo into template
+                    $templateProcessor->setImageValue('foto_siswa', $fullPhotoPath);
+                    return;
+                }
+            }
+
+            // If no photo found, set placeholder text
+            $templateProcessor->setValue('foto_siswa', '[Foto Siswa]');
+
+        } catch (\Exception $e) {
+            Log::warning('Gagal memproses foto siswa, menggunakan placeholder.', [
+                'error' => $e->getMessage(),
+                'studentId' => $student->id,
+            ]);
+            $templateProcessor->setValue('foto_siswa', '[Foto Siswa]');
+        }
+    }
+
+    /**
+     * Export School Transfer Certificate.
+     */
+    public function exportTransferCertificate(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
+    {
+        try {
+            Log::info('Memulai ekspor Surat Keterangan Pindah Sekolah.', [
+                'classroomStudentId' => $classroomStudent->id,
+                'studentName' => $classroomStudent->student->name,
+            ]);
+
+            $validated = $request->validate([
+                'transfer_date' => 'required|date',
+                'transfer_reason' => 'required|string|max:500',
+                'destination_school' => 'nullable|string|max:200',
+                'destination_city' => 'nullable|string|max:100',
+            ]);
+
+            // Load data yang dibutuhkan
+            $schoolAcademicYear->load(['academicYear', 'school']);
+            $classroomStudent->load(['student.parent', 'student.guardian']);
+            $school = $schoolAcademicYear->school;
+            $school->load('principal');
+
+            return $this->generateTransferCertificateDocument(
+                $classroomStudent,
+                $classroom,
+                $schoolAcademicYear,
+                $school,
+                $validated
+            );
+
+        } catch (\Exception $e) {
+            Log::error('Gagal membuat Surat Keterangan Pindah Sekolah!', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'classroomStudentId' => $classroomStudent->id,
+            ]);
+
+            report($e);
+            return redirect()->back()->with('error', 'Gagal membuat Surat Keterangan Pindah Sekolah: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate Word document for Transfer Certificate.
+     */
+    private function generateTransferCertificateDocument($classroomStudent, $classroom, $schoolAcademicYear, $school, $transferData)
+    {
+        try {
+            Log::info('Memulai pembuatan dokumen Surat Keterangan Pindah Sekolah.');
+
+            // 1. Muat template
+            $templatePath = storage_path('app/templates/TEMPLATE_KETERANGAN_PINDAH_SEKOLAH.docx');
+
+            if (!file_exists($templatePath)) {
+                Log::error('Template Surat Keterangan Pindah Sekolah tidak ditemukan!', ['path' => $templatePath]);
+                throw new \Exception('File template Surat Keterangan Pindah Sekolah tidak ditemukan di server.');
+            }
+
+            $templateProcessor = new TemplateProcessor($templatePath);
+
+            // 2. Siapkan data siswa
+            $student = $classroomStudent->student;
+            $parent = $student->parent;
+            $guardian = $student->guardian;
+
+            // Gender labels
+            $genderLabels = [
+                \App\Enums\GenderEnum::MALE->value => 'Laki-laki',
+                \App\Enums\GenderEnum::FEMALE->value => 'Perempuan',
+            ];
+            $religionLabels = [
+                \App\Enums\ReligionEnum::MUSLIM->value => 'Islam',
+                \App\Enums\ReligionEnum::CHRISTIAN->value => 'Kristen Protestan',
+                \App\Enums\ReligionEnum::CATHOLIC->value => 'Kristen Katolik',
+                \App\Enums\ReligionEnum::HINDU->value => 'Hindu',
+                \App\Enums\ReligionEnum::BUDDHIST->value => 'Buddha',
+                \App\Enums\ReligionEnum::OTHER->value => 'Lainnya',
+            ];
+
+            // Format tanggal
+            $birthDate = \Carbon\Carbon::parse($student->birth_date)->locale('id')->translatedFormat('d F Y');
+            $transferDate = \Carbon\Carbon::parse($transferData['transfer_date'])->locale('id')->translatedFormat('d F Y');
+
+            // 3. Isi placeholder data sekolah
+            $templateProcessor->setValue('nama_sekolah', $school->name ?? '');
+            $templateProcessor->setValue('npsn', $school->npsn ?? '');
+            $templateProcessor->setValue('alamat_sekolah', $school->address ?? '');
+            $templateProcessor->setValue('kota_sekolah', $school->city ?? '');
+            $templateProcessor->setValue('provinsi_sekolah', $school->province ?? '');
+
+            // 4. Isi placeholder data siswa
+            $templateProcessor->setValue('nama_siswa', $student->name ?? '');
+            $templateProcessor->setValue('nisn', $student->nisn ?? '');
+            $templateProcessor->setValue('nis', '-'); // NIS jika ada
+            $templateProcessor->setValue('jenis_kelamin', $genderLabels[$student->gender->value] ?? '');
+            $templateProcessor->setValue('tempat_lahir', $student->birth_place ?? '');
+            $templateProcessor->setValue('tanggal_lahir', $birthDate);
+            $templateProcessor->setValue('agama', $religionLabels[$student->religion->value] ?? '');
+            $templateProcessor->setValue('alamat_siswa', $student->address ?? '');
+
+            // 5. Isi placeholder data akademik
+            $templateProcessor->setValue('nama_kelas', $classroom->name ?? '');
+            $templateProcessor->setValue('tahun_ajaran', $schoolAcademicYear->year);
+
+            // 6. Isi placeholder data pindah
+            $templateProcessor->setValue('tanggal_pindah', $transferDate);
+            $templateProcessor->setValue('alasan_pindah', $transferData['transfer_reason']);
+            $templateProcessor->setValue('sekolah_tujuan', $transferData['destination_school'] ?? '-');
+            $templateProcessor->setValue('kota_tujuan', $transferData['destination_city'] ?? '-');
+
+            // 7. Isi placeholder data orang tua
+            $templateProcessor->setValue('nama_ayah', $parent->father_name ?? '');
+            $templateProcessor->setValue('pekerjaan_ayah', $parent->father_job ?? '');
+            $templateProcessor->setValue('nama_ibu', $parent->mother_name ?? '');
+            $templateProcessor->setValue('pekerjaan_ibu', $parent->mother_job ?? '');
+
+            // 8. Isi placeholder data kepala sekolah
+            $principal = $school->principal;
+            if ($principal) {
+                $templateProcessor->setValue('nama_kepala_sekolah', $principal->name ?? '');
+                $templateProcessor->setValue('nip_kepala_sekolah', $principal->employee_id ?? $principal->nip ?? '');
+            } else {
+                $templateProcessor->setValue('nama_kepala_sekolah', '');
+                $templateProcessor->setValue('nip_kepala_sekolah', '');
+            }
+
+            // 9. Format tanggal surat
+            $currentDate = \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y');
+            $templateProcessor->setValue('tanggal_surat', $currentDate);
+
+            // 10. Generate nama file
+            $studentName = str_replace([' ', '/', '\\'], '_', $student->name);
+            $filename = 'Surat_Keterangan_Pindah_Sekolah_' . $studentName . '.docx';
+            $tempPath = storage_path('app/temp');
+            File::ensureDirectoryExists($tempPath);
+            $tempFilePath = $tempPath . '/' . uniqid('transfer_certificate_', true) . '.docx';
+            $templateProcessor->saveAs($tempFilePath);
+
+            Log::info('Surat Keterangan Pindah Sekolah berhasil disimpan.', [
+                'tempFilePath' => $tempFilePath,
+                'filename' => $filename
+            ]);
+
+            return response()
+                ->download($tempFilePath, $filename)
+                ->deleteFileAfterSend(true);
+
+        } catch (\Exception $e) {
+            Log::error('Gagal membuat Surat Keterangan Pindah Sekolah!', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Export Final Report Card.
+     */
+    public function exportReportCard(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
+    {
+        try {
+            Log::info('Memulai ekspor Rapor Akhir.', [
+                'classroomStudentId' => $classroomStudent->id,
+                'studentName' => $classroomStudent->student->name,
+            ]);
+
+            $validated = $request->validate([
+                'semester_id' => 'required|exists:academic_years,id',
+            ]);
+
+            // Load data yang dibutuhkan
+            $schoolAcademicYear->load(['academicYear', 'school']);
+            $classroomStudent->load(['student.parent', 'student.guardian']);
+            $school = $schoolAcademicYear->school;
+            $school->load('principal');
+
+            $selectedSemester = \App\Models\AcademicYear::find($validated['semester_id']);
+
+            return $this->generateReportCardDocument(
+                $classroomStudent,
+                $classroom,
+                $schoolAcademicYear,
+                $school,
+                $selectedSemester
+            );
+
+        } catch (\Exception $e) {
+            Log::error('Gagal membuat Rapor Akhir!', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'classroomStudentId' => $classroomStudent->id,
+            ]);
+
+            report($e);
+            return redirect()->back()->with('error', 'Gagal membuat Rapor Akhir: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate Word document for Final Report Card.
+     */
+    private function generateReportCardDocument($classroomStudent, $classroom, $schoolAcademicYear, $school, $semester)
+    {
+        try {
+            Log::info('Memulai pembuatan dokumen Rapor Akhir.');
+
+            // 1. Muat template
+            $templatePath = storage_path('app/templates/Template_Rapor.docx');
+
+            if (!file_exists($templatePath)) {
+                Log::error('Template Rapor Akhir tidak ditemukan!', ['path' => $templatePath]);
+                throw new \Exception('File template Rapor Akhir tidak ditemukan di server.');
+            }
+
+            $templateProcessor = new TemplateProcessor($templatePath);
+
+            // 2. Siapkan data siswa
+            $student = $classroomStudent->student;
+            $parent = $student->parent;
+
+            // Gender labels
+            $genderLabels = [
+                \App\Enums\GenderEnum::MALE->value => 'Laki-laki',
+                \App\Enums\GenderEnum::FEMALE->value => 'Perempuan',
+            ];
+            $religionLabels = [
+                \App\Enums\ReligionEnum::MUSLIM->value => 'Islam',
+                \App\Enums\ReligionEnum::CHRISTIAN->value => 'Kristen Protestan',
+                \App\Enums\ReligionEnum::CATHOLIC->value => 'Kristen Katolik',
+                \App\Enums\ReligionEnum::HINDU->value => 'Hindu',
+                \App\Enums\ReligionEnum::BUDDHIST->value => 'Buddha',
+                \App\Enums\ReligionEnum::OTHER->value => 'Lainnya',
+            ];
+
+            // Format tanggal
+            $birthDate = \Carbon\Carbon::parse($student->birth_date)->locale('id')->translatedFormat('d F Y');
+
+            // 3. Isi placeholder data sekolah
+            $templateProcessor->setValue('nama_sekolah', $school->name ?? '');
+            $templateProcessor->setValue('npsn', $school->npsn ?? '');
+            $templateProcessor->setValue('alamat_sekolah', $school->address ?? '');
+
+            // 4. Isi placeholder data siswa
+            $templateProcessor->setValue('nama_siswa', $student->name ?? '');
+            $templateProcessor->setValue('nisn', $student->nisn ?? '');
+            $templateProcessor->setValue('jenis_kelamin', $genderLabels[$student->gender->value] ?? '');
+            $templateProcessor->setValue('tempat_lahir', $student->birth_place ?? '');
+            $templateProcessor->setValue('tanggal_lahir', $birthDate);
+            $templateProcessor->setValue('agama', $religionLabels[$student->religion->value] ?? '');
+
+            // 5. Isi placeholder data akademik
+            $templateProcessor->setValue('nama_kelas', $classroom->name ?? '');
+            $templateProcessor->setValue('semester', $semester->name ?? '');
+            $templateProcessor->setValue('tahun_ajaran', $schoolAcademicYear->year);
+
+            // 6. Process nilai-nilai untuk semester yang dipilih
+            $this->processReportCardGrades($templateProcessor, $classroomStudent, $classroom, $semester);
+
+            // 7. Isi placeholder data orang tua
+            $templateProcessor->setValue('nama_ayah', $parent->father_name ?? '');
+            $templateProcessor->setValue('pekerjaan_ayah', $parent->father_job ?? '');
+            $templateProcessor->setValue('nama_ibu', $parent->mother_name ?? '');
+            $templateProcessor->setValue('pekerjaan_ibu', $parent->mother_job ?? '');
+
+            // 8. Isi placeholder data kepala sekolah
+            $principal = $school->principal;
+            if ($principal) {
+                $templateProcessor->setValue('nama_kepala_sekolah', $principal->name ?? '');
+                $templateProcessor->setValue('nip_kepala_sekolah', $principal->employee_id ?? $principal->nip ?? '');
+            } else {
+                $templateProcessor->setValue('nama_kepala_sekolah', '');
+                $templateProcessor->setValue('nip_kepala_sekolah', '');
+            }
+
+            // 9. Generate nama file
+            $studentName = str_replace([' ', '/', '\\'], '_', $student->name);
+            $semesterName = str_replace([' ', '/', '\\'], '_', $semester->name);
+            $filename = 'Rapor_Akhir_' . $studentName . '_' . $semesterName . '.docx';
+            $tempPath = storage_path('app/temp');
+            File::ensureDirectoryExists($tempPath);
+            $tempFilePath = $tempPath . '/' . uniqid('report_card_', true) . '.docx';
+            $templateProcessor->saveAs($tempFilePath);
+
+            Log::info('Rapor Akhir berhasil disimpan.', [
+                'tempFilePath' => $tempFilePath,
+                'filename' => $filename
+            ]);
+
+            return response()
+                ->download($tempFilePath, $filename)
+                ->deleteFileAfterSend(true);
+
+        } catch (\Exception $e) {
+            Log::error('Gagal membuat Rapor Akhir!', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Process grades for report card.
+     */
+    private function processReportCardGrades($templateProcessor, $classroomStudent, $classroom, $semester)
+    {
+        // Placeholder untuk implementasi pengolahan nilai
+        // Ini akan diisi sesuai dengan struktur database yang ada
+        $templateProcessor->setValue('tabel_nilai', '[Tabel Nilai Akan Diisi Sini]');
+        $templateProcessor->setValue('catatan_wali_kelas', '[Catatan Wali Kelas Akan Diisi Sini]');
+        $templateProcessor->setValue('kehadiran_sakit', '0');
+        $templateProcessor->setValue('kehadiran_izin', '0');
+        $templateProcessor->setValue('kehadiran_tanpa_keterangan', '0');
+        $templateProcessor->setValue('ekstrakurikuler', '[Data Ekstrakurikuler Akan Diisi Sini]');
+    }
+
+    /**
+     * Export STS Assessment Data.
+     */
+    public function exportSts(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
+    {
+        try {
+            Log::info('Memulai ekspor Data STS.', [
+                'classroomStudentId' => $classroomStudent->id,
+                'studentName' => $classroomStudent->student->name,
+            ]);
+
+            // Load data yang dibutuhkan
+            $schoolAcademicYear->load(['academicYear', 'school']);
+            $classroomStudent->load(['student.parent', 'student.guardian']);
+            $school = $schoolAcademicYear->school;
+            $school->load('principal');
+
+            return $this->generateStsDocument(
+                $classroomStudent,
+                $classroom,
+                $schoolAcademicYear,
+                $school
+            );
+
+        } catch (\Exception $e) {
+            Log::error('Gagal membuat Data STS!', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'classroomStudentId' => $classroomStudent->id,
+            ]);
+
+            report($e);
+            return redirect()->back()->with('error', 'Gagal membuat Data STS: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate Word document for STS.
+     */
+    private function generateStsDocument($classroomStudent, $classroom, $schoolAcademicYear, $school)
+    {
+        try {
+            Log::info('Memulai pembuatan dokumen STS.');
+
+            // 1. Muat template
+            $templatePath = storage_path('app/templates/Template_Rapor_STS.docx');
+
+            if (!file_exists($templatePath)) {
+                Log::error('Template STS tidak ditemukan!', ['path' => $templatePath]);
+                throw new \Exception('File template STS tidak ditemukan di server.');
+            }
+
+            $templateProcessor = new TemplateProcessor($templatePath);
+
+            // 2. Siapkan data siswa
+            $student = $classroomStudent->student;
+            $parent = $student->parent;
+
+            // Gender labels
+            $genderLabels = [
+                \App\Enums\GenderEnum::MALE->value => 'Laki-laki',
+                \App\Enums\GenderEnum::FEMALE->value => 'Perempuan',
+            ];
+
+            // Format tanggal
+            $birthDate = \Carbon\Carbon::parse($student->birth_date)->locale('id')->translatedFormat('d F Y');
+
+            // 3. Isi placeholder data sekolah
+            $templateProcessor->setValue('nama_sekolah', $school->name ?? '');
+            $templateProcessor->setValue('npsn', $school->npsn ?? '');
+
+            // 4. Isi placeholder data siswa
+            $templateProcessor->setValue('nama_siswa', $student->name ?? '');
+            $templateProcessor->setValue('nisn', $student->nisn ?? '');
+            $templateProcessor->setValue('nis', '-');
+            $templateProcessor->setValue('jenis_kelamin', $genderLabels[$student->gender->value] ?? '');
+            $templateProcessor->setValue('tempat_lahir', $student->birth_place ?? '');
+            $templateProcessor->setValue('tanggal_lahir', $birthDate);
+
+            // 5. Isi placeholder data akademik
+            $templateProcessor->setValue('nama_kelas', $classroom->name ?? '');
+            $templateProcessor->setValue('tahun_ajaran', $schoolAcademicYear->year . ' Semester ' . $schoolAcademicYear->academicYear->name);
+
+            // 6. Process nilai STS
+            $this->processStsGrades($templateProcessor, $classroomStudent, $classroom);
+
+            // 7. Generate nama file
+            $studentName = str_replace([' ', '/', '\\'], '_', $student->name);
+            $filename = 'STS_' . $studentName . '.docx';
+            $tempPath = storage_path('app/temp');
+            File::ensureDirectoryExists($tempPath);
+            $tempFilePath = $tempPath . '/' . uniqid('sts_', true) . '.docx';
+            $templateProcessor->saveAs($tempFilePath);
+
+            Log::info('STS berhasil disimpan.', [
+                'tempFilePath' => $tempFilePath,
+                'filename' => $filename
+            ]);
+
+            return response()
+                ->download($tempFilePath, $filename)
+                ->deleteFileAfterSend(true);
+
+        } catch (\Exception $e) {
+            Log::error('Gagal membuat STS!', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Process grades for STS.
+     */
+    private function processStsGrades($templateProcessor, $classroomStudent, $classroom)
+    {
+        // Placeholder untuk implementasi pengolahan nilai STS
+        // Ini akan diisi sesuai dengan struktur database yang ada
+        $templateProcessor->setValue('tabel_nilai_sts', '[Tabel Nilai STS Akan Diisi Sini]');
+        $templateProcessor->setValue('catatan_wali_kelas_sts', '[Catatan Wali Kelas STS Akan Diisi Sini]');
+    }
+
+    /**
+     * Process summative grades for rapor template.
+     */
+    private function processSummativeGradesForRapor($templateProcessor, $summatives, $classroomStudent, $classroom, $academicYear)
+    {
+        try {
+            // Placeholder untuk implementasi pengolahan nilai rapor
+            // Ini akan diisi sesuai dengan struktur database yang ada
+            $templateProcessor->setValue('tabel_nilai', '[Tabel Nilai Rapor Akan Diisi Sini]');
+            $templateProcessor->setValue('catatan_wali_kelas', '[Catatan Wali Kelas Akan Diisi Sini]');
+            $templateProcessor->setValue('kehadiran_sakit', '0');
+            $templateProcessor->setValue('kehadiran_izin', '0');
+            $templateProcessor->setValue('kehadiran_tanpa_keterangan', '0');
+            $templateProcessor->setValue('ekstrakurikuler', '[Data Ekstrakurikuler Akan Diisi Sini]');
+
+            Log::info('Processing summative grades for rapor template.', [
+                'totalSummatives' => $summatives->count(),
+                'classroom' => $classroom->name,
+                'academicYear' => $academicYear->name,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to process summative grades for rapor!', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            // Set default values if processing fails
+            $templateProcessor->setValue('tabel_nilai', '[Error processing grades]');
+            $templateProcessor->setValue('catatan_wali_kelas', '[Error processing notes]');
+        }
     }
 }
