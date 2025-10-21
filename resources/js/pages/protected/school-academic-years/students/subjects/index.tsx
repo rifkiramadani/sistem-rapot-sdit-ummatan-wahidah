@@ -34,7 +34,7 @@ interface SubjectsIndexProps {
 export default function SubjectsIndex({ schoolAcademicYear, student, subjects }: SubjectsIndexProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Dashboard',
+            title: 'Dasbor',
             href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id })
         },
         {

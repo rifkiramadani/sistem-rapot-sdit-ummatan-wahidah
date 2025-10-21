@@ -82,7 +82,7 @@ interface IndexProps {
 export default function Index({ schoolAcademicYear, dashboardData, error }: IndexProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Dashboard',
+            title: 'Dasbor',
             href: route('protected.school-academic-years.dashboard.index', {
                 schoolAcademicYear: schoolAcademicYear.id,
             }),
@@ -92,13 +92,13 @@ export default function Index({ schoolAcademicYear, dashboardData, error }: Inde
     if (error || !dashboardData) {
         return (
             <AppLayout breadcrumbs={breadcrumbs}>
-                <Head title={`${schoolAcademicYear.academicYear?.name || 'Dashboard'}`} />
+                <Head title={`${schoolAcademicYear.academicYear?.name || 'Dasbor'}`} />
                 <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-red-600">
                                 <School className="h-5 w-5" />
-                                Dashboard Error
+                                Dasbor Error
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -114,7 +114,7 @@ export default function Index({ schoolAcademicYear, dashboardData, error }: Inde
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`${school_info.academic_year} - Dashboard`} />
+            <Head title={`${school_info.academic_year} - Dasbor`} />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 {/* Header with School and Academic Year Information */}
                 <Card>

@@ -15,7 +15,7 @@ interface IndexProps {
 
 export default function Index({ classrooms, schoolAcademicYear, isTeacher = false }: IndexProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }) },
+        { title: 'Dasbor', href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }) },
         { title: 'Kelas', href: route('protected.school-academic-years.classrooms.index', { schoolAcademicYear: schoolAcademicYear.id }) },
     ];
 

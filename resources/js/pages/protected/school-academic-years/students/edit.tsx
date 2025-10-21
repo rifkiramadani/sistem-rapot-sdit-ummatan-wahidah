@@ -12,7 +12,7 @@ interface EditProps {
 
 export default function Edit({ schoolAcademicYear, student }: EditProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }) },
+        { title: 'Dasbor', href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }) },
         { title: 'Siswa', href: route('protected.school-academic-years.students.index', { schoolAcademicYear: schoolAcademicYear.id }) },
         {
             title: 'Edit',

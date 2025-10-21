@@ -39,7 +39,7 @@ import {
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dashboard',
+        title: 'Dasbor',
         href: route('protected.dashboard.index'),
     },
 ];
@@ -104,17 +104,17 @@ export default function Index({ school, dashboardData, error }: IndexProps) {
     if (error || !dashboardData) {
         return (
             <AppLayout breadcrumbs={breadcrumbs}>
-                <Head title="Dashboard" />
+                <Head title="Dasbor" />
                 <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-red-600">
                                 <School className="h-5 w-5" />
-                                Dashboard Error
+                                Dasbor Error
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-muted-foreground">{error || 'No dashboard data available'}</p>
+                            <p className="text-muted-foreground">{error || 'Data dasbor tidak tersedia'}</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -126,7 +126,7 @@ export default function Index({ school, dashboardData, error }: IndexProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`${school_info.name} - Dashboard`} />
+            <Head title={`${school_info.name} - Dasbor`} />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 {/* Header with School Information */}
                 <Card>

@@ -15,7 +15,7 @@ export default function Create({ schoolAcademicYear }: CreateProps) {
     // Definisikan breadcrumbs untuk navigasi
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Dashboard',
+            title: 'Dasbor',
             href: route('protected.school-academic-years.dashboard.index', {
                 schoolAcademicYear: schoolAcademicYear.id,
             }),

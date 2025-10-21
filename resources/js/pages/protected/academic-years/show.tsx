@@ -40,7 +40,7 @@ export default function Show({ academicYear, schoolAcademicYear }: { academicYea
                                 >
                                     <Button variant="outline" size="sm">
                                         <LayoutDashboard className="mr-2 h-4 w-4" />
-                                        Dashboard
+                                        Dasbor
                                     </Button>
                                 </Link>
                             </div>

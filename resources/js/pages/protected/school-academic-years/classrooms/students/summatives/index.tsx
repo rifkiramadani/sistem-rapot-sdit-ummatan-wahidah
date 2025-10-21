@@ -42,7 +42,7 @@ export default function Index({ schoolAcademicYear, classroom, classroomStudent,
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Dashboard',
+            title: 'Dasbor',
             href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }),
         },
         {

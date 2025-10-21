@@ -60,7 +60,7 @@ export default function SubjectDetail({
 }: SubjectDetailProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Dashboard',
+            title: 'Dasbor',
             href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id })
         },
         {

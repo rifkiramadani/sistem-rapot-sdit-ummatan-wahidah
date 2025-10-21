@@ -5,11 +5,11 @@ import AcademicYearsForm from './_components/academic-years-form';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Academic Years',
+        title: 'Tahun Ajaran',
         href: route('protected.academic-years.index'),
     },
     {
-        title: 'Create',
+        title: 'Buat',
         href: route('protected.academic-years.create'),
     },
 ];

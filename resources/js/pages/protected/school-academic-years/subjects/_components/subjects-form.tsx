@@ -75,7 +75,7 @@ export default function SubjectsForm({ subject, schoolAcademicYear }: SubjectsFo
                     {/* [UBAH] Bungkus tombol di div yang memenuhi 2 kolom untuk alignment yang benar */}
                     <div className="flex justify-end md:col-span-2">
                         <Button type="submit" disabled={processing}>
-                            {processing ? 'Menyimpan...' : isEditMode ? 'Simpan Perubahan' : 'Buat Subject'}
+                            {processing ? 'Menyimpan...' : isEditMode ? 'Simpan Perubahan' : 'Buat Mata Pelajaran'}
                         </Button>
                     </div>
                 </form>

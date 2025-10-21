@@ -30,7 +30,7 @@ interface ShowProps {
 
 export default function Show({ schoolAcademicYear, student }: ShowProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }) },
+        { title: 'Dasbor', href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }) },
         { title: 'Siswa', href: route('protected.school-academic-years.students.index', { schoolAcademicYear: schoolAcademicYear.id }) },
         {
             title: student.name,

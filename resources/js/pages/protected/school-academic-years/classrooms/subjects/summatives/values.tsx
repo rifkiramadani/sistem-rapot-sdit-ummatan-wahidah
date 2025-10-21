@@ -47,7 +47,7 @@ interface IndexProps {
 export default function Index({ summatives, classroomSubject, schoolAcademicYear, classroom, studentSummativeValues }: IndexProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Dashboard',
+            title: 'Dasbor',
             href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }),
         },
         {

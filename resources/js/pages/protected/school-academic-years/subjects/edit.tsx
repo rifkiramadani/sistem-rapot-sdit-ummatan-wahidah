@@ -17,7 +17,7 @@ export default function Edit({ schoolAcademicYear, subject }: EditProps) {
     // Definisikan breadcrumbs untuk navigasi halaman edit
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: 'Dashboard',
+            title: 'Dasbor',
             href: route('protected.school-academic-years.dashboard.index', {
                 schoolAcademicYear: schoolAcademicYear.id,
             }),

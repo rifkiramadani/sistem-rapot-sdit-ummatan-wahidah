@@ -12,7 +12,7 @@ interface CreateProps {
 
 export default function Create({ schoolAcademicYear, teachers }: CreateProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }) },
+        { title: 'Dasbor', href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }) },
         { title: 'Kelas', href: route('protected.school-academic-years.classrooms.index', { schoolAcademicYear: schoolAcademicYear.id }) },
         { title: 'Tambah', href: route('protected.school-academic-years.classrooms.create', { schoolAcademicYear: schoolAcademicYear.id }) },
     ];
