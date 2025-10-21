@@ -108,6 +108,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
             Route::put('/{classroom}', [ClassroomController::class, 'update'])->name('update');
             Route::delete('/{classroom}', [ClassroomController::class, 'destroy'])->name('destroy');
             Route::post('/bulk-destroy', [ClassroomController::class, 'bulkDestroy'])->name('bulk-destroy');
+            Route::get('/{classroom}/export-final-grades', [ClassroomController::class, 'exportFinalGrades'])->name('export-final-grades');
 
             Route::prefix('/{classroom}/students')->name('students.')->group(function () {
                 Route::get('', [ClassroomStudentController::class, 'index'])->name('index');

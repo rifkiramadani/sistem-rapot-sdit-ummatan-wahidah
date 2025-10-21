@@ -8,7 +8,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { type Classroom } from '@/types/models/classrooms';
 import { type SchoolAcademicYear } from '@/types/models/school-academic-years';
-import { BookCopy, Pencil, Users } from 'lucide-react';
+import { BookCopy, Pencil, Users, Download } from 'lucide-react';
 
 interface ShowProps {
     schoolAcademicYear: SchoolAcademicYear;
@@ -59,6 +59,21 @@ export default function Show({ schoolAcademicYear, classroom }: ShowProps) {
                                         Mata Pelajaran
                                     </Button>
                                 </Link>
+
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const url = route('protected.school-academic-years.classrooms.export-final-grades', {
+                                            schoolAcademicYear: schoolAcademicYear.id,
+                                            classroom: classroom.id,
+                                        });
+                                        window.open(url, '_blank');
+                                    }}
+                                >
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Export Nilai Akhir Kelas
+                                </Button>
                             </div>
                             <Link
                                 href={route('protected.school-academic-years.classrooms.edit', {
