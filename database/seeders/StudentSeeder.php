@@ -16,9 +16,33 @@ class StudentSeeder extends Seeder
             return;
         }
 
-        // Create 50 students, each with a parent and guardian record.
-        Student::factory()->count(50)->create();
+        $schoolAcademicYears = SchoolAcademicYear::all();
 
-        $this->command->info('Created 50 students with parent and guardian data.');
+        if ($schoolAcademicYears->isEmpty()) {
+            $this->command->warn('No SchoolAcademicYear records found. Please run the SchoolAcademicYearSeeder first.');
+            return;
+        }
+
+        // Distribute students across academic years
+        $totalStudents = 50;
+        $studentsPerYear = ceil($totalStudents / $schoolAcademicYears->count());
+
+        $createdStudents = 0;
+
+        foreach ($schoolAcademicYears as $index => $schoolAcademicYear) {
+            // For the last academic year, adjust the count to reach exactly totalStudents
+            $studentsForThisYear = ($index === $schoolAcademicYears->count() - 1)
+                ? ($totalStudents - $createdStudents)
+                : $studentsPerYear;
+
+            Student::factory()->count($studentsForThisYear)->create([
+                'school_academic_year_id' => $schoolAcademicYear->id,
+            ]);
+
+            $createdStudents += $studentsForThisYear;
+            $this->command->info("Created {$studentsForThisYear} students for academic year: {$schoolAcademicYear->academicYear->name}");
+        }
+
+        $this->command->info("Created total of {$createdStudents} students with parent and guardian data across all academic years.");
     }
 }

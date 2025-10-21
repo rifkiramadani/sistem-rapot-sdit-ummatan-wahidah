@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Classroom;
+use App\Models\SchoolAcademicYear;
 use App\Models\Teacher;
 use Illuminate\Database\Seeder;
 
@@ -19,9 +20,33 @@ class ClassroomSeeder extends Seeder
             return;
         }
 
-        // Create 10 classrooms. The factory will handle the logic.
-        Classroom::factory()->count(10)->create();
+        $schoolAcademicYears = SchoolAcademicYear::all();
 
-        $this->command->info('Created 10 classrooms.');
+        if ($schoolAcademicYears->isEmpty()) {
+            $this->command->warn('No SchoolAcademicYear records found. Please run the SchoolAcademicYearSeeder first.');
+            return;
+        }
+
+        // Distribute classrooms across academic years
+        $totalClassrooms = 10;
+        $classroomsPerYear = ceil($totalClassrooms / $schoolAcademicYears->count());
+
+        $createdClassrooms = 0;
+
+        foreach ($schoolAcademicYears as $index => $schoolAcademicYear) {
+            // For the last academic year, adjust the count to reach exactly totalClassrooms
+            $classroomsForThisYear = ($index === $schoolAcademicYears->count() - 1)
+                ? ($totalClassrooms - $createdClassrooms)
+                : $classroomsPerYear;
+
+            Classroom::factory()->count($classroomsForThisYear)->create([
+                'school_academic_year_id' => $schoolAcademicYear->id,
+            ]);
+
+            $createdClassrooms += $classroomsForThisYear;
+            $this->command->info("Created {$classroomsForThisYear} classrooms for academic year: {$schoolAcademicYear->academicYear->name}");
+        }
+
+        $this->command->info("Created total of {$createdClassrooms} classrooms across all academic years.");
     }
 }
