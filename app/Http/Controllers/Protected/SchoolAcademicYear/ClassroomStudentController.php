@@ -97,6 +97,11 @@ class ClassroomStudentController extends Controller
     {
         Gate::authorize('create', ClassroomStudent::class);
 
+        // Additional check: Verify user can create classroom students in this specific classroom
+        if (!ClassroomStudent::canBeCreatedBy($request->user(), $classroom)) {
+            abort(403, 'You are not authorized to add students to this classroom.');
+        }
+
         // 1. Ambil ID siswa yang sudah ada di kelas ini via relasi `classroomStudents`
         $existingStudentIds = $classroom->classroomStudents()->pluck('student_id');
 
@@ -119,6 +124,11 @@ class ClassroomStudentController extends Controller
     public function store(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
         Gate::authorize('create', ClassroomStudent::class);
+
+        // Additional check: Verify user can create classroom students in this specific classroom
+        if (!ClassroomStudent::canBeCreatedBy($request->user(), $classroom)) {
+            abort(403, 'You are not authorized to add students to this classroom.');
+        }
 
         $validated = $request->validate([
             'student_id' => [

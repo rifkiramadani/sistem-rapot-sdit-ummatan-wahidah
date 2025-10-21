@@ -17,6 +17,7 @@ use App\Support\QueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log; // <-- PASTIKAN INI ADA
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -29,6 +30,22 @@ class SummativeController extends Controller
 {
     public function index(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
     {
+        Gate::authorize('viewAny', Summative::class);
+
+        // Check if current user is a teacher and validate classroom access
+        $user = $request->user();
+        $isTeacher = $user && $user->role && $user->role->name === \App\Enums\RoleEnum::TEACHER->value;
+
+        if ($isTeacher) {
+            $teacherRecord = $user->teacher()
+                                 ->where('school_academic_year_id', $schoolAcademicYear->id)
+                                 ->first();
+
+            if (!$teacherRecord || $teacherRecord->id !== $classroom->teacher_id) {
+                abort(403, 'You are not authorized to access this classroom.');
+            }
+        }
+
         $request->validate([
             'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
             'sort_by' => 'sometimes|string|in:name,identifier',
@@ -56,11 +73,14 @@ class SummativeController extends Controller
             'classroom' => $classroom,
             'classroomSubject' => $classroomSubject,
             'summatives' => $summatives,
+            'isTeacher' => $isTeacher,
         ]);
     }
 
     public function create(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
     {
+        Gate::authorize('create', Summative::class);
+
         $classroomSubject->load('subject');
         $summativeTypes = $schoolAcademicYear->summativeTypes()->orderBy('name')->get();
 
@@ -74,6 +94,8 @@ class SummativeController extends Controller
 
     public function store(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
     {
+        Gate::authorize('create', Summative::class);
+
         $validated = $this->validateSummative($request, $schoolAcademicYear);
 
         $classroomSubject->summatives()->create($validated);
@@ -84,6 +106,8 @@ class SummativeController extends Controller
 
     public function edit(SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject, Summative $summative)
     {
+        Gate::authorize('update', $summative);
+
         if ($summative->classroom_subject_id !== $classroomSubject->id) {
             abort(403);
         }
@@ -102,6 +126,8 @@ class SummativeController extends Controller
 
     public function update(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject, Summative $summative)
     {
+        Gate::authorize('update', $summative);
+
         if ($summative->classroom_subject_id !== $classroomSubject->id) {
             abort(403);
         }
@@ -116,6 +142,22 @@ class SummativeController extends Controller
 
     public function values(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
     {
+        Gate::authorize('updateValues', Summative::class);
+
+        // Check if current user is a teacher and validate classroom access
+        $user = $request->user();
+        $isTeacher = $user && $user->role && $user->role->name === \App\Enums\RoleEnum::TEACHER->value;
+
+        if ($isTeacher) {
+            $teacherRecord = $user->teacher()
+                                 ->where('school_academic_year_id', $schoolAcademicYear->id)
+                                 ->first();
+
+            if (!$teacherRecord || $teacherRecord->id !== $classroom->teacher_id) {
+                abort(403, 'You are not authorized to access this classroom.');
+            }
+        }
+
         $classroomSubject->load('subject');
 
         // 1. Ambil semua siswa di kelas ini
@@ -192,6 +234,7 @@ class SummativeController extends Controller
             'classroom' => $classroom,
             'classroomSubject' => $classroomSubject,
             'studentSummativeValues' => $studentData, // <-- Kirim data yang sudah di-transformasi
+            'isTeacher' => $isTeacher,
         ]);
     }
 
@@ -261,6 +304,8 @@ class SummativeController extends Controller
      */
     public function exportWord(SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
     {
+        Gate::authorize('exportDocuments', Summative::class);
+
         // LOG 1: Mencatat dimulainya proses ekspor
         Log::info('Memulai ekspor Word sumatif.', [
             'classroomSubjectId' => $classroomSubject->id,
@@ -589,6 +634,8 @@ class SummativeController extends Controller
 
     public function updateValue(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
     {
+        Gate::authorize('updateValues', Summative::class);
+
         // 1. Validasi data yang masuk
         $validated = $request->validate([
             'student_id' => ['required', 'ulid', Rule::exists('students', 'id')],
@@ -624,6 +671,8 @@ class SummativeController extends Controller
 
     public function destroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject, Summative $summative)
     {
+        Gate::authorize('delete', $summative);
+
         if ($summative->classroom_subject_id !== $classroomSubject->id) {
             abort(403);
         }
@@ -637,6 +686,8 @@ class SummativeController extends Controller
 
     public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
     {
+        Gate::authorize('bulkDelete', Summative::class);
+
         $request->validate([
             'ids'   => ['required', 'array'],
             'ids.*' => ['exists:summatives,id'],

@@ -69,6 +69,11 @@ class ClassroomSubjectController extends Controller
         // Authorization: Who can create classroom subjects?
         Gate::authorize('create', ClassroomSubject::class);
 
+        // Additional check: Verify user can create classroom subjects in this specific classroom
+        if (!ClassroomSubject::canBeCreatedBy($request->user(), $classroom)) {
+            abort(403, 'You are not authorized to create classroom subjects in this classroom.');
+        }
+
         // 1. Ambil ID mata pelajaran yang sudah ada di kelas ini
         $existingSubjectIds = $classroom->classroomSubjects()->pluck('subject_id');
 
@@ -92,6 +97,11 @@ class ClassroomSubjectController extends Controller
     {
         // Authorization: Who can create classroom subjects?
         Gate::authorize('create', ClassroomSubject::class);
+
+        // Additional check: Verify user can create classroom subjects in this specific classroom
+        if (!ClassroomSubject::canBeCreatedBy($request->user(), $classroom)) {
+            abort(403, 'You are not authorized to create classroom subjects in this classroom.');
+        }
 
         $validated = $request->validate([
             'subject_id' => [

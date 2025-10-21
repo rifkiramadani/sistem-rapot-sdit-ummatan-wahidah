@@ -23,17 +23,9 @@ export const getColumns = (
     schoolAcademicYear: SchoolAcademicYear,
     classroom: Classroom,
     classroomSubject: ClassroomSubject,
-): ColumnDef<Summative>[] => [
-        {
-            id: 'select',
-            header: ({ table }) => (
-                <Checkbox
-                    checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
-                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                />
-            ),
-            cell: ({ row }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} />,
-        },
+    isTeacher: boolean = false,
+): ColumnDef<Summative>[] => {
+    const baseColumns: ColumnDef<Summative>[] = [
         // { id: 'no', header: 'No.', cell: ({ row, table }) => ((table.options.meta as TableMeta)?.from ?? 0) + row.index + 1 },
         { accessorKey: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Sumatif" /> },
         { accessorKey: 'identifier', header: ({ column }) => <DataTableColumnHeader column={column} title="Identifier" /> },
@@ -72,21 +64,45 @@ export const getColumns = (
         },
     ];
 
+    // Always include select column for all users (teachers can manage their summatives)
+    return [
+        {
+            id: 'select',
+            header: ({ table }) => (
+                <Checkbox
+                    checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                />
+            ),
+            cell: ({ row }) => <Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} />,
+        },
+        ...baseColumns,
+    ];
+};
+
 interface SummativesTableProps {
     summatives: SummativesPaginated;
     schoolAcademicYear: SchoolAcademicYear;
     classroom: Classroom;
     classroomSubject: ClassroomSubject;
+    isTeacher?: boolean;
 }
 
-export function SummativesTable({ summatives, schoolAcademicYear, classroom, classroomSubject }: SummativesTableProps) {
+export function SummativesTable({ summatives, schoolAcademicYear, classroom, classroomSubject, isTeacher = false }: SummativesTableProps) {
     const handleBulkDelete = (table: TanstackTable<Summative>) => {
         const selectedIds = Object.keys(table.getState().rowSelection);
-        console.log("Menghapus ID:", selectedIds);
-        alert(`Simulasi penghapusan ${selectedIds.length} data sumatif.`);
+        router.post(
+            route('protected.school-academic-years.classrooms.subjects.summatives.bulk-destroy', {
+                schoolAcademicYear,
+                classroom,
+                classroomSubject
+            }),
+            { ids: selectedIds },
+            { onSuccess: () => table.resetRowSelection(), preserveScroll: true },
+        );
     };
 
-    const columns = getColumns(schoolAcademicYear, classroom, classroomSubject);
+    const columns = getColumns(schoolAcademicYear, classroom, classroomSubject, isTeacher);
 
     return (
         <div className="space-y-4">
@@ -110,4 +126,3 @@ export function SummativesTable({ summatives, schoolAcademicYear, classroom, cla
         </div>
     );
 }
-

@@ -24,17 +24,7 @@ class ClassroomStudentPolicy
      */
     public function view(User $user, ClassroomStudent $classroomStudent): bool
     {
-        // Management can view all classroom students
-        if ($this->isManagement($user)) {
-            return true;
-        }
-
-        // Teachers can only view students in their assigned classrooms
-        if ($this->isTeacher($user)) {
-            return $this->isTeacherOfClassroom($user, $classroomStudent->classroom);
-        }
-
-        return false;
+        return $classroomStudent->canBeManagedBy($user);
     }
 
     /**
@@ -52,17 +42,7 @@ class ClassroomStudentPolicy
      */
     public function update(User $user, ClassroomStudent $classroomStudent): bool
     {
-        // Management can update all classroom students
-        if ($this->isManagement($user)) {
-            return true;
-        }
-
-        // Teachers can only update students in their assigned classrooms
-        if ($this->isTeacher($user)) {
-            return $this->isTeacherOfClassroom($user, $classroomStudent->classroom);
-        }
-
-        return false;
+        return $classroomStudent->canBeManagedBy($user);
     }
 
     /**
@@ -70,17 +50,7 @@ class ClassroomStudentPolicy
      */
     public function delete(User $user, ClassroomStudent $classroomStudent): bool
     {
-        // Management can delete all classroom students
-        if ($this->isManagement($user)) {
-            return true;
-        }
-
-        // Teachers can only delete students from their assigned classrooms
-        if ($this->isTeacher($user)) {
-            return $this->isTeacherOfClassroom($user, $classroomStudent->classroom);
-        }
-
-        return false;
+        return $classroomStudent->canBeManagedBy($user);
     }
 
     /**
@@ -96,17 +66,7 @@ class ClassroomStudentPolicy
      */
     public function viewSummatives(User $user, ClassroomStudent $classroomStudent): bool
     {
-        // Management can view all summatives
-        if ($this->isManagement($user)) {
-            return true;
-        }
-
-        // Teachers can view summatives for students in their classrooms
-        if ($this->isTeacher($user)) {
-            return $this->isTeacherOfClassroom($user, $classroomStudent->classroom);
-        }
-
-        return false;
+        return $classroomStudent->canBeManagedBy($user);
     }
 
     /**
@@ -114,17 +74,7 @@ class ClassroomStudentPolicy
      */
     public function exportDocuments(User $user, ClassroomStudent $classroomStudent): bool
     {
-        // Management can export all documents
-        if ($this->isManagement($user)) {
-            return true;
-        }
-
-        // Teachers can export documents for students in their classrooms
-        if ($this->isTeacher($user)) {
-            return $this->isTeacherOfClassroom($user, $classroomStudent->classroom);
-        }
-
-        return false;
+        return $classroomStudent->canBeManagedBy($user);
     }
 
     /**

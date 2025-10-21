@@ -14,9 +14,10 @@ interface IndexProps {
     classroomSubject: ClassroomSubject;
     schoolAcademicYear: SchoolAcademicYear;
     classroom: Classroom;
+    isTeacher?: boolean;
 }
 
-export default function Index({ summatives, classroomSubject, schoolAcademicYear, classroom }: IndexProps) {
+export default function Index({ summatives, classroomSubject, schoolAcademicYear, classroom, isTeacher = false }: IndexProps) {
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'Dashboard',
@@ -81,6 +82,7 @@ export default function Index({ summatives, classroomSubject, schoolAcademicYear
                             schoolAcademicYear={schoolAcademicYear}
                             classroom={classroom}
                             classroomSubject={classroomSubject}
+                            isTeacher={isTeacher}
                         />
                     </div>
                 </div>

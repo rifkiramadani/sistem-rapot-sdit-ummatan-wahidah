@@ -76,4 +76,64 @@ class ClassroomSubject extends Model
     {
         return $this->hasMany(Summative::class);
     }
+
+    /**
+     * Check if the given user has access to this classroom subject record
+     */
+    public function canBeManagedBy($user): bool
+    {
+        if (!$user || !$user->role) {
+            return false;
+        }
+
+        // Management roles can manage all classroom subjects
+        if (in_array($user->role->name, [\App\Enums\RoleEnum::SUPERADMIN->value, \App\Enums\RoleEnum::ADMIN->value, \App\Enums\RoleEnum::PRINCIPAL->value])) {
+            return true;
+        }
+
+        // Teachers can only manage classroom subjects in classrooms they homeroom
+        if ($user->role->name === \App\Enums\RoleEnum::TEACHER->value) {
+            $teacherRecord = $user->teacher()
+                                 ->where('school_academic_year_id', $this->classroom->school_academic_year_id)
+                                 ->first();
+
+            if (!$teacherRecord) {
+                return false;
+            }
+
+            return $teacherRecord->id === $this->classroom->teacher_id;
+        }
+
+        return false;
+    }
+
+    /**
+     * Static method to check if user can create classroom subjects in a specific classroom
+     */
+    public static function canBeCreatedBy($user, Classroom $classroom): bool
+    {
+        if (!$user || !$user->role) {
+            return false;
+        }
+
+        // Management roles can create classroom subjects in any classroom
+        if (in_array($user->role->name, [\App\Enums\RoleEnum::SUPERADMIN->value, \App\Enums\RoleEnum::ADMIN->value, \App\Enums\RoleEnum::PRINCIPAL->value])) {
+            return true;
+        }
+
+        // Teachers can only create classroom subjects in classrooms they homeroom
+        if ($user->role->name === \App\Enums\RoleEnum::TEACHER->value) {
+            $teacherRecord = $user->teacher()
+                                 ->where('school_academic_year_id', $classroom->school_academic_year_id)
+                                 ->first();
+
+            if (!$teacherRecord) {
+                return false;
+            }
+
+            return $teacherRecord->id === $classroom->teacher_id;
+        }
+
+        return false;
+    }
 }
