@@ -25,6 +25,7 @@ use PhpOffice\PhpWord\TemplateProcessor;
 use PhpOffice\PhpWord\IOFactory;
 use PhpOffice\PhpWord\PhpWord;
 use Spatie\Activitylog\Facades\LogBatch;
+use Illuminate\Support\Collection;
 
 class ClassroomStudentController extends Controller
 {
@@ -906,17 +907,14 @@ class ClassroomStudentController extends Controller
                 'studentName' => $classroomStudent->student->name,
             ]);
 
-            $validated = $request->validate([
-                'semester_id' => 'required|exists:academic_years,id',
-            ]);
-
             // Load data yang dibutuhkan
             $schoolAcademicYear->load(['academicYear', 'school']);
             $classroomStudent->load(['student.parent', 'student.guardian']);
             $school = $schoolAcademicYear->school;
             $school->load('principal');
 
-            $selectedSemester = \App\Models\AcademicYear::find($validated['semester_id']);
+            // Use the current academic year for the report card
+            $selectedSemester = $schoolAcademicYear->academicYear;
 
             return $this->generateReportCardDocument(
                 $classroomStudent,
@@ -944,77 +942,205 @@ class ClassroomStudentController extends Controller
     private function generateReportCardDocument($classroomStudent, $classroom, $schoolAcademicYear, $school, $semester)
     {
         try {
-            Log::info('Memulai pembuatan dokumen Rapor Akhir.');
+            Log::info('Memulai pembuatan dokumen Rapor Akhir dengan injeksi XML (Struktur Dinamis).');
 
             // 1. Muat template
             $templatePath = storage_path('app/templates/Template_Rapor.docx');
-
             if (!file_exists($templatePath)) {
                 Log::error('Template Rapor Akhir tidak ditemukan!', ['path' => $templatePath]);
                 throw new \Exception('File template Rapor Akhir tidak ditemukan di server.');
             }
-
             $templateProcessor = new TemplateProcessor($templatePath);
 
-            // 2. Siapkan data siswa
+            // 2. Siapkan data siswa & sekolah (Placeholder Sederhana)
             $student = $classroomStudent->student;
-            $parent = $student->parent;
+            $templateProcessor->setValue('nama_sekolah', $school->name ?? 'SDIT UMMATAN WAHIDAH');
+            $templateProcessor->setValue('alamat_sekolah', $school->address ?? 'Jl. Letjend Suprapto No 90 Kel. Talang Rimbo Baru'); // Sesuai template
 
-            // Gender labels
-            $genderLabels = [
-                \App\Enums\GenderEnum::MALE->value => 'Laki-laki',
-                \App\Enums\GenderEnum::FEMALE->value => 'Perempuan',
-            ];
-            $religionLabels = [
-                \App\Enums\ReligionEnum::MUSLIM->value => 'Islam',
-                \App\Enums\ReligionEnum::CHRISTIAN->value => 'Kristen Protestan',
-                \App\Enums\ReligionEnum::CATHOLIC->value => 'Kristen Katolik',
-                \App\Enums\ReligionEnum::HINDU->value => 'Hindu',
-                \App\Enums\ReligionEnum::BUDDHIST->value => 'Buddha',
-                \App\Enums\ReligionEnum::OTHER->value => 'Lainnya',
-            ];
-
-            // Format tanggal
-            $birthDate = \Carbon\Carbon::parse($student->birth_date)->locale('id')->translatedFormat('d F Y');
-
-            // 3. Isi placeholder data sekolah
-            $templateProcessor->setValue('nama_sekolah', $school->name ?? '');
-            $templateProcessor->setValue('npsn', $school->npsn ?? '');
-            $templateProcessor->setValue('alamat_sekolah', $school->address ?? '');
-
-            // 4. Isi placeholder data siswa
             $templateProcessor->setValue('nama_siswa', $student->name ?? '');
             $templateProcessor->setValue('nisn', $student->nisn ?? '');
-            $templateProcessor->setValue('jenis_kelamin', $genderLabels[$student->gender->value] ?? '');
-            $templateProcessor->setValue('tempat_lahir', $student->birth_place ?? '');
-            $templateProcessor->setValue('tanggal_lahir', $birthDate);
-            $templateProcessor->setValue('agama', $religionLabels[$student->religion->value] ?? '');
-
-            // 5. Isi placeholder data akademik
+            $templateProcessor->setValue('nis', '-'); // Ganti jika ada
             $templateProcessor->setValue('nama_kelas', $classroom->name ?? '');
+            $templateProcessor->setValue('fase', $classroom->fase ?? '-'); // Asumsi ada properti 'fase' di Classroom
             $templateProcessor->setValue('semester', $semester->name ?? '');
             $templateProcessor->setValue('tahun_ajaran', $schoolAcademicYear->year);
 
-            // 6. Process nilai-nilai untuk semester yang dipilih
-            $this->processReportCardGrades($templateProcessor, $classroomStudent, $classroom, $semester);
-
-            // 7. Isi placeholder data orang tua
-            $templateProcessor->setValue('nama_ayah', $parent->father_name ?? '');
-            $templateProcessor->setValue('pekerjaan_ayah', $parent->father_job ?? '');
-            $templateProcessor->setValue('nama_ibu', $parent->mother_name ?? '');
-            $templateProcessor->setValue('pekerjaan_ibu', $parent->mother_job ?? '');
-
-            // 8. Isi placeholder data kepala sekolah
+            // Placeholder Tanda Tangan
             $principal = $school->principal;
-            if ($principal) {
-                $templateProcessor->setValue('nama_kepala_sekolah', $principal->name ?? '');
-                $templateProcessor->setValue('nip_kepala_sekolah', $principal->employee_id ?? $principal->nip ?? '');
-            } else {
-                $templateProcessor->setValue('nama_kepala_sekolah', '');
-                $templateProcessor->setValue('nip_kepala_sekolah', '');
+            $templateProcessor->setValue('nama_kepala_sekolah', $principal->name ?? 'Alfera Zelfiani, S.Pd.I');
+            $templateProcessor->setValue('nip_kepala_sekolah', $principal->employee_id ?? $principal->nip ?? '10226020 5006 13 0032');
+
+            $teacher = $classroom->teacher;
+            $templateProcessor->setValue('nama_guru_kelas', $teacher->name ?? 'DWI RATNA SARI, S.Pd.I');
+            $templateProcessor->setValue('nip_guru_kelas', $teacher->employee_id ?? $teacher->nip ?? '10226020 5006 13 0006');
+
+            $place = $school->place_date_raport ?? 'Rejang Lebong';
+            $date = \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y');
+            $templateProcessor->setValue('tanggal_surat', $date); // Sesuai template baru
+
+            // Placeholder Lainnya (Kehadiran & Ekskul)
+            $templateProcessor->setValue('sakit', '0');
+            $templateProcessor->setValue('izin', '0');
+            $templateProcessor->setValue('alpha', '0');
+            $templateProcessor->setValue('pramuka_predikat', '-');
+            $templateProcessor->setValue('pramuka_keterangan', '-');
+            $templateProcessor->setValue('t2q_predikat', '-');
+            $templateProcessor->setValue('t2q_keterangan', '-');
+            $templateProcessor->setValue('eks_3_nama', '-');
+            $templateProcessor->setValue('eks_3_predikat', '-');
+            $templateProcessor->setValue('eks_3_keterangan', '-');
+
+
+            // 3. Persiapan Tabel PhpWord
+            $tablePhpWord = new PhpWord();
+            $section = $tablePhpWord->addSection(['marginLeft' => 0, 'marginRight' => 0, 'marginTop' => 0, 'marginBottom' => 0]);
+
+            // Definisikan Gaya
+            $headerStyle = ['bold' => true, 'bgColor' => 'F2F2F2', 'size' => 9];
+            $bodyStyle = ['size' => 9];
+            $descStyle = ['size' => 8]; // Font kecil untuk capaian
+            $cellCentered = ['alignment' => 'center', 'valign' => 'center'];
+            $cellLeft = ['alignment' => 'left', 'valign' => 'top']; // Capaian align top
+            $cellVCentered = ['valign' => 'center'];
+            $tableStyle = ['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80, 'alignment' => 'center'];
+
+            // Definisikan lebar kolom
+            $colWidths = [
+                'no' => 600,
+                'mapel' => 3000,
+                'nilai' => 1000,
+                'capaian' => 5400,
+            ];
+
+            $wordTable = $section->addTable($tableStyle);
+
+            // 4. Ambil SEMUA data nilai dinamis SATU KALI
+            $student_id = $classroomStudent->student_id;
+            $classroomSubjects = $classroom->classroomSubjects() // Memuat dari relasi
+                ->join('subjects', 'classroom_subjects.subject_id', '=', 'subjects.id')
+                ->orderBy('subjects.name', 'asc') // Urutkan berdasarkan nama mapel
+                ->with([
+                    'subject',
+                    'summatives.summativeType',
+                    'summatives.studentSummatives' => function ($query) use ($student_id) {
+                        $query->where('student_id', $student_id);
+                    }
+                ])
+                ->select('classroom_subjects.*') // Hindari ambiguitas
+                ->get();
+
+            // 5. Buat Baris Header Tabel (HANYA SEKALI)
+            $wordTable->addRow(400);
+            $wordTable->addCell($colWidths['no'], $cellCentered)->addText('No', $headerStyle, $cellCentered);
+            $wordTable->addCell($colWidths['mapel'], $cellCentered)->addText('Muatan Pelajaran', $headerStyle, $cellCentered);
+            $wordTable->addCell($colWidths['nilai'], $cellCentered)->addText('Nilai Akhir', $headerStyle, $cellCentered);
+            $wordTable->addCell($colWidths['capaian'], $cellCentered)->addText('Capaian Kompetensi', $headerStyle, $cellCentered);
+
+            $i = 1; // Nomor urut global
+
+            // 6. Loop melalui struktur DINAMIS dan isi tabel
+            foreach ($classroomSubjects as $cs) {
+                $nilaiAkhir = 0;
+                $capaian = '';
+
+                $allScores = []; // Untuk menghitung Nilai Rapor (NR)
+                $materiScores = new Collection();
+
+                $summatives = $cs->summatives;
+                // Kelompokkan berdasarkan Tipe Sumatif
+                $summativesByType = $summatives->groupBy('summativeType.name');
+
+                foreach ($summativesByType as $typeName => $typeSummatives) {
+                    $values = $typeSummatives->map(function ($summative) use ($student_id) { // Tambahkan $student_id
+                        // Ambil nilai siswa (sudah difilter)
+                        $scoreModel = $summative->studentSummatives->first();
+                        $score = $scoreModel ? (int)$scoreModel->value : null;
+                        return [
+                            'id' => $summative->id,
+                            'score' => $score,
+                        ];
+                    });
+
+                    $validScores = $values->pluck('score')->filter(fn($s) => !is_null($s));
+                    $mean = $validScores->avg() ?? 0;
+
+                    if ($mean > 0) {
+                        $allScores[] = $mean;
+                    }
+
+                    if ($typeName === DefaultSummativeTypeEnum::MATERI->value) {
+                        $materiScores = $materiScores->concat($values);
+                    }
+                }
+
+                // Hitung Nilai Akhir (NR)
+                $nilaiAkhir = count($allScores) > 0 ? round(array_sum($allScores) / count($allScores)) : 0;
+
+                // Tentukan Deskripsi Capaian
+                $highestScore = $materiScores->whereNotNull('score')->sortByDesc('score')->first();
+                $lowestScore = $materiScores->whereNotNull('score')->sortBy('score')->first();
+
+                $highestSummative = $highestScore ? $summatives->find($highestScore['id']) : null;
+                $lowestSummative = $lowestScore ? $summatives->find($lowestScore['id']) : null;
+
+                $capaianMenonjol = $highestSummative->prominent ?? null;
+                $capaianDitingkatkan = $lowestSummative->improvement ?? null;
+
+                $capaian = '';
+                if ($capaianMenonjol) {
+                    $capaian .= "Menunjukkan penguasaan yang sangat baik dalam " . lcfirst($capaianMenonjol);
+                }
+                if ($capaianDitingkatkan) {
+                    if ($capaian) $capaian .= ". "; // Tambah pemisah
+                    $capaian .= "Perlu bimbingan lebih lanjut dalam " . lcfirst($capaianDitingkatkan);
+                }
+
+                // Tambahkan baris ke tabel Word
+                $wordTable->addRow();
+                $wordTable->addCell($colWidths['no'], $cellCentered)->addText($i, $bodyStyle, $cellCentered);
+                $wordTable->addCell($colWidths['mapel'], $cellVCentered)->addText($cs->subject->name, $bodyStyle, $cellLeft);
+                $wordTable->addCell($colWidths['nilai'], $cellCentered)->addText($nilaiAkhir > 0 ? $nilaiAkhir : '-', $bodyStyle, $cellCentered);
+
+                $cellCapaian = $wordTable->addCell($colWidths['capaian'], $cellLeft);
+                $cellCapaian->addText($capaian ?: '-', $descStyle, $cellLeft);
+
+                $i++; // Increment nomor urut global
             }
 
-            // 9. Generate nama file
+            // 7. Ekstraksi XML Tabel
+            Log::info('Tabel Rapor Akhir (Dinamis) berhasil dibuat di memori. Memulai ekstraksi XML.');
+
+            $tempTableFile = tempnam(sys_get_temp_dir(), 'phpword_table_rapor');
+            $xmlWriter = IOFactory::createWriter($tablePhpWord, 'Word2007');
+            $xmlWriter->save($tempTableFile);
+
+            $zip = new \ZipArchive();
+            if ($zip->open($tempTableFile) === true) {
+                $fullXml = $zip->getFromName('word/document.xml');
+                $zip->close();
+                unlink($tempTableFile);
+            } else {
+                throw new \Exception('Gagal memproses XML tabel Rapor (ZipArchive).');
+            }
+
+            if (!$fullXml) {
+                throw new \Exception('Gagal memproses XML tabel Rapor (XML kosong).');
+            }
+
+            $tableXml = '';
+            if (preg_match('/<w:body(.*?)>(.*)<\/w:body>/s', $fullXml, $matches)) {
+                $bodyContent = $matches[2];
+                $tableXml = preg_replace('/<w:sectPr\s*.*?\s*\/w:sectPr>/s', '', $bodyContent);
+                $tableXml = preg_replace('/<w:lastRenderedPageBreak\s*\/>/', '', $tableXml);
+                $tableXml = trim($tableXml);
+            } else {
+                throw new \Exception('Gagal memproses XML tabel Rapor (preg_match body).');
+            }
+
+            // 8. Injeksi XML Tabel ke Template Utama
+            $templateProcessor->setValue('table_rapor', $tableXml); // Sesuai placeholder baru
+
+            // 9. Generate nama file dan Simpan
             $studentName = str_replace([' ', '/', '\\'], '_', $student->name);
             $semesterName = str_replace([' ', '/', '\\'], '_', $semester->name);
             $filename = 'Rapor_Akhir_' . $studentName . '_' . $semesterName . '.docx';
@@ -1023,7 +1149,7 @@ class ClassroomStudentController extends Controller
             $tempFilePath = $tempPath . '/' . uniqid('report_card_', true) . '.docx';
             $templateProcessor->saveAs($tempFilePath);
 
-            Log::info('Rapor Akhir berhasil disimpan.', [
+            Log::info('Rapor Akhir (XML Injected) berhasil disimpan.', [
                 'tempFilePath' => $tempFilePath,
                 'filename' => $filename
             ]);
@@ -1032,7 +1158,7 @@ class ClassroomStudentController extends Controller
                 ->download($tempFilePath, $filename)
                 ->deleteFileAfterSend(true);
         } catch (\Exception $e) {
-            Log::error('Gagal membuat Rapor Akhir!', [
+            Log::error('Gagal membuat Rapor Akhir (XML Injected)!', [
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
@@ -1043,17 +1169,12 @@ class ClassroomStudentController extends Controller
 
     /**
      * Process grades for report card.
+     * FUNGSI INI TIDAK LAGI DIPERLUKAN KARENA LOGIKANYA DIGABUNG KE generateReportCardDocument
      */
     private function processReportCardGrades($templateProcessor, $classroomStudent, $classroom, $semester)
     {
-        // Placeholder untuk implementasi pengolahan nilai
-        // Ini akan diisi sesuai dengan struktur database yang ada
-        $templateProcessor->setValue('tabel_nilai', '[Tabel Nilai Akan Diisi Sini]');
-        $templateProcessor->setValue('catatan_wali_kelas', '[Catatan Wali Kelas Akan Diisi Sini]');
-        $templateProcessor->setValue('kehadiran_sakit', '0');
-        $templateProcessor->setValue('kehadiran_izin', '0');
-        $templateProcessor->setValue('kehadiran_tanpa_keterangan', '0');
-        $templateProcessor->setValue('ekstrakurikuler', '[Data Ekstrakurikuler Akan Diisi Sini]');
+        // Logika telah dipindahkan ke generateReportCardDocument
+        // Fungsi ini bisa dihapus
     }
 
     /**

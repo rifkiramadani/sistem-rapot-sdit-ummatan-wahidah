@@ -48,7 +48,6 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
 
     // State untuk modals
     const [transferDialogOpen, setTransferDialogOpen] = useState(false);
-    const [reportCardDialogOpen, setReportCardDialogOpen] = useState(false);
 
     // State transferForm sekarang mencakup transfer_date
     const [transferForm, setTransferForm] = useState({
@@ -57,7 +56,6 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
         destination_school: '',
         destination_city: '',
     });
-    const [selectedSemester, setSelectedSemester] = useState('');
 
     // Handler untuk transfer certificate (sudah diperbarui)
     const handleTransferCertificate = () => {
@@ -95,22 +93,14 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
 
     // Handler untuk report card
     const handleReportCard = () => {
-        if (!selectedSemester) {
-            return;
-        }
-
         const url = route('protected.school-academic-years.classrooms.students.export-report-card', {
             schoolAcademicYear: schoolAcademicYear.id,
             classroom: classroom.id,
             classroomStudent: classroomStudent.id,
-        }) + '?semester_id=' + selectedSemester;
+        });
 
         // Open in new window for download
         window.open(url, '_blank');
-
-        // Close dialog and reset form
-        setReportCardDialogOpen(false);
-        setSelectedSemester('');
     };
 
     // Helper function for STS export
@@ -303,52 +293,16 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
                                     Export Data STS
                                 </Button>
 
-                                {/* Report Card Dialog */}
-                                <Dialog open={reportCardDialogOpen} onOpenChange={setReportCardDialogOpen}>
-                                    <DialogTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                            <FileCheck className="mr-2 h-4 w-4" />
-                                            Export Rapor Akhir
-                                        </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[400px]">
-                                        <DialogHeader>
-                                            <DialogTitle>Export Rapor Akhir</DialogTitle>
-                                            <DialogDescription>
-                                                Pilih semester untuk rapor yang akan diekspor.
-                                            </DialogDescription>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="semester">
-                                                    Pilih Semester <span className="text-red-500">*</span>
-                                                </Label>
-                                                <Select value={selectedSemester} onValueChange={setSelectedSemester}>
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Pilih semester" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="1">Semester 1</SelectItem>
-                                                        <SelectItem value="2">Semester 2</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-                                        <DialogFooter>
-                                            <Button variant="outline" onClick={() => setReportCardDialogOpen(false)}>
-                                                Batal
-                                            </Button>
-                                            <Button
-                                                onClick={handleReportCard}
-                                                disabled={!selectedSemester}
-                                                type="button"
-                                            >
-                                                <Download className="mr-2 h-4 w-4" />
-                                                Export Rapor
-                                            </Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
+                                {/* Report Card Export Button */}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    type="button"
+                                    onClick={handleReportCard}
+                                >
+                                    <FileCheck className="mr-2 h-4 w-4" />
+                                    Export Rapor Akhir
+                                </Button>
 
 
                             </div>
