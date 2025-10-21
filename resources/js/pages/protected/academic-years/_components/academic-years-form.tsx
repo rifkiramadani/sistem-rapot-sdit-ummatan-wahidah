@@ -34,9 +34,7 @@ export default function AcademicYearsForm({ academicYear }: AcademicYearsFormPro
 
                 if (!isNaN(startYear) && !isNaN(endYear)) {
                     const academicYearName = `${startYear}/${endYear}`;
-                    if (data.name !== academicYearName) {
-                        setData('name', academicYearName);
-                    }
+                    setData('name', academicYearName);
                 }
             // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
             } catch (error: any) {
@@ -45,6 +43,7 @@ export default function AcademicYearsForm({ academicYear }: AcademicYearsFormPro
         } else {
             setData('name', '');
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data.start, data.end]);
 
     function handleSubmit(e: FormEvent) {
@@ -110,8 +109,16 @@ export default function AcademicYearsForm({ academicYear }: AcademicYearsFormPro
                                         if (!date) return;
                                         const newStartDateString = format(date, 'yyyy-MM-dd');
                                         setData('start', newStartDateString);
-                                        if (data.end && new Date(newStartDateString) > new Date(data.end)) {
-                                            setData('end', '');
+                                        // Clear end date if it's outside the 1-year range
+                                        if (data.end) {
+                                            const startDate = new Date(newStartDateString);
+                                            const oneYearLater = new Date(startDate);
+                                            oneYearLater.setFullYear(startDate.getFullYear() + 1);
+
+                                            const currentEndDate = new Date(data.end);
+                                            if (currentEndDate < startDate || currentEndDate > oneYearLater) {
+                                                setData('end', '');
+                                            }
                                         }
                                     }}
                                     initialFocus
@@ -125,6 +132,9 @@ export default function AcademicYearsForm({ academicYear }: AcademicYearsFormPro
                         <Label htmlFor="end">
                             Selesai <span className="text-red-500">*</span>
                         </Label>
+                        <p className="text-xs text-muted-foreground">
+                            (Maksimal 1 tahun setelah tanggal mulai)
+                        </p>
                         <Popover>
                             <PopoverTrigger asChild>
                                 <Button
@@ -143,8 +153,21 @@ export default function AcademicYearsForm({ academicYear }: AcademicYearsFormPro
                                     fromYear={currentYear - 10}
                                     toYear={currentYear + 10}
                                     selected={data.end ? new Date(data.end) : undefined}
-                                    onSelect={(date) => date && setData('end', format(date, 'yyyy-MM-dd'))}
-                                    disabled={{ before: data.start ? new Date(data.start) : new Date() }}
+                                    onSelect={(date) => {
+                                        if (!date) return;
+                                        const newEndDateString = format(date, 'yyyy-MM-dd');
+                                        setData('end', newEndDateString);
+                                    }}
+                                    disabled={(date) => {
+                                        if (!data.start) return true;
+
+                                        const startDate = new Date(data.start);
+                                        const oneYearLater = new Date(startDate);
+                                        oneYearLater.setFullYear(startDate.getFullYear() + 1);
+
+                                        // Enable dates from start date to exactly 1 year after start date
+                                        return date < startDate || date > oneYearLater;
+                                    }}
                                     defaultMonth={data.start ? new Date(data.start) : undefined}
                                     initialFocus
                                 />

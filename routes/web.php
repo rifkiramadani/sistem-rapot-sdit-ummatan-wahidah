@@ -14,6 +14,7 @@ use App\Http\Controllers\Protected\SchoolAcademicYear\ClassroomStudentController
 use App\Http\Controllers\Protected\SchoolAcademicYear\ClassroomSubjectController;
 use App\Http\Controllers\Protected\SchoolAcademicYearController;
 use App\Http\Controllers\Protected\SchoolAcademicYear\SummativeController;
+use App\Http\Controllers\Protected\DashboardController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -21,9 +22,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(function () {
-    Route::get('', function () {
-        return Inertia::render('protected/dashboard/index');
-    })->name('dashboard.index');
+    Route::get('', [DashboardController::class, 'index'])->name('dashboard.index');
 
     // ROUTE FOR ACADEMIC YEAR
     Route::prefix('academic-years')->name('academic-years.')->group(function () {

@@ -77,12 +77,36 @@ class AcademicYearController extends Controller
                 'unique:academic_years,name', // Tambahkan validasi unique
             ],
             'start' => 'required|date',
-            'end' => 'required|date'
+            'end' => [
+                'required',
+                'date',
+                'after:start',
+                function ($attribute, $value, $fail) use ($request) {
+                    $startDate = \Carbon\Carbon::parse($request->start);
+                    $endDate = \Carbon\Carbon::parse($value);
+                    $oneYearLater = $startDate->copy()->addYear();
+
+                    // Check if end date is more than 1 year after start date
+                    if ($endDate->greaterThan($oneYearLater)) {
+                        $fail('Tanggal selesai tidak boleh lebih dari 1 tahun setelah tanggal mulai.');
+                    }
+                },
+            ],
         ]);
 
-        AcademicYear::create($validated);
+        // Create the academic year
+        $academicYear = AcademicYear::create($validated);
 
-        return redirect()->route('protected.academic-years.index')->with('success', 'Tahun ajaran berhasil dibuat.');
+        // Get the main school and create the pivot record
+        $mainSchool = $this->getMainSchool();
+
+        // Create the school_academic_years pivot record
+        SchoolAcademicYear::create([
+            'school_id' => $mainSchool->id,
+            'academic_year_id' => $academicYear->id,
+        ]);
+
+        return redirect()->route('protected.academic-years.index')->with('success', 'Tahun ajaran berhasil dibuat dan dihubungkan dengan sekolah.');
     }
 
     private function getMainSchool(): School
@@ -129,7 +153,21 @@ class AcademicYearController extends Controller
                 Rule::unique('academic_years')->ignore($academicYear->id),
             ],
             'start' => 'required|date',
-            'end' => 'required|date'
+            'end' => [
+                'required',
+                'date',
+                'after:start',
+                function ($attribute, $value, $fail) use ($request) {
+                    $startDate = \Carbon\Carbon::parse($request->start);
+                    $endDate = \Carbon\Carbon::parse($value);
+                    $oneYearLater = $startDate->copy()->addYear();
+
+                    // Check if end date is more than 1 year after start date
+                    if ($endDate->greaterThan($oneYearLater)) {
+                        $fail('Tanggal selesai tidak boleh lebih dari 1 tahun setelah tanggal mulai.');
+                    }
+                },
+            ],
         ]);
 
         $academicYear->update($validated);

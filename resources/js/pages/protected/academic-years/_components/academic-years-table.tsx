@@ -20,10 +20,10 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableMeta } from '@/types';
 import { SchoolAcademicYear, SchoolAcademicYearsPaginated } from '@/types/models/school-academic-years';
-import { router } from '@inertiajs/react';
+import { router, Link } from '@inertiajs/react';
 import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { Eye, Settings2, Trash2 } from 'lucide-react';
+import { Eye, Settings2, Trash2, LayoutDashboard } from 'lucide-react';
 import { AcademicYearsTableFilters } from '../../schools/academic-years/_components/academic-years-table-filters';
 
 export const columns: ColumnDef<SchoolAcademicYear>[] = [
@@ -84,6 +84,16 @@ export const columns: ColumnDef<SchoolAcademicYear>[] = [
 
             return (
                 <div className="flex gap-2">
+                    <Link
+                        href={route('protected.school-academic-years.dashboard.index', {
+                            schoolAcademicYear: schoolAcademicYear.id,
+                        })}
+                    >
+                        <Button variant="outline" size="sm">
+                            <LayoutDashboard className="mr-2 h-4 w-4" />
+                            Dashboard
+                        </Button>
+                    </Link>
                     <TableTooltipAction info="Lihat">
                         <Button
                             variant="outline"
