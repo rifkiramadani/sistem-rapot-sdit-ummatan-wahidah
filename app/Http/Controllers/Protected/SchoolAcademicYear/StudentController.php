@@ -8,6 +8,7 @@ use App\Enums\ReligionEnum;
 use App\Http\Controllers\Controller;
 use App\Models\SchoolAcademicYear;
 use App\Models\Student;
+use App\Models\Subject;
 use App\QueryFilters\Filter;
 use App\QueryFilters\Sort;
 use App\Support\QueryBuilder;
@@ -232,6 +233,71 @@ class StudentController extends Controller
 
         return redirect()->route('protected.school-academic-years.students.index', $schoolAcademicYear)
             ->with('success', 'Data siswa berhasil dihapus.');
+    }
+
+    /**
+     * Menampilkan mata pelajaran yang diambil oleh seorang siswa.
+     */
+    public function subjects(Request $request, SchoolAcademicYear $schoolAcademicYear, Student $student)
+    {
+        // Gate::authorize('view', $student);
+
+        // Load student dengan relasi yang dibutuhkan
+        $student->load(['classroomStudents.classroom.classroomSubjects.subject']);
+
+        // Collect subjects dari semua classroom dimana student terdaftar
+        $subjects = collect();
+
+        foreach ($student->classroomStudents as $classroomStudent) {
+            if ($classroomStudent->classroom) {
+                foreach ($classroomStudent->classroom->classroomSubjects as $classroomSubject) {
+                    if ($classroomSubject->subject) {
+                        $subjects->push($classroomSubject->subject);
+                    }
+                }
+            }
+        }
+
+        // Remove duplicates dan sort by name
+        $subjects = $subjects->unique('id')->sortBy('name')->values();
+
+        $schoolAcademicYear->load('academicYear');
+
+        return Inertia::render('protected/school-academic-years/students/subjects/index', [
+            'schoolAcademicYear' => $schoolAcademicYear,
+            'student' => $student,
+            'subjects' => $subjects,
+        ]);
+    }
+
+    /**
+     * Menampilkan detail mata pelajaran seorang siswa.
+     */
+    public function subjectDetail(Request $request, SchoolAcademicYear $schoolAcademicYear, Student $student, Subject $subject)
+    {
+        // Gate::authorize('view', $student);
+
+        // Load relasi yang dibutuhkan
+        $student->load(['classroomStudents.classroom.classroomSubjects' => function ($query) use ($subject) {
+            $query->where('subject_id', $subject->id);
+        }]);
+
+        // Load student summatives untuk subject ini melalui classroom subject
+        $studentSummatives = $student->studentSummatives()
+            ->whereHas('summative.classroomSubject', function ($query) use ($subject) {
+                $query->where('subject_id', $subject->id);
+            })
+            ->with(['summative.classroomSubject.subject'])
+            ->get();
+
+        $schoolAcademicYear->load('academicYear');
+
+        return Inertia::render('protected/school-academic-years/students/subjects/show', [
+            'schoolAcademicYear' => $schoolAcademicYear,
+            'student' => $student,
+            'subject' => $subject,
+            'studentSummatives' => $studentSummatives,
+        ]);
     }
 
     /**

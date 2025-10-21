@@ -45,10 +45,17 @@ export default function Show({ schoolAcademicYear, student }: ShowProps) {
                 <Card>
                     <CardHeader>
                         <div className="flex items-center justify-between">
-                            <Button variant="outline" size="sm">
-                                <BookMarked className="mr-2 h-4 w-4" />
-                                Lihat Mata Pelajaran (Segera)
-                            </Button>
+                            <Link
+                                href={route('protected.school-academic-years.students.subjects', {
+                                    schoolAcademicYear: schoolAcademicYear.id,
+                                    student: student.id,
+                                })}
+                            >
+                                <Button variant="outline" size="sm">
+                                    <BookMarked className="mr-2 h-4 w-4" />
+                                    Lihat Mata Pelajaran
+                                </Button>
+                            </Link>
                             <Link
                                 href={route('protected.school-academic-years.students.edit', {
                                     schoolAcademicYear: schoolAcademicYear.id,

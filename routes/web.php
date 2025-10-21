@@ -149,6 +149,8 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
             Route::put('/{student}', [StudentController::class, 'update'])->name('update');
             Route::delete('/{student}', [StudentController::class, 'destroy'])->name('destroy');
             Route::post('/bulk-destroy', [StudentController::class, 'bulkDestroy'])->name('bulk-destroy');
+            Route::get('/{student}/subjects', [StudentController::class, 'subjects'])->name('subjects');
+            Route::get('/{student}/subjects/{subject}', [StudentController::class, 'subjectDetail'])->name('subjects.detail');
         });
     });
 });
