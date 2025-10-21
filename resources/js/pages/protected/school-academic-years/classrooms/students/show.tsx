@@ -292,6 +292,17 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
                                     </DialogContent>
                                 </Dialog>
 
+                                {/* STS Export Button */}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    type="button"
+                                    onClick={handleStsExport}
+                                >
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    Export Data STS
+                                </Button>
+
                                 {/* Report Card Dialog */}
                                 <Dialog open={reportCardDialogOpen} onOpenChange={setReportCardDialogOpen}>
                                     <DialogTrigger asChild>
@@ -339,16 +350,7 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
                                     </DialogContent>
                                 </Dialog>
 
-                                {/* STS Export Button */}
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    type="button"
-                                    onClick={handleStsExport}
-                                >
-                                    <FileText className="mr-2 h-4 w-4" />
-                                    Export Data STS
-                                </Button>
+
                             </div>
                         </div>
                     </CardHeader>

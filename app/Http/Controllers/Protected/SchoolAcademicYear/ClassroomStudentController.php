@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Protected\SchoolAcademicYear;
 
+use App\Enums\DefaultSummativeTypeEnum;
 use App\Enums\PerPageEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Classroom;
@@ -1099,51 +1100,216 @@ class ClassroomStudentController extends Controller
     private function generateStsDocument($classroomStudent, $classroom, $schoolAcademicYear, $school)
     {
         try {
-            Log::info('Memulai pembuatan dokumen STS.');
+            Log::info('Memulai pembuatan dokumen STS dengan injeksi XML (Struktur Dinamis).');
 
             // 1. Muat template
             $templatePath = storage_path('app/templates/Template_Rapor_STS.docx');
-
             if (!file_exists($templatePath)) {
                 Log::error('Template STS tidak ditemukan!', ['path' => $templatePath]);
                 throw new \Exception('File template STS tidak ditemukan di server.');
             }
-
             $templateProcessor = new TemplateProcessor($templatePath);
 
-            // 2. Siapkan data siswa
+            // 2. Isi placeholder sederhana
             $student = $classroomStudent->student;
-            $parent = $student->parent;
-
-            // Gender labels
-            $genderLabels = [
-                \App\Enums\GenderEnum::MALE->value => 'Laki-laki',
-                \App\Enums\GenderEnum::FEMALE->value => 'Perempuan',
-            ];
-
-            // Format tanggal
-            $birthDate = \Carbon\Carbon::parse($student->birth_date)->locale('id')->translatedFormat('d F Y');
-
-            // 3. Isi placeholder data sekolah
-            $templateProcessor->setValue('nama_sekolah', $school->name ?? '');
-            $templateProcessor->setValue('npsn', $school->npsn ?? '');
-
-            // 4. Isi placeholder data siswa
             $templateProcessor->setValue('nama_siswa', $student->name ?? '');
             $templateProcessor->setValue('nisn', $student->nisn ?? '');
             $templateProcessor->setValue('nis', '-');
-            $templateProcessor->setValue('jenis_kelamin', $genderLabels[$student->gender->value] ?? '');
-            $templateProcessor->setValue('tempat_lahir', $student->birth_place ?? '');
-            $templateProcessor->setValue('tanggal_lahir', $birthDate);
 
-            // 5. Isi placeholder data akademik
+            $semesterRoman = $schoolAcademicYear->academicYear->name === 'GANJIL' ? 'I' : 'II';
+            $tahunAjaranShort = str_replace('/', ' / 202', $schoolAcademicYear->year);
+
             $templateProcessor->setValue('nama_kelas', $classroom->name ?? '');
-            $templateProcessor->setValue('tahun_ajaran', $schoolAcademicYear->year . ' Semester ' . $schoolAcademicYear->academicYear->name);
+            $templateProcessor->setValue('semester_roman', $semesterRoman);
+            $templateProcessor->setValue('smt', $semesterRoman);
+            $templateProcessor->setValue('tahun_ajaran_short', $tahunAjaranShort);
+            $templateProcessor->setValue('fase', $classroom->fase ?? '-');
 
-            // 6. Process nilai STS
-            $this->processStsGrades($templateProcessor, $classroomStudent, $classroom);
+            // ... (Kode untuk mengisi data Kepala Sekolah & Guru tetap sama) ...
+            $principal = $school->principal;
+            if ($principal) {
+                $templateProcessor->setValue('nama_kepala_sekolah', $principal->name ?? '');
+                $templateProcessor->setValue('nip_kepala_sekolah', $principal->employee_id ?? $principal->nip ?? '');
+            } else {
+                $templateProcessor->setValue('nama_kepala_sekolah', 'Alfera Zelfiani, S.Pd.I');
+                $templateProcessor->setValue('nip_kepala_sekolah', '10226020 5006 13 0032');
+            }
 
-            // 7. Generate nama file
+            $teacher = $classroom->teacher;
+            if ($teacher) {
+                $templateProcessor->setValue('nama_guru_kelas', $teacher->name ?? '');
+                $templateProcessor->setValue('nip_guru_kelas', $teacher->employee_id ?? $teacher->nip ?? '');
+            } else {
+                $templateProcessor->setValue('nama_guru_kelas', 'DWI RATNA SARI, S.Pd.I');
+                $templateProcessor->setValue('nip_guru_kelas', '10226020 5006 13 0006');
+            }
+
+            $place = $school->place_date_sts ?? 'Rejang Lebong';
+            $date = \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y');
+            $templateProcessor->setValue('place_date_sts', $place . ', ' . $date);
+
+            // 3. Persiapan Tabel PhpWord
+            $tablePhpWord = new PhpWord();
+            $section = $tablePhpWord->addSection();
+
+            // Definisikan Gaya
+            $headerStyle = ['bold' => true, 'bgColor' => 'F2F2F2', 'size' => 9];
+            $bodyStyle = ['size' => 9];
+            $bodyBoldStyle = ['size' => 9, 'bold' => true];
+            $cellCentered = ['alignment' => 'center', 'valign' => 'center'];
+            $cellLeft = ['alignment' => 'left', 'valign' => 'center'];
+            $cellSpan = ['gridSpan' => 2, 'valign' => 'center']; // Untuk footer
+            $tableStyle = ['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 80, 'alignment' => 'center'];
+
+            // Definisikan lebar kolom
+            $colWidths = [
+                'no' => 600,
+                'mapel' => 5000,
+                'non_tes' => 1200,
+                'tes' => 1200,
+                'jumlah' => 1200,
+                'na' => 1200,
+            ];
+
+            $wordTable = $section->addTable($tableStyle);
+
+            // 4. Buat Baris Header Tabel
+            $wordTable->addRow(400);
+            $wordTable->addCell($colWidths['no'], $cellCentered)->addText('NO', $headerStyle, $cellCentered);
+            $wordTable->addCell($colWidths['mapel'], $cellCentered)->addText('MATA PELAJARAN', $headerStyle, $cellCentered);
+            $wordTable->addCell($colWidths['non_tes'], $cellCentered)->addText('NON TES', $headerStyle, $cellCentered);
+            $wordTable->addCell($colWidths['tes'], $cellCentered)->addText('TES', $headerStyle, $cellCentered);
+            $wordTable->addCell($colWidths['jumlah'], $cellCentered)->addText('JUMLAH', $headerStyle, $cellCentered);
+            $wordTable->addCell($colWidths['na'], $cellCentered)->addText('N.A.', $headerStyle, $cellCentered);
+
+            // 5. Ambil SEMUA data nilai dinamis SATU KALI
+            $student_id = $classroomStudent->student_id;
+            // Muat mata pelajaran dari kelas 
+            $classroomSubjects = $classroom->classroomSubjects()
+                ->join('subjects', 'classroom_subjects.subject_id', '=', 'subjects.id')
+                ->orderBy('subjects.name', 'asc') // Urutkan berdasarkan nama mapel
+                ->with([
+                    'subject',
+                    'summatives.summativeType',
+                    'summatives.studentSummatives' => function ($query) use ($student_id) {
+                        $query->where('student_id', $student_id);
+                    }
+                ])
+                ->select('classroom_subjects.*') // Hindari ambiguitas kolom
+                ->get();
+
+            $totalAllSubjectsNA = 0;
+            $subjectCount = 0;
+            $i = 1; // Indeks baris tabel, mulai dari 1
+
+            // 6. Loop melalui daftar DINAMIS
+            foreach ($classroomSubjects as $cs) {
+                // Hentikan jika kita sudah mengisi 11 baris (sesuai template)
+                if ($i > 11) break;
+
+                $materiScores = [];
+                $stsScores = [];
+
+                foreach ($cs->summatives as $summative) {
+                    $scoreModel = $summative->studentSummatives->first();
+                    $score = $scoreModel ? (int)$scoreModel->value : null;
+
+                    if ($score !== null) {
+                        $typeName = $summative->summativeType->name;
+                        if ($typeName === DefaultSummativeTypeEnum::MATERI->value) {
+                            $materiScores[] = $score;
+                        } elseif ($typeName === DefaultSummativeTypeEnum::TENGAH_SEMESTER->value) {
+                            $stsScores[] = $score;
+                        }
+                    }
+                }
+
+                $materiMean = count($materiScores) > 0 ? array_sum($materiScores) / count($materiScores) : 0;
+                $stsMean = count($stsScores) > 0 ? array_sum($stsScores) / count($stsScores) : 0;
+                $jumlah = $materiMean + $stsMean;
+
+                $naScores = [];
+                if ($materiMean > 0) $naScores[] = $materiMean;
+                if ($stsMean > 0) $naScores[] = $stsMean;
+                $na = count($naScores) > 0 ? array_sum($naScores) / count($naScores) : 0;
+
+                if ($na > 0) {
+                    $totalAllSubjectsNA += $na;
+                    $subjectCount++;
+                }
+
+                // Tambahkan baris ke tabel Word
+                $wordTable->addRow();
+                $wordTable->addCell($colWidths['no'], $cellCentered)->addText($i, $bodyStyle, $cellCentered);
+                $wordTable->addCell($colWidths['mapel'], $cellLeft)->addText($cs->subject->name, $bodyStyle, $cellLeft);
+                $wordTable->addCell($colWidths['non_tes'], $cellCentered)->addText($materiMean > 0 ? round($materiMean, 1) : '-', $bodyStyle, $cellCentered);
+                $wordTable->addCell($colWidths['tes'], $cellCentered)->addText($stsMean > 0 ? round($stsMean, 1) : '-', $bodyStyle, $cellCentered);
+                $wordTable->addCell($colWidths['jumlah'], $cellCentered)->addText($jumlah > 0 ? round($jumlah, 1) : '-', $bodyStyle, $cellCentered);
+                $wordTable->addCell($colWidths['na'], $cellCentered)->addText($na > 0 ? round($na, 1) : '-', $bodyStyle, $cellCentered);
+
+                $i++; // Pindah ke baris berikutnya
+            }
+
+            // 7. Isi baris kosong jika mapel < 11
+            // $i sekarang adalah nomor baris BERIKUTNYA
+            for ($j = $i; $j <= 11; $j++) {
+                $wordTable->addRow();
+                $wordTable->addCell($colWidths['no'], $cellCentered)->addText($j, $bodyStyle, $cellCentered);
+                $wordTable->addCell($colWidths['mapel'], $cellLeft)->addText('-', $bodyStyle, $cellLeft);
+                $wordTable->addCell($colWidths['non_tes'], $cellCentered)->addText('-', $bodyStyle, $cellCentered);
+                $wordTable->addCell($colWidths['tes'], $cellCentered)->addText('-', $bodyStyle, $cellCentered);
+                $wordTable->addCell($colWidths['jumlah'], $cellCentered)->addText('-', $bodyStyle, $cellCentered);
+                $wordTable->addCell($colWidths['na'], $cellCentered)->addText('-', $bodyStyle, $cellCentered);
+            }
+
+            // 8. Buat Baris Footer Tabel (Rata-rata & Peringkat)
+            $rataRata = $subjectCount > 0 ? $totalAllSubjectsNA / $subjectCount : 0;
+
+            $wordTable->addRow();
+            $wordTable->addCell($colWidths['no'] + $colWidths['mapel'], $cellSpan)->addText('Rata - Rata', $bodyBoldStyle, $cellLeft);
+            $wordTable->addCell(array_sum(array_slice($colWidths, 2)), ['gridSpan' => 4, 'valign' => 'center'])->addText($rataRata > 0 ? round($rataRata, 2) : '-', $bodyBoldStyle, $cellCentered);
+
+            $wordTable->addRow();
+            $wordTable->addCell($colWidths['no'] + $colWidths['mapel'], $cellSpan)->addText('Peringkat Kelas', $bodyBoldStyle, $cellLeft);
+            $wordTable->addCell(array_sum(array_slice($colWidths, 2)), ['gridSpan' => 4, 'valign' => 'center'])->addText('-', $bodyBoldStyle, $cellCentered); // Peringkat tidak dihitung
+
+
+            // 9. Ekstraksi XML Tabel (Logika dari referensi)
+            Log::info('Tabel STS (Struktur Dinamis) berhasil dibuat di memori. Memulai ekstraksi XML.');
+
+            $tempTableFile = tempnam(sys_get_temp_dir(), 'phpword_table_sts');
+            $xmlWriter = IOFactory::createWriter($tablePhpWord, 'Word2007');
+            $xmlWriter->save($tempTableFile);
+
+            $zip = new \ZipArchive();
+            if ($zip->open($tempTableFile) === true) {
+                $fullXml = $zip->getFromName('word/document.xml');
+                $zip->close();
+                unlink($tempTableFile);
+            } else {
+                throw new \Exception('Gagal memproses XML tabel STS (ZipArchive).');
+            }
+
+            if (!$fullXml) {
+                throw new \Exception('Gagal memproses XML tabel STS (XML kosong).');
+            }
+
+            $tableXml = '';
+            if (preg_match('/<w:body(.*?)>(.*)<\/w:body>/s', $fullXml, $matches)) {
+                $bodyContent = $matches[2];
+                $tableXml = preg_replace('/<w:sectPr\s*.*?\s*\/w:sectPr>/s', '', $bodyContent);
+                $tableXml = preg_replace('/<w:lastRenderedPageBreak\s*\/>/', '', $tableXml);
+                $tableXml = trim($tableXml);
+            } else {
+                throw new \Exception('Gagal memproses XML tabel STS (preg_match body).');
+            }
+
+            // 10. Injeksi XML Tabel ke Template Utama
+            // Pastikan template-mu memiliki placeholder ${tabel_nilai_sts}
+            $templateProcessor->setValue('tabel_nilai_sts', $tableXml);
+
+
+            // 11. Generate nama file dan Simpan
             $studentName = str_replace([' ', '/', '\\'], '_', $student->name);
             $filename = 'STS_' . $studentName . '.docx';
             $tempPath = storage_path('app/temp');
@@ -1151,7 +1317,7 @@ class ClassroomStudentController extends Controller
             $tempFilePath = $tempPath . '/' . uniqid('sts_', true) . '.docx';
             $templateProcessor->saveAs($tempFilePath);
 
-            Log::info('STS berhasil disimpan.', [
+            Log::info('STS (XML Injected) berhasil disimpan.', [
                 'tempFilePath' => $tempFilePath,
                 'filename' => $filename
             ]);
@@ -1160,55 +1326,12 @@ class ClassroomStudentController extends Controller
                 ->download($tempFilePath, $filename)
                 ->deleteFileAfterSend(true);
         } catch (\Exception $e) {
-            Log::error('Gagal membuat STS!', [
+            Log::error('Gagal membuat STS (XML Injected)!', [
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
             throw $e;
-        }
-    }
-
-    /**
-     * Process grades for STS.
-     */
-    private function processStsGrades($templateProcessor, $classroomStudent, $classroom)
-    {
-        // Placeholder untuk implementasi pengolahan nilai STS
-        // Ini akan diisi sesuai dengan struktur database yang ada
-        $templateProcessor->setValue('tabel_nilai_sts', '[Tabel Nilai STS Akan Diisi Sini]');
-        $templateProcessor->setValue('catatan_wali_kelas_sts', '[Catatan Wali Kelas STS Akan Diisi Sini]');
-    }
-
-    /**
-     * Process summative grades for rapor template.
-     */
-    private function processSummativeGradesForRapor($templateProcessor, $summatives, $classroomStudent, $classroom, $academicYear)
-    {
-        try {
-            // Placeholder untuk implementasi pengolahan nilai rapor
-            // Ini akan diisi sesuai dengan struktur database yang ada
-            $templateProcessor->setValue('tabel_nilai', '[Tabel Nilai Rapor Akan Diisi Sini]');
-            $templateProcessor->setValue('catatan_wali_kelas', '[Catatan Wali Kelas Akan Diisi Sini]');
-            $templateProcessor->setValue('kehadiran_sakit', '0');
-            $templateProcessor->setValue('kehadiran_izin', '0');
-            $templateProcessor->setValue('kehadiran_tanpa_keterangan', '0');
-            $templateProcessor->setValue('ekstrakurikuler', '[Data Ekstrakurikuler Akan Diisi Sini]');
-
-            Log::info('Processing summative grades for rapor template.', [
-                'totalSummatives' => $summatives->count(),
-                'classroom' => $classroom->name,
-                'academicYear' => $academicYear->name,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Failed to process summative grades for rapor!', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            // Set default values if processing fails
-            $templateProcessor->setValue('tabel_nilai', '[Error processing grades]');
-            $templateProcessor->setValue('catatan_wali_kelas', '[Error processing notes]');
         }
     }
 }
