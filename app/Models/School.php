@@ -21,6 +21,14 @@ class School extends Model
         'name',
         'npsn',
         'address',
+
+        // --- TAMBAHKAN INI ---
+        'village',
+        'district',
+        'city',
+        'province',
+        // --- BATAS TAMBAHAN ---
+
         'postal_code',
         'website',
         'email',

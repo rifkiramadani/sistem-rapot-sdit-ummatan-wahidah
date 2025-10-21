@@ -29,6 +29,14 @@ class SchoolFactory extends Factory
             'npsn' => $this->faker->numerify('########'),
 
             'address' => $this->faker->address(),
+
+            // --- TAMBAHKAN INI ---
+            'village' => $this->faker->cityPrefix() . ' ' . $this->faker->streetName(),
+            'district' => $this->faker->citySuffix() . ' ' . $this->faker->city(),
+            'city' => $this->faker->city(),
+            'province' => $this->faker->state(),
+            // --- BATAS TAMBAHAN ---
+
             'postal_code' => $this->faker->postcode(),
             'website' => $this->faker->unique()->domainName(),
             'email' => $this->faker->unique()->safeEmail(),

@@ -24,6 +24,14 @@ class SchoolAcademicYearSeeder extends Seeder
             'name' => 'SDIT Ummatan Wahidah',
             'npsn' => '12345678',
             'address' => 'Jl. Pendidikan No. 123, Jakarta Selatan',
+
+            // --- TAMBAHKAN INI ---
+            'village' => 'Pondok Indah',
+            'district' => 'Kebayoran Lama',
+            'city' => 'Jakarta Selatan',
+            'province' => 'DKI Jakarta',
+            // --- BATAS TAMBAHAN ---
+
             'postal_code' => '12345',
             'website' => 'www.ummatanwahidah.sch.id',
             'email' => 'info@ummatanwahidah.sch.id',

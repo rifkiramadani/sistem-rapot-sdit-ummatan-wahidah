@@ -49,8 +49,8 @@ class ClassroomStudentController extends Controller
         // Teachers can only access their own classrooms
         if ($isTeacher) {
             $teacherRecord = $user->teacher()
-                                 ->where('school_academic_year_id', $schoolAcademicYear->id)
-                                 ->first();
+                ->where('school_academic_year_id', $schoolAcademicYear->id)
+                ->first();
 
             if (!$teacherRecord || $teacherRecord->id !== $classroom->teacher_id) {
                 // Teacher is not assigned to this classroom
@@ -366,7 +366,6 @@ class ClassroomStudentController extends Controller
                 $classroom,
                 $schoolAcademicYear
             );
-
         } catch (\Exception $e) {
             Log::error('Gagal membuat dokumen Word nilai sumatif siswa!', [
                 'message' => $e->getMessage(),
@@ -476,7 +475,6 @@ class ClassroomStudentController extends Controller
             return response()
                 ->download($tempFilePath, $filename)
                 ->deleteFileAfterSend(true);
-
         } catch (\Exception $e) {
             Log::error('Gagal membuat dokumen Word siswa!', [
                 'message' => $e->getMessage(),
@@ -556,7 +554,6 @@ class ClassroomStudentController extends Controller
                 $schoolAcademicYear,
                 $school
             );
-
         } catch (\Exception $e) {
             Log::error('Gagal membuat Sampul Rapor!', [
                 'message' => $e->getMessage(),
@@ -618,6 +615,13 @@ class ClassroomStudentController extends Controller
             $templateProcessor->setValue('website', $school->website ?? '');
             $templateProcessor->setValue('email', $school->email ?? '');
 
+            // --- TAMBAHKAN BARIS-BARIS DI BAWAH INI ---
+            $templateProcessor->setValue('desa_kelurahan', $school->village ?? '');
+            $templateProcessor->setValue('kecamatan', $school->district ?? '');
+            $templateProcessor->setValue('kabupaten_kota', $school->city ?? '');
+            $templateProcessor->setValue('provinsi', $school->province ?? '');
+            // --- BATAS TAMBAHAN ---
+
             // 4. Isi placeholder data siswa
             $templateProcessor->setValue('nama_siswa', $student->name ?? '');
             $templateProcessor->setValue('nisn', $student->nisn ?? '');
@@ -626,6 +630,7 @@ class ClassroomStudentController extends Controller
             $templateProcessor->setValue('tempat_lahir', $student->birth_place ?? '');
             $templateProcessor->setValue('tanggal_lahir', $birthDate);
             $templateProcessor->setValue('agama', $religionLabels[$student->religion->value] ?? '');
+            $templateProcessor->setValue('last_education', $student->last_education ?? '');
             $templateProcessor->setValue('alamat_siswa', $student->address ?? '');
 
             // 5. Isi placeholder data orang tua
@@ -678,7 +683,6 @@ class ClassroomStudentController extends Controller
             return response()
                 ->download($tempFilePath, $filename)
                 ->deleteFileAfterSend(true);
-
         } catch (\Exception $e) {
             Log::error('Gagal membuat Sampul Rapor!', [
                 'message' => $e->getMessage(),
@@ -719,7 +723,6 @@ class ClassroomStudentController extends Controller
 
             // If no photo found, set placeholder text
             $templateProcessor->setValue('foto_siswa', '[Foto Siswa]');
-
         } catch (\Exception $e) {
             Log::warning('Gagal memproses foto siswa, menggunakan placeholder.', [
                 'error' => $e->getMessage(),
@@ -762,7 +765,6 @@ class ClassroomStudentController extends Controller
                 $school,
                 $validated
             );
-
         } catch (\Exception $e) {
             Log::error('Gagal membuat Surat Keterangan Pindah Sekolah!', [
                 'message' => $e->getMessage(),
@@ -880,7 +882,6 @@ class ClassroomStudentController extends Controller
             return response()
                 ->download($tempFilePath, $filename)
                 ->deleteFileAfterSend(true);
-
         } catch (\Exception $e) {
             Log::error('Gagal membuat Surat Keterangan Pindah Sekolah!', [
                 'message' => $e->getMessage(),
@@ -923,7 +924,6 @@ class ClassroomStudentController extends Controller
                 $school,
                 $selectedSemester
             );
-
         } catch (\Exception $e) {
             Log::error('Gagal membuat Rapor Akhir!', [
                 'message' => $e->getMessage(),
@@ -1030,7 +1030,6 @@ class ClassroomStudentController extends Controller
             return response()
                 ->download($tempFilePath, $filename)
                 ->deleteFileAfterSend(true);
-
         } catch (\Exception $e) {
             Log::error('Gagal membuat Rapor Akhir!', [
                 'message' => $e->getMessage(),
@@ -1081,7 +1080,6 @@ class ClassroomStudentController extends Controller
                 $schoolAcademicYear,
                 $school
             );
-
         } catch (\Exception $e) {
             Log::error('Gagal membuat Data STS!', [
                 'message' => $e->getMessage(),
@@ -1161,7 +1159,6 @@ class ClassroomStudentController extends Controller
             return response()
                 ->download($tempFilePath, $filename)
                 ->deleteFileAfterSend(true);
-
         } catch (\Exception $e) {
             Log::error('Gagal membuat STS!', [
                 'message' => $e->getMessage(),

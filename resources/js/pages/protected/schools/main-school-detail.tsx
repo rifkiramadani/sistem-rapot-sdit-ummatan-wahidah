@@ -20,6 +20,10 @@ interface SchoolProps {
     name: string;
     npsn: string | null;
     address: string | null;
+    village: string | null;
+    district: string | null;
+    city: string | null;
+    province: string | null;
     postal_code: string | null;
     website: string | null;
     email: string | null;
@@ -72,6 +76,10 @@ export default function MainSchoolDetail({ school }: MainSchoolDetailProps) {
         name: school.name || '',
         npsn: school.npsn || '',
         address: school.address || '',
+        village: school.village || '',
+        district: school.district || '',
+        city: school.city || '',
+        province: school.province || '',
         postal_code: school.postal_code || '',
         website: school.website || '',
         email: school.email || '',
@@ -143,7 +151,7 @@ export default function MainSchoolDetail({ school }: MainSchoolDetailProps) {
                                     value={data.website}
                                     onChange={(e) => setData('website', e.target.value)}
                                     error={errors.website}
-                                    type="url"
+                                    
                                 />
                                 <InputField
                                     label="Email"
@@ -177,6 +185,42 @@ export default function MainSchoolDetail({ school }: MainSchoolDetailProps) {
                                     />
                                     {errors.address && <p className="text-sm font-medium text-red-500">{errors.address}</p>}
                                 </div>
+
+                                {/* --- TAMBAHKAN INI --- */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <InputField
+                                        label="Desa/Kelurahan"
+                                        id="village"
+                                        value={data.village}
+                                        onChange={(e) => setData('village', e.target.value)}
+                                        error={errors.village}
+                                    />
+                                    <InputField
+                                        label="Kecamatan"
+                                        id="district"
+                                        value={data.district}
+                                        onChange={(e) => setData('district', e.target.value)}
+                                        error={errors.district}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <InputField
+                                        label="Kabupaten/Kota"
+                                        id="city"
+                                        value={data.city}
+                                        onChange={(e) => setData('city', e.target.value)}
+                                        error={errors.city}
+                                    />
+                                    <InputField
+                                        label="Provinsi"
+                                        id="province"
+                                        value={data.province}
+                                        onChange={(e) => setData('province', e.target.value)}
+                                        error={errors.province}
+                                    />
+                                </div>
+                                {/* --- BATAS TAMBAHAN --- */}
 
                                 <InputField
                                     label="Kode Pos"
