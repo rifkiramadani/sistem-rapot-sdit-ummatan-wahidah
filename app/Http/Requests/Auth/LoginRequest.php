@@ -43,7 +43,6 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-
         // 1. Otentikasi Email & Password
         if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
@@ -55,17 +54,29 @@ class LoginRequest extends FormRequest
 
         // 2. Jika otentikasi berhasil, periksa role.
         $user = Auth::user();
-        $selectedRole = $this->role;
 
-        // LOGIKA KONVERSI KRITIS: Mapping nilai role dari Frontend ke nilai RoleEnum (Database)
-        $expectedRoleInDb = match ($selectedRole) {
-            'admin' => RoleEnum::ADMIN->value,      // 'admin' -> 'admin'
-            'guru' => RoleEnum::TEACHER->value,     // 'guru' -> 'teacher'
+        // AMBIL ROLE DARI REQUEST (FORM LOGIN)
+        // (e.g., 'guru')
+        $roleFromRequest = $this->input('role');
+
+        // AMBIL ROLE ASLI PENGGUNA DARI DATABASE
+        // (e.g., 'teacher')
+        $actualRoleInDb = $user->role->name; // <-- INI PERBAIKANNYA
+
+        // 3. LOGIKA KONVERSI: Mapping nilai role dari Frontend (request)
+        //    ke nilai standar di database (RoleEnum)
+        $expectedRoleInDb = match ($roleFromRequest) {
+            'admin'      => RoleEnum::ADMIN->value,      // 'admin' -> 'admin'
+            'guru'       => RoleEnum::TEACHER->value,    // 'guru' -> 'teacher'
             'superadmin' => RoleEnum::SUPERADMIN->value, // 'superadmin' -> 'superadmin'
-            default => null,
+            // Tambahkan case lain jika ada, e.g., 'kepsek' => RoleEnum::PRINCIPAL->value
+            default      => null,
         };
 
-        if ($user->role !== $expectedRoleInDb) {
+        // 4. Bandingkan string role asli di DB dengan string role yang diharapkan dari form
+        //    Contoh: $actualRoleInDb ('teacher') !== $expectedRoleInDb ('teacher') -> false (cocok)
+        //    Contoh: $actualRoleInDb ('admin')   !== $expectedRoleInDb ('teacher') -> true (tidak cocok)
+        if ($actualRoleInDb !== $expectedRoleInDb) {
 
             // Logout, invalidasi sesi, dan regenerate token saat role salah
             Auth::logout();
@@ -75,11 +86,12 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
+                // Kembalikan error ke field 'role'
                 'role' => 'Peran yang Anda pilih tidak cocok dengan akun ini.',
             ]);
         }
 
-        // 3. Role cocok
+        // 5. Role cocok
         RateLimiter::clear($this->throttleKey());
     }
 

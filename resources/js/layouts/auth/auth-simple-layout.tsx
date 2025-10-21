@@ -1,6 +1,9 @@
 // import AppLogoIcon from '@/components/app-logo-icon';
-import { Link } from '@inertiajs/react';
-import { type PropsWithChildren } from 'react';
+import { Toaster } from '@/components/ui/sonner';
+import { SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import { useEffect, type PropsWithChildren } from 'react';
+import { toast } from 'sonner';
 
 interface AuthLayoutProps {
     name?: string;
@@ -9,8 +12,20 @@ interface AuthLayoutProps {
 }
 
 export default function AuthSimpleLayout({ children, title, description }: PropsWithChildren<AuthLayoutProps>) {
+    const { flash } = usePage<SharedData>().props;
+
+    // Use useEffect to watch for changes in the flash messages
+    useEffect(() => {
+        if (flash.success) {
+            toast.success(flash.success);
+        }
+        if (flash.error) {
+            toast.error(flash.error);
+        }
+    })
     return (
         <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
+            <Toaster richColors position="bottom-center" />
             <div className="w-full max-w-sm">
                 <div className="flex flex-col gap-8">
                     <div className="flex flex-col items-center gap-4">

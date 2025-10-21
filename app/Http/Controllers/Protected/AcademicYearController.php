@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Protected;
 
+use App\Models\SchoolAcademicYear;
 use Inertia\Inertia;
 use App\Models\AcademicYear;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ use App\Support\QueryBuilder; // <-- Import QueryBuilder
 use App\QueryFilters\Filter;   // <-- Import Filter pipe
 use App\QueryFilters\Sort;     // <-- Import Sort pipe
 use App\Enums\PerPageEnum; // <-- Import Enum
+use App\Models\School;
 
 class AcademicYearController extends Controller
 {
@@ -31,17 +33,27 @@ class AcademicYearController extends Controller
             'filter.q' => 'sometimes|string|nullable',
         ]);
 
-        // 2. Ganti semua logika query manual dengan QueryBuilder
-        $academicYears = QueryBuilder::for(AcademicYear::with(['schools', 'schoolAcademicYears']))
+        $mainSchoolId = $this->getMainSchool()->id;
+
+        // --- CORRECTED LOGIC ---
+
+        // 1. Prepare the base Eloquent query with all your initial conditions.
+        $baseQuery = SchoolAcademicYear::query()
+            ->with('academicYear')
+            ->where('school_id', $mainSchoolId);
+
+        // 2. Now, pass the fully prepared Eloquent Builder object
+        //    to your QueryBuilder.
+        $schoolAcademicYears = QueryBuilder::for($baseQuery)
             ->through([
-                Filter::class, // Akan otomatis memanggil scopeQ()
+                Filter::class,
                 Sort::class,
             ])
             ->paginate();
 
         // 3. Kembalikan response
         return Inertia::render('protected/academic-years/index', [
-            'academicYears' => $academicYears,
+            'schoolAcademicYears' => $schoolAcademicYears,
         ]);
     }
 
@@ -73,12 +85,27 @@ class AcademicYearController extends Controller
         return redirect()->route('protected.academic-years.index')->with('success', 'Tahun ajaran berhasil dibuat.');
     }
 
+    private function getMainSchool(): School
+    {
+        // Ambil sekolah pertama, atau buat jika tidak ada (untuk dev/testing)
+        // Gunakan findOrNew() atau first()
+        return School::first() ?? School::factory()->create();
+    }
+
     public function show(AcademicYear $academicYear)
     {
         Gate::authorize('view', $academicYear);
 
+        $schoolId = $this->getMainSchool()->id;
+
+        $schoolAcademicYear = $academicYear->schoolAcademicYears()
+            ->where('school_id', $schoolId)
+            ->first();
+        dd($schoolAcademicYear);
+
         return Inertia::render('protected/academic-years/show', [
             'academicYear' => $academicYear,
+            'schoolAcademicYear' => $schoolAcademicYear,
         ]);
     }
 
