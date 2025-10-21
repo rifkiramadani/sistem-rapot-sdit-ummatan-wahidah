@@ -49,17 +49,22 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
     // State untuk modals
     const [transferDialogOpen, setTransferDialogOpen] = useState(false);
     const [reportCardDialogOpen, setReportCardDialogOpen] = useState(false);
-    const [transferDate, setTransferDate] = useState<Date>();
+
+    // State transferForm sekarang mencakup transfer_date
     const [transferForm, setTransferForm] = useState({
+        transfer_date: undefined as Date | undefined, // Menampung objek Date
         transfer_reason: '',
         destination_school: '',
         destination_city: '',
     });
     const [selectedSemester, setSelectedSemester] = useState('');
 
-    // Handler untuk transfer certificate
+    // Handler untuk transfer certificate (sudah diperbarui)
     const handleTransferCertificate = () => {
-        const formattedDate = transferDate ? format(transferDate, 'yyyy-MM-dd') : '';
+        // Baca tanggal dari transferForm
+        const formattedDate = transferForm.transfer_date
+            ? format(transferForm.transfer_date, 'yyyy-MM-dd')
+            : '';
 
         const params = new URLSearchParams({
             transfer_date: formattedDate,
@@ -79,8 +84,9 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
 
         // Close dialog and reset form
         setTransferDialogOpen(false);
-        setTransferDate(undefined);
+        // Reset semua field di transferForm, termasuk transfer_date
         setTransferForm({
+            transfer_date: undefined,
             transfer_reason: '',
             destination_school: '',
             destination_city: '',
@@ -181,7 +187,8 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
                                     </Button>
                                 </Link>
 
-                                {/* Transfer Certificate Dialog */}
+                                {/* Transfer Certificate Dialog (Sudah diperbaiki) */}
+                                {/* Transfer Certificate Dialog (SUDAH DIPERBAIKI) */}
                                 <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
                                     <DialogTrigger asChild>
                                         <Button variant="outline" size="sm">
@@ -201,26 +208,30 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
                                                 <Label htmlFor="transfer_date">
                                                     Tanggal Pindah <span className="text-red-500">*</span>
                                                 </Label>
-                                                <Popover>
+
+                                                {/* MODIFIED: Tambahkan modal={true} di sini */}
+                                                <Popover modal={true}>
                                                     <PopoverTrigger asChild>
                                                         <Button
                                                             variant="outline"
                                                             className={cn(
                                                                 "w-full justify-start text-left font-normal",
-                                                                !transferDate && "text-muted-foreground"
+                                                                !transferForm.transfer_date && "text-muted-foreground"
                                                             )}
                                                         >
                                                             <CalendarIcon className="mr-2 h-4 w-4" />
-                                                            {transferDate ? format(transferDate, "PPP", { locale: indonesiaLocale }) : "Pilih tanggal"}
+                                                            {transferForm.transfer_date
+                                                                ? format(transferForm.transfer_date, "PPP", { locale: indonesiaLocale })
+                                                                : "Pilih tanggal"}
                                                         </Button>
                                                     </PopoverTrigger>
                                                     <PopoverContent className="w-auto p-0" align="start">
                                                         <Calendar
                                                             mode="single"
-                                                            selected={transferDate}
-                                                            onSelect={(date) => {
-                                                                setTransferDate(date);
-                                                            }}
+                                                            selected={transferForm.transfer_date}
+                                                            onSelect={(date) =>
+                                                                setTransferForm({ ...transferForm, transfer_date: date })
+                                                            }
                                                             initialFocus
                                                             disabled={(date) => date > new Date()}
                                                             locale={indonesiaLocale}
@@ -265,7 +276,7 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
                                             </Button>
                                             <Button
                                                 onClick={handleTransferCertificate}
-                                                disabled={!transferDate || !transferForm.transfer_reason}
+                                                disabled={!transferForm.transfer_date || !transferForm.transfer_reason}
                                                 type="button"
                                             >
                                                 <Download className="mr-2 h-4 w-4" />

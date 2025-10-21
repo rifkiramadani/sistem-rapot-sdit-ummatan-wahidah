@@ -101,5 +101,6 @@ class DatabaseSeeder extends Seeder
         $this->command->info('');
         $this->command->info('🔑 Login Credentials:');
         $this->command->info('   Super Admin: superadmin@example.com / password');
+        $this->command->info('   Principal: kepsek@ummatanwahidah.sch.id / password');
     }
 }

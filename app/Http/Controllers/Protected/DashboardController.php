@@ -36,11 +36,13 @@ class DashboardController extends Controller
         $schoolAcademicYears = $school->schoolAcademicYears()
             ->with('academicYear')
             ->withCount(['students', 'teachers', 'classrooms', 'subjects'])
-            ->join('academic_years', 'school_academic_years.academic_year_id', '=', 'academic_years.id')
-            ->orderBy('academic_years.start', 'desc')
-            ->select('school_academic_years.*')
-            ->get();
+            ->get()
+            ->sortByDesc(function ($say) {
+                return $say->academicYear ? $say->academicYear->start : null;
+            })
+            ->values();
 
+        
         // Calculate overall statistics across all academic years
         $totalStudents = Student::whereIn('school_academic_year_id', $schoolAcademicYears->pluck('id'))->count();
         $totalTeachers = Teacher::whereIn('school_academic_year_id', $schoolAcademicYears->pluck('id'))->count();
@@ -65,14 +67,15 @@ class DashboardController extends Controller
                 'id' => $say->id,
                 'year' => $say->academicYear->name ?? 'Unknown',
                 'academic_year_name' => $say->academicYear->name ?? 'Unknown',
-                'students_count' => $say->students_count,
-                'teachers_count' => $say->teachers_count,
-                'classrooms_count' => $say->classrooms_count,
-                'subjects_count' => $say->subjects_count,
+                'students_count' => $say->students_count ?? 0,
+                'teachers_count' => $say->teachers_count ?? 0,
+                'classrooms_count' => $say->classrooms_count ?? 0,
+                'subjects_count' => $say->subjects_count ?? 0,
                 'summatives_count' => $summativeCount,
             ];
         });
 
+        
         // Get distribution data for pie charts
         $studentsByAcademicYear = $academicYearsData->map(function ($data) {
             return [
