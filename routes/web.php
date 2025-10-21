@@ -71,6 +71,15 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
             ]);
         })->name('dashboard.index');
 
+        // ROUTE FOR PROFILE SETTINGS
+        Route::prefix('/settings')->name('settings.')->group(function () {
+            Route::get('/profile', function (SchoolAcademicYear $schoolAcademicYear) {
+                return Inertia::render('settings/profile', [
+                    'schoolAcademicYear' => $schoolAcademicYear
+                ]);
+            })->name('profile.edit');
+        });
+
         Route::prefix('/teachers')->name('teachers.')->group(function () {
             Route::get('', [TeacherController::class, 'index'])->name('index');
             Route::get('/create', [TeacherController::class, 'create'])->name('create');
