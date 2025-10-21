@@ -13,12 +13,16 @@ use App\QueryFilters\Filter;
 use App\QueryFilters\Sort;
 use App\Support\QueryBuilder;
 use Illuminate\Support\Facades\DB; // <-- Import DB
+use Illuminate\Support\Facades\Gate; // <-- Import Gate for authorization
 use Spatie\Activitylog\Facades\LogBatch;
 
 class SubjectController extends Controller
 {
     public function index(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
+        // Authorization: Who can view the list of subjects?
+        Gate::authorize('viewAny', Subject::class);
+
         // 1. Validasi semua parameter request
         $request->validate([
             'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
@@ -45,6 +49,9 @@ class SubjectController extends Controller
 
     public function show(SchoolAcademicYear $schoolAcademicYear, Subject $subject)
     {
+        // Authorization: Who can view the details of this subject?
+        Gate::authorize('view', $subject);
+
         return Inertia::render('protected/school-academic-years/subjects/show', [
             'schoolAcademicYear' => $schoolAcademicYear,
             'subject' => $subject,
@@ -53,6 +60,9 @@ class SubjectController extends Controller
 
     public function create(SchoolAcademicYear $schoolAcademicYear)
     {
+        // Authorization: Who can create a new subject?
+        Gate::authorize('create', Subject::class);
+
         return Inertia::render('protected/school-academic-years/subjects/create', [
             'schoolAcademicYear' => $schoolAcademicYear
         ]);
@@ -60,6 +70,9 @@ class SubjectController extends Controller
 
     public function store(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
+        // Authorization: Who can create a new subject?
+        Gate::authorize('create', Subject::class);
+
         // Validasi data subject
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -77,6 +90,9 @@ class SubjectController extends Controller
 
     public function edit(SchoolAcademicYear $schoolAcademicYear, Subject $subject)
     {
+        // Authorization: Who can update this subject?
+        Gate::authorize('update', $subject);
+
         return Inertia::render('protected/school-academic-years/subjects/edit', [
             'schoolAcademicYear' => $schoolAcademicYear,
             'subject' => $subject
@@ -85,6 +101,9 @@ class SubjectController extends Controller
 
     public function update(Request $request, SchoolAcademicYear $schoolAcademicYear, Subject $subject)
     {
+        // Authorization: Who can update this subject?
+        Gate::authorize('update', $subject);
+
         // Validasi data subject
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -102,6 +121,9 @@ class SubjectController extends Controller
 
     public function destroy(SchoolAcademicYear $schoolAcademicYear, Subject $subject)
     {
+        // Authorization: Who can delete this subject?
+        Gate::authorize('delete', $subject);
+
         $subject->delete();
 
         return redirect()->route('protected.school-academic-years.subjects.index', $schoolAcademicYear)
@@ -110,6 +132,9 @@ class SubjectController extends Controller
 
     public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
+        // Authorization: Who can bulk delete subjects?
+        Gate::authorize('bulkDelete', Subject::class);
+
         // Validasi bahwa 'ids' ada, merupakan sebuah array, dan setiap ID ada di tabel subject
         $request->validate([
             'ids'   => ['required', 'array'],

@@ -6,6 +6,7 @@ import { getSchoolAcademicYearNavItems, mainNavItems } from '@/constants/protect
 import { SharedData, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder } from 'lucide-react';
+import { canManageMasterData } from '@/utils/roles';
 import AppLogo from './app-logo';
 
 const footerNavItems: NavItem[] = [
@@ -26,6 +27,7 @@ export function AppSidebar() {
     const { schoolAcademicYear } = props;
 
     const isSchoolAcademicYearContext = schoolAcademicYear && route().current()?.startsWith('protected.school-academic-years.');
+    const canManageData = canManageMasterData();
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -63,16 +65,18 @@ export function AppSidebar() {
                         </SidebarGroup>
 
                         {/* Data Master Group - Guru, Siswa */}
-                        <SidebarGroup>
-                            <SidebarGroupLabel>Data Master</SidebarGroupLabel>
-                            <SidebarGroupContent>
-                                <NavMain items={getSchoolAcademicYearNavItems(schoolAcademicYear).filter(item =>
-                                    item.href.includes('teachers') ||
-                                    item.href.includes('students') ||
-                                    item.href.includes('subjects')
-                                )} />
-                            </SidebarGroupContent>
-                        </SidebarGroup>
+                        {canManageData && (
+                            <SidebarGroup>
+                                <SidebarGroupLabel>Data Master</SidebarGroupLabel>
+                                <SidebarGroupContent>
+                                    <NavMain items={getSchoolAcademicYearNavItems(schoolAcademicYear).filter(item =>
+                                        item.href.includes('teachers') ||
+                                        item.href.includes('students') ||
+                                        item.href.includes('subjects')
+                                    )} />
+                                </SidebarGroupContent>
+                            </SidebarGroup>
+                        )}
 
                         {/* Struktur Akademik Group - Kelas, Mata Pelajaran */}
                         <SidebarGroup>

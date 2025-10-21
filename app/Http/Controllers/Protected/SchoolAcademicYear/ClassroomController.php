@@ -20,7 +20,8 @@ class ClassroomController extends Controller
 {
     public function index(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
-        // Gate::authorize('viewAny', Classroom::class);
+        // Authorization: Who can view the list of classrooms?
+        Gate::authorize('viewAny', Classroom::class);
 
         $request->validate([
             'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
@@ -48,7 +49,8 @@ class ClassroomController extends Controller
      */
     public function show(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Gate::authorize('view', $classroom);
+        // Authorization: Who can view the details of this classroom?
+        Gate::authorize('view', $classroom);
 
         // Muat relasi yang dibutuhkan untuk halaman detail
         $classroom->load(['teacher', 'classroomStudents.student'])
@@ -62,7 +64,8 @@ class ClassroomController extends Controller
 
     public function create(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
-        // Gate::authorize('create', Classroom::class);
+        // Authorization: Who can create a new classroom?
+        Gate::authorize('create', Classroom::class);
 
         // Ambil daftar guru di tahun ajaran ini untuk dropdown wali kelas
         $teachers = $schoolAcademicYear->teachers()->orderBy('name')->get();
@@ -78,7 +81,8 @@ class ClassroomController extends Controller
      */
     public function store(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
-        // Gate::authorize('create', Classroom::class);
+        // Authorization: Who can create a new classroom?
+        Gate::authorize('create', Classroom::class);
 
         $validated = $request->validate([
             'name' => [
@@ -107,7 +111,8 @@ class ClassroomController extends Controller
      */
     public function edit(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Gate::authorize('update', $classroom);
+        // Authorization: Who can update this classroom?
+        Gate::authorize('update', $classroom);
 
         // Ambil guru yang belum menjadi wali kelas, KECUALI wali kelas saat ini
         $assignedTeacherIds = $schoolAcademicYear->classrooms()
@@ -131,7 +136,8 @@ class ClassroomController extends Controller
      */
     public function update(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Gate::authorize('update', $classroom);
+        // Authorization: Who can update this classroom?
+        Gate::authorize('update', $classroom);
 
         $validated = $request->validate([
             'name' => [
@@ -164,7 +170,8 @@ class ClassroomController extends Controller
      */
     public function destroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Gate::authorize('delete', $classroom);
+        // Authorization: Who can delete this classroom?
+        Gate::authorize('delete', $classroom);
 
         $classroom->delete();
 
@@ -177,7 +184,8 @@ class ClassroomController extends Controller
      */
     public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
-        // Gate::authorize('bulkDelete', Classroom::class);
+        // Authorization: Who can bulk delete classrooms?
+        Gate::authorize('bulkDelete', Classroom::class);
 
         $request->validate([
             'ids'   => ['required', 'array'],

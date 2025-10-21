@@ -14,6 +14,7 @@ use App\QueryFilters\Sort;
 use App\Support\QueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Spatie\Activitylog\Facades\LogBatch;
@@ -22,7 +23,8 @@ class StudentController extends Controller
 {
     public function index(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
-        // Gate::authorize('viewAny', Student::class);
+        // Authorization: Who can view the list of students?
+        Gate::authorize('viewAny', Student::class);
 
         $request->validate([
             'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
@@ -50,7 +52,8 @@ class StudentController extends Controller
      */
     public function show(Request $request, SchoolAcademicYear $schoolAcademicYear, Student $student)
     {
-        // Gate::authorize('view', $student);
+        // Authorization: Who can view the details of this student?
+        Gate::authorize('view', $student);
 
         // Muat semua relasi yang dibutuhkan untuk ditampilkan
         $student->load(['parent', 'guardian']);
@@ -63,7 +66,8 @@ class StudentController extends Controller
 
     public function create(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
-        // Gate::authorize('create', Student::class);
+        // Authorization: Who can create a new student?
+        Gate::authorize('create', Student::class);
 
         return Inertia::render('protected/school-academic-years/students/create', [
             'schoolAcademicYear' => $schoolAcademicYear,
@@ -75,7 +79,8 @@ class StudentController extends Controller
      */
     public function store(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
-        // Gate::authorize('create', Student::class);
+        // Authorization: Who can create a new student?
+        Gate::authorize('create', Student::class);
 
         // Validasi semua data yang masuk dari form
         $validated = $request->validate([
@@ -143,7 +148,8 @@ class StudentController extends Controller
      */
     public function edit(Request $request, SchoolAcademicYear $schoolAcademicYear, Student $student)
     {
-        // Gate::authorize('update', $student);
+        // Authorization: Who can update this student?
+        Gate::authorize('update', $student);
 
         // Muat relasi parent dan guardian agar datanya bisa ditampilkan di form
         $student->load(['parent', 'guardian']);
@@ -159,7 +165,8 @@ class StudentController extends Controller
      */
     public function update(Request $request, SchoolAcademicYear $schoolAcademicYear, Student $student)
     {
-        // Gate::authorize('update', $student);
+        // Authorization: Who can update this student?
+        Gate::authorize('update', $student);
 
         // Validasi data, aturan 'unique' mengabaikan data siswa saat ini
         $validated = $request->validate([
@@ -225,7 +232,8 @@ class StudentController extends Controller
      */
     public function destroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Student $student)
     {
-        // Gate::authorize('delete', $student);
+        // Authorization: Who can delete this student?
+        Gate::authorize('delete', $student);
 
         // Menghapus data siswa akan otomatis menghapus data parent dan guardian
         // karena onDelete('cascade') di migrasi.
@@ -240,7 +248,8 @@ class StudentController extends Controller
      */
     public function subjects(Request $request, SchoolAcademicYear $schoolAcademicYear, Student $student)
     {
-        // Gate::authorize('view', $student);
+        // Authorization: Who can view this student's subjects?
+        Gate::authorize('view', $student);
 
         // Load student dengan relasi yang dibutuhkan
         $student->load(['classroomStudents.classroom.classroomSubjects.subject']);
@@ -275,7 +284,8 @@ class StudentController extends Controller
      */
     public function subjectDetail(Request $request, SchoolAcademicYear $schoolAcademicYear, Student $student, Subject $subject)
     {
-        // Gate::authorize('view', $student);
+        // Authorization: Who can view this student's subject details?
+        Gate::authorize('view', $student);
 
         // Load relasi yang dibutuhkan
         $student->load(['classroomStudents.classroom.classroomSubjects' => function ($query) use ($subject) {
@@ -305,7 +315,8 @@ class StudentController extends Controller
      */
     public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
-        // Gate::authorize('bulkDelete', Student::class);
+        // Authorization: Who can bulk delete students?
+        Gate::authorize('bulkDelete', Student::class);
 
 
         $request->validate([

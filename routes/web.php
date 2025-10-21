@@ -23,10 +23,10 @@ Route::get('/', function () {
 })->name('home');
 
 Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(function () {
-    Route::get('', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index')->middleware('block.teacher.root');
 
     // ROUTE FOR ACADEMIC YEAR
-    Route::prefix('academic-years')->name('academic-years.')->group(function () {
+    Route::prefix('academic-years')->name('academic-years.')->middleware('block.teacher.root')->group(function () {
         Route::get('', [AcademicYearController::class, 'index'])->name('index');
         Route::get('/create', [AcademicYearController::class, 'create'])->name('create');
         Route::post('', [AcademicYearController::class, 'store'])->name('store');
@@ -37,7 +37,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
         Route::post('/bulk-destroy', [AcademicYearController::class, 'bulkDestroy'])->name('bulk-destroy');
     });
 
-    Route::prefix('schools')->name('schools.')->group(function () {
+    Route::prefix('schools')->name('schools.')->middleware('block.teacher.root')->group(function () {
         // [BARU] Rute untuk School Detail Page yang baru
         Route::get('/detail', [SchoolController::class, 'showMainSchool'])->name('detail');
         Route::put('/detail', [SchoolController::class, 'updateMainSchool'])->name('update.detail');
@@ -52,7 +52,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
         Route::delete('/{school}', [SchoolController::class, 'destroy'])->name('destroy');
         Route::post('/bulk-destroy', [SchoolController::class, 'bulkDestroy'])->name('bulk-destroy');
 
-        Route::prefix('/{school}/academic-years')->name('academic-years.')->group(function () {
+        Route::prefix('/{school}/academic-years')->name('academic-years.')->middleware('block.teacher.root')->group(function () {
             Route::get('', [SchoolAcademicYearController::class, 'index'])->name('index');
             Route::get('/create', [SchoolAcademicYearController::class, 'create'])->name('create');
             Route::post('', [SchoolAcademicYearController::class, 'store'])->name('store');
@@ -65,7 +65,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
     });
 
     Route::prefix('{schoolAcademicYear}')->name('school-academic-years.')->group(function () {
-        Route::get('', [SchoolAcademicYearDashboardController::class, 'index'])->name('dashboard.index');
+        Route::get('/dashboard', [SchoolAcademicYearDashboardController::class, 'index'])->name('dashboard.index');
 
         // ROUTE FOR PROFILE SETTINGS
         Route::prefix('/settings')->name('settings.')->group(function () {
@@ -146,7 +146,6 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
                     Route::get('/values', [SummativeController::class, 'values'])->name('values');
                     Route::post('update-value', [SummativeController::class, 'updateValue'])
                         ->name('update-value');
-                    Route::get('/export-word', [SummativeController::class, 'exportWord'])->name('export-word');
                 });
             });
         });

@@ -2,23 +2,22 @@
 
 namespace App\Policies;
 
-use App\Models\AcademicYear;
+use App\Models\Student;
 use App\Models\User;
 use App\Traits\PolicyTrait;
-use Illuminate\Auth\Access\Response;
 
-class AcademicYearPolicy
+class StudentPolicy
 {
     use PolicyTrait;
 
-    // Management roles (SUPERADMIN, ADMIN, PRINCIPAL) can manage academic years
+    // Only management can manage student master data
 
     public function viewAny(User $user): bool
     {
         return $this->isManagement($user);
     }
 
-    public function view(User $user, AcademicYear $academicYear): bool
+    public function view(User $user, Student $student): bool
     {
         return $this->isManagement($user);
     }
@@ -28,12 +27,12 @@ class AcademicYearPolicy
         return $this->isManagement($user);
     }
 
-    public function update(User $user, AcademicYear $academicYear): bool
+    public function update(User $user, Student $student): bool
     {
         return $this->isManagement($user);
     }
 
-    public function delete(User $user, AcademicYear $academicYear): bool
+    public function delete(User $user, Student $student): bool
     {
         return $this->isManagement($user);
     }
@@ -43,12 +42,12 @@ class AcademicYearPolicy
         return $this->isManagement($user);
     }
 
-    public function restore(User $user, AcademicYear $academicYear): bool
+    public function restore(User $user, Student $student): bool
     {
         return $this->isManagement($user);
     }
 
-    public function forceDelete(User $user, AcademicYear $academicYear): bool
+    public function forceDelete(User $user, Student $student): bool
     {
         return $this->isManagement($user);
     }

@@ -5,69 +5,80 @@ namespace App\Policies;
 use App\Models\SchoolAcademicYear;
 use App\Models\User;
 use App\Traits\PolicyTrait;
-use Illuminate\Auth\Access\Response;
 
 class SchoolAcademicYearPolicy
 {
     use PolicyTrait;
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
-    {
-        return $this->isSuperadmin($user);
-    }
 
     /**
-     * Determine whether the user can view the model.
+     * Who can view/access this academic year's dashboard?
      */
     public function view(User $user, SchoolAcademicYear $schoolAcademicYear): bool
     {
-        return $this->isSuperadmin($user);
+        // 1. Management can view all.
+        if ($this->isManagement($user)) {
+            return true;
+        }
+
+        // 2. A teacher is allowed, AS LONG AS they are registered in that academic year.
+        if ($this->isTeacher($user)) {
+            // Assumption: `teachers` relationship exists on User model: hasMany(Teacher::class, 'user_id')
+            return $user->teacher()->where('school_academic_year_id', $schoolAcademicYear->id)->exists();
+        }
+
+        return false;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Who can view the list of school academic years?
+     */
+    public function viewAny(User $user): bool
+    {
+        return $this->isSuperadmin($user) || $this->isAdmin($user);
+    }
+
+    /**
+     * Who can create new school academic years?
      */
     public function create(User $user): bool
     {
-        return $this->isSuperadmin($user);
+        return $this->isSuperadmin($user) || $this->isAdmin($user);
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Who can update school academic years?
      */
-    public function update(User $user, SchoolAcademicYear $schoolAcademicYear): bool
+    public function update(User $user): bool
     {
-        return $this->isSuperadmin($user);
+        return $this->isSuperadmin($user) || $this->isAdmin($user);
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Who can delete school academic years?
      */
-    public function delete(User $user, SchoolAcademicYear $schoolAcademicYear): bool
+    public function delete(User $user): bool
     {
-        return $this->isSuperadmin($user);
+        return $this->isSuperadmin($user) || $this->isAdmin($user);
     }
 
     public function bulkDelete(User $user): bool
     {
-        return $this->isSuperadmin($user);
+        return $this->isSuperadmin($user) || $this->isAdmin($user);
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Who can restore school academic years?
      */
-    public function restore(User $user, SchoolAcademicYear $schoolAcademicYear): bool
+    public function restore(User $user): bool
     {
-        return $this->isSuperadmin($user);
+        return $this->isSuperadmin($user) || $this->isAdmin($user);
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Who can permanently delete school academic years?
      */
-    public function forceDelete(User $user, SchoolAcademicYear $schoolAcademicYear): bool
+    public function forceDelete(User $user): bool
     {
-        return $this->isSuperadmin($user);
+        return $this->isSuperadmin($user) || $this->isAdmin($user);
     }
 }

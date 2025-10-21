@@ -10,6 +10,7 @@ use App\Models\ClassroomSubject;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Gate;
 
 class DashboardController extends Controller
 {
@@ -18,6 +19,9 @@ class DashboardController extends Controller
      */
     public function index(SchoolAcademicYear $schoolAcademicYear)
     {
+        // Authorization: Who can access this academic year's dashboard?
+        Gate::authorize('view', $schoolAcademicYear);
+
         try {
             Log::info('Loading school-academic-year dashboard', [
                 'schoolAcademicYearId' => $schoolAcademicYear->id,

@@ -211,7 +211,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     </form>
                 </Card>
 
-                <div className="text-white flex justify-center gap-1 text-sm">
+                {/* <div className="text-white flex justify-center gap-1 text-sm">
                     <p>Tidak punya akun?</p>
                     <TextLink
                         href={route('register')}
@@ -220,7 +220,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                     >
                         Daftar
                     </TextLink>
-                </div>
+                </div> */}
             </div>
         </AuthLayout>
     );

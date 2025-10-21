@@ -17,12 +17,16 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB; // <-- Import DB
 use Illuminate\Support\Facades\Hash; // <-- Import Hash
+use Illuminate\Support\Facades\Gate; // <-- Import Gate for authorization
 use Spatie\Activitylog\Facades\LogBatch;
 
 class TeacherController extends Controller
 {
     public function index(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
+        // Authorization: Who can view the list of teachers?
+        Gate::authorize('viewAny', Teacher::class);
+
         // 1. Validasi semua parameter request
         $request->validate([
             'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
@@ -49,7 +53,8 @@ class TeacherController extends Controller
 
     public function show(Request $request, SchoolAcademicYear $schoolAcademicYear, Teacher $teacher)
     {
-        // Gate::authorize('view', $teacher);
+        // Authorization: Who can view the details of this teacher?
+        Gate::authorize('view', $teacher);
 
         // Muat relasi 'user' untuk menampilkan data user seperti email
         $teacher->load('user');
@@ -62,6 +67,9 @@ class TeacherController extends Controller
 
     public function create(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
+        // Authorization: Who can create a new teacher?
+        Gate::authorize('create', Teacher::class);
+
         // Tidak perlu lagi mengambil data user
         return Inertia::render('protected/school-academic-years/teachers/create', [
             'schoolAcademicYear' => $schoolAcademicYear,
@@ -73,6 +81,9 @@ class TeacherController extends Controller
      */
     public function store(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
+        // Authorization: Who can create a new teacher?
+        Gate::authorize('create', Teacher::class);
+
         // Validasi data baru, termasuk email dan password
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -111,6 +122,9 @@ class TeacherController extends Controller
      */
     public function edit(Request $request, SchoolAcademicYear $schoolAcademicYear, Teacher $teacher)
     {
+        // Authorization: Who can update this teacher?
+        Gate::authorize('update', $teacher);
+
         // Muat relasi 'user' agar email bisa ditampilkan di form
         $teacher->load('user');
 
@@ -125,6 +139,9 @@ class TeacherController extends Controller
      */
     public function update(Request $request, SchoolAcademicYear $schoolAcademicYear, Teacher $teacher)
     {
+        // Authorization: Who can update this teacher?
+        Gate::authorize('update', $teacher);
+
         // Validasi data. Perhatikan aturan 'unique' yang mengabaikan data saat ini.
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -162,7 +179,8 @@ class TeacherController extends Controller
      */
     public function destroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Teacher $teacher)
     {
-        // Gate::authorize('delete', $teacher);
+        // Authorization: Who can delete this teacher?
+        Gate::authorize('delete', $teacher);
 
         $teacher->user()->delete();
 
@@ -175,7 +193,8 @@ class TeacherController extends Controller
      */
     public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear)
     {
-        // Gate::authorize('bulkDelete', Teacher::class);
+        // Authorization: Who can bulk delete teachers?
+        Gate::authorize('bulkDelete', Teacher::class);
 
         // Validasi bahwa 'ids' ada, merupakan sebuah array, dan setiap ID ada di tabel teachers
         $request->validate([

@@ -12,6 +12,7 @@ use App\QueryFilters\Sort;
 use App\Support\QueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Spatie\Activitylog\Facades\LogBatch;
@@ -20,6 +21,9 @@ class ClassroomSubjectController extends Controller
 {
     public function index(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
+        // Authorization: Who can view the list of classroom subjects?
+        Gate::authorize('viewAny', ClassroomSubject::class);
+
         $request->validate([
             'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
             'sort_by' => 'sometimes|string|in:name',
@@ -44,7 +48,8 @@ class ClassroomSubjectController extends Controller
 
     public function show(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
     {
-        // Gate::authorize('view', $classroomSubject);
+        // Authorization: Who can view the details of this classroom subject?
+        Gate::authorize('view', $classroomSubject);
 
         // Muat relasi dari mata pelajaran yang terkait
         $classroomSubject->load('subject');
@@ -61,6 +66,9 @@ class ClassroomSubjectController extends Controller
      */
     public function create(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
+        // Authorization: Who can create classroom subjects?
+        Gate::authorize('create', ClassroomSubject::class);
+
         // 1. Ambil ID mata pelajaran yang sudah ada di kelas ini
         $existingSubjectIds = $classroom->classroomSubjects()->pluck('subject_id');
 
@@ -82,6 +90,9 @@ class ClassroomSubjectController extends Controller
      */
     public function store(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
+        // Authorization: Who can create classroom subjects?
+        Gate::authorize('create', ClassroomSubject::class);
+
         $validated = $request->validate([
             'subject_id' => [
                 'required',
@@ -145,7 +156,8 @@ class ClassroomSubjectController extends Controller
      */
     public function destroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
     {
-        // Gate::authorize('delete', $classroomSubject);
+        // Authorization: Who can delete this classroom subject?
+        Gate::authorize('delete', $classroomSubject);
 
         // Keamanan: pastikan record yang akan dihapus benar-benar milik kelas ini
         if ($classroomSubject->classroom_id !== $classroom->id) {
@@ -163,7 +175,8 @@ class ClassroomSubjectController extends Controller
      */
     public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Gate::authorize('bulkDelete', ClassroomSubject::class);
+        // Authorization: Who can bulk delete classroom subjects?
+        Gate::authorize('bulkDelete', ClassroomSubject::class);
 
         $request->validate([
             'ids'   => ['required', 'array'],

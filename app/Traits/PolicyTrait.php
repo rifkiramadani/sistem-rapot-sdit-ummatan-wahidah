@@ -12,18 +12,27 @@ trait PolicyTrait
         return $user->role?->name === RoleEnum::SUPERADMIN->value;
     }
 
+    public function isAdmin(User $user): bool
+    {
+        return $user->role?->name === RoleEnum::ADMIN->value;
+    }
+
+    public function isPrincipal(User $user): bool
+    {
+        return $user->role?->name === RoleEnum::PRINCIPAL->value;
+    }
+
+    public function isTeacher(User $user): bool
+    {
+        return $user->role?->name === RoleEnum::TEACHER->value;
+    }
+
     /**
-     * Anda bisa menambahkan fungsi-fungsi bantuan policy lainnya di sini di masa depan.
-     * Contoh:
-     *
-     * protected function isAdmin(User $user): bool
-     * {
-     * return $user->role === RoleEnum::ADMIN;
-     * }
-     *
-     * protected function isOwner(User $user, $model): bool
-     * {
-     * return $user->id === $model->user_id;
-     * }
+     * Helper for management roles (SUPERADMIN, ADMIN, PRINCIPAL).
+     * These roles generally have full access within their scope.
      */
+    public function isManagement(User $user): bool
+    {
+        return $this->isSuperadmin($user) || $this->isAdmin($user) || $this->isPrincipal($user);
+    }
 }

@@ -131,13 +131,13 @@ const Welcome = () => {
                                                         </Button>
                                                     </Link>
                                                 </li>
-                                                <li className="w-full sm:w-auto">
+                                                {/* <li className="w-full sm:w-auto">
                                                     <Link href={route('register')} className="w-full block">
                                                         <Button className='w-full bg-[#773DCE] text-white hover:bg-[#3D138C] hover:text-white dark:hover:bg-[#3D138C] dark:hover:text-white py-2 px-15'>
                                                             Daftar
                                                         </Button>
                                                     </Link>
-                                                </li>
+                                                </li> */}
                                             </>
                                         )}
                                     </ul>

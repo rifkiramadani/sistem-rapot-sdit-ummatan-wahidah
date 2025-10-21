@@ -110,20 +110,6 @@ export default function Index({ summatives, classroomSubject, schoolAcademicYear
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            asChild
-                            variant="outline"
-                            size="sm"
-                        >
-                            <Link
-                                href={route('protected.school-academic-years.classrooms.subjects.summatives.export-word', routeParams)}
-                            >
-                                <Download className="mr-2 h-4 w-4" />
-                                Ekspor Word
-                            </Link>
-                        </Button>
-                    </div>
                 </div>
 
                 {/* Content Section */}
