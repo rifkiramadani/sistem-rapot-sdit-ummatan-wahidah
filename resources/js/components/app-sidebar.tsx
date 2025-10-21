@@ -1,7 +1,7 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarGroupAction } from '@/components/ui/sidebar';
 import { getSchoolAcademicYearNavItems, mainNavItems } from '@/constants/protected-sidebar';
 import { SharedData, type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
@@ -56,7 +56,35 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={navItems} />
+                {/* Dashboard Section */}
+                <SidebarGroup>
+                    <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <NavMain items={navItems.filter(item => item.href.includes('dashboard'))} />
+                    </SidebarGroupContent>
+                </SidebarGroup>
+
+                {/* Master Data Group */}
+                <SidebarGroup>
+                    <SidebarGroupLabel>Data Master</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <NavMain items={navItems.filter(item =>
+                            item.href.includes('teachers') ||
+                            item.href.includes('students')
+                        )} />
+                    </SidebarGroupContent>
+                </SidebarGroup>
+
+                {/* Academic Structure Group */}
+                <SidebarGroup>
+                    <SidebarGroupLabel>Struktur Akademik</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <NavMain items={navItems.filter(item =>
+                            item.href.includes('classrooms') ||
+                            item.href.includes('subjects')
+                        )} />
+                    </SidebarGroupContent>
+                </SidebarGroup>
             </SidebarContent>
 
             <SidebarFooter>

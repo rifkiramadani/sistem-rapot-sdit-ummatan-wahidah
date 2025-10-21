@@ -14,6 +14,7 @@ use App\Http\Controllers\Protected\SchoolAcademicYear\ClassroomStudentController
 use App\Http\Controllers\Protected\SchoolAcademicYear\ClassroomSubjectController;
 use App\Http\Controllers\Protected\SchoolAcademicYearController;
 use App\Http\Controllers\Protected\SchoolAcademicYear\SummativeController;
+use App\Http\Controllers\Protected\SchoolAcademicYear\DashboardController as SchoolAcademicYearDashboardController;
 use App\Http\Controllers\Protected\DashboardController;
 
 Route::get('/', function () {
@@ -64,11 +65,7 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
     });
 
     Route::prefix('{schoolAcademicYear}')->name('school-academic-years.')->group(function () {
-        Route::get('', function (SchoolAcademicYear $schoolAcademicYear) {
-            return Inertia::render('protected/school-academic-years/dashboard/index', [
-                'schoolAcademicYear' => $schoolAcademicYear
-            ]);
-        })->name('dashboard.index');
+        Route::get('', [SchoolAcademicYearDashboardController::class, 'index'])->name('dashboard.index');
 
         // ROUTE FOR PROFILE SETTINGS
         Route::prefix('/settings')->name('settings.')->group(function () {

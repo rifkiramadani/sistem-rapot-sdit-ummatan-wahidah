@@ -22,7 +22,7 @@ export const mainNavItems: NavItem[] = [
 
 export const getSchoolAcademicYearNavItems = (schoolAcademicYear: SchoolAcademicYear): NavItem[] => [
     {
-        title: 'Dashboard TA',
+        title: 'Dashboard',
         href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear: schoolAcademicYear.id }),
         icon: LayoutGrid,
     },
@@ -42,14 +42,8 @@ export const getSchoolAcademicYearNavItems = (schoolAcademicYear: SchoolAcademic
         icon: ArrowDownRightFromSquareIcon,
     },
     {
-        title: 'Subject',
+        title: 'Mata Pelajaran',
         href: route('protected.school-academic-years.subjects.index', { schoolAcademicYear: schoolAcademicYear.id }),
         icon: BookOpenText,
     },
-    // Contoh item menu lain di dalam konteks tahun ajaran
-    // {
-    //     title: 'Guru',
-    //     href: route('protected.school-academic-years.teachers.index', { schoolAcademicYear: schoolAcademicYear.id }),
-    //     icon: Users,
-    // },
-];
+    ];
