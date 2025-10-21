@@ -73,10 +73,18 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
                                         Edit Profil Siswa
                                     </Button>
                                 </Link>
-                                <Button variant="outline" size="sm">
-                                    <BookCopy className="mr-2 h-4 w-4" />
-                                    Lihat sumatif (Segera)
-                                </Button>
+                                <Link
+                                    href={route('protected.school-academic-years.classrooms.students.summatives', {
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                        classroom: classroom.id,
+                                        classroomStudent: classroomStudent.id,
+                                    })}
+                                >
+                                    <Button variant="outline" size="sm">
+                                        <BookCopy className="mr-2 h-4 w-4" />
+                                        Lihat Sumatif
+                                    </Button>
+                                </Link>
                             </div>
                         </div>
                     </CardHeader>

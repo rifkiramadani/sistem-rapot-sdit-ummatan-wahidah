@@ -14,8 +14,13 @@ use App\Support\QueryBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use PhpOffice\PhpWord\TemplateProcessor;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\PhpWord;
 use Spatie\Activitylog\Facades\LogBatch;
 
 class ClassroomStudentController extends Controller
@@ -175,6 +180,63 @@ class ClassroomStudentController extends Controller
     }
 
     /**
+     * Menampilkan daftar nilai sumatif siswa untuk semua mata pelajaran di kelasnya.
+     */
+    public function summatives(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
+    {
+        // Gate::authorize('view', $classroomStudent);
+        $schoolAcademicYear->load('academicYear');
+        // Load relasi yang dibutuhkan
+        $classroomStudent->load(['student', 'classroom']);
+
+        // Ambil semua classroom subjects dari kelas ini
+        $classroomSubjects = $classroom->classroomSubjects()
+            ->with('subject')
+            ->get();
+
+        // Kumpulkan semua summatives untuk siswa ini dari semua mata pelajaran di kelasnya
+        $allSummatives = collect();
+
+        foreach ($classroomSubjects as $classroomSubject) {
+            // Ambil summatives untuk classroom subject ini
+            $summatives = $classroomSubject->summatives()
+                ->with(['summativeType', 'studentSummatives' => function ($query) use ($classroomStudent) {
+                    $query->where('student_id', $classroomStudent->student_id);
+                }])
+                ->get();
+
+            foreach ($summatives as $summative) {
+                // Cari student summative untuk siswa ini
+                $studentSummative = $summative->studentSummatives
+                    ->where('student_id', $classroomStudent->student_id)
+                    ->first();
+
+                $allSummatives->push([
+                    'id' => $summative->id,
+                    'name' => $summative->name,
+                    'identifier' => $summative->identifier,
+                    'description' => $summative->description,
+                    'type' => $summative->summativeType->name ?? 'Tidak ada',
+                    'subject' => $classroomSubject->subject->name,
+                    'student_value' => $studentSummative?->value,
+                    'student_summative_id' => $studentSummative?->id,
+                    'classroom_subject_id' => $classroomSubject->id,
+                ]);
+            }
+        }
+
+        // Sort by subject name then summative name
+        $sortedSummatives = $allSummatives->sortBy(['subject', 'name'])->values();
+
+        return Inertia::render('protected/school-academic-years/classrooms/students/summatives/index', [
+            'schoolAcademicYear' => $schoolAcademicYear,
+            'classroom' => $classroom,
+            'classroomStudent' => $classroomStudent,
+            'summatives' => $sortedSummatives,
+        ]);
+    }
+
+    /**
      * Mengeluarkan beberapa siswa dari kelas sekaligus.
      *
      * @param Request $request
@@ -204,5 +266,251 @@ class ClassroomStudentController extends Controller
 
         return redirect()->route('protected.school-academic-years.classrooms.students.index', [$schoolAcademicYear, $classroom])
             ->with('success', 'Siswa yang dipilih berhasil dikeluarkan dari kelas.');
+    }
+
+    /**
+     * Export student summatives to Word document.
+     */
+    public function exportSummativesWord(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
+    {
+        try {
+            Log::info('Memulai ekspor Word nilai sumatif siswa.', [
+                'classroomStudentId' => $classroomStudent->id,
+                'studentName' => $classroomStudent->student->name,
+                'className' => $classroom->name,
+            ]);
+
+            // Load data yang dibutuhkan
+            $schoolAcademicYear->load('academicYear');
+            $classroomStudent->load(['student', 'classroom']);
+
+            // Ambil semua classroom subjects dari kelas ini
+            $classroomSubjects = $classroom->classroomSubjects()
+                ->with('subject')
+                ->get();
+
+            // Kumpulkan semua summatives untuk siswa ini
+            $allSummatives = collect();
+            foreach ($classroomSubjects as $classroomSubject) {
+                $summatives = $classroomSubject->summatives()
+                    ->with(['summativeType', 'studentSummatives' => function ($query) use ($classroomStudent) {
+                        $query->where('student_id', $classroomStudent->student_id);
+                    }])
+                    ->get();
+
+                foreach ($summatives as $summative) {
+                    $studentSummative = $summative->studentSummatives
+                        ->where('student_id', $classroomStudent->student_id)
+                        ->first();
+
+                    $allSummatives->push([
+                        'id' => $summative->id,
+                        'name' => $summative->name,
+                        'identifier' => $summative->identifier,
+                        'description' => $summative->description,
+                        'type' => $summative->summativeType->name ?? 'Tidak ada',
+                        'subject' => $classroomSubject->subject->name,
+                        'student_value' => $studentSummative?->value,
+                        'classroom_subject_id' => $classroomSubject->id,
+                    ]);
+                }
+            }
+
+            // Sort by subject name then summative name
+            $sortedSummatives = $allSummatives->sortBy(['subject', 'name'])->values();
+
+            // Cek jika data kosong
+            if ($sortedSummatives->isEmpty()) {
+                Log::warning('Ekspor Word dibatalkan: Tidak ada data sumatif untuk siswa.', [
+                    'classroomStudentId' => $classroomStudent->id,
+                ]);
+                return redirect()->route('protected.school-academic-years.classrooms.students.summatives', [$schoolAcademicYear, $classroom, $classroomStudent])
+                    ->with('error', 'Tidak ada data nilai untuk diekspor.');
+            }
+
+            // Generate Word document
+            return $this->generateStudentSummativesDocument(
+                $sortedSummatives,
+                $classroomStudent,
+                $classroom,
+                $schoolAcademicYear
+            );
+
+        } catch (\Exception $e) {
+            Log::error('Gagal membuat dokumen Word nilai sumatif siswa!', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'classroomStudentId' => $classroomStudent->id,
+            ]);
+
+            report($e);
+            return redirect()->back()->with('error', 'Gagal membuat dokumen: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate Word document for student summatives.
+     */
+    private function generateStudentSummativesDocument($summatives, $classroomStudent, $classroom, $schoolAcademicYear)
+    {
+        try {
+            Log::info('Memulai pembuatan dokumen Word untuk nilai sumatif siswa.', [
+                'totalSummatives' => $summatives->count(),
+            ]);
+
+            // 1. Muat template
+            $templatePath = storage_path('app/templates/template_rekap_nilai_siswa.docx');
+
+            // Jika template tidak ada, buat template sederhana
+            if (!file_exists($templatePath)) {
+                Log::info('Template tidak ditemukan, membuat template sederhana.');
+                $this->createSimpleStudentTemplate($templatePath);
+            }
+
+            $templateProcessor = new TemplateProcessor($templatePath);
+
+            // 2. Isi placeholder
+            $templateProcessor->setValue('nama_siswa', $classroomStudent->student->name);
+            $templateProcessor->setValue('nisn', $classroomStudent->student->nisn);
+            $templateProcessor->setValue('nama_kelas', $classroom->name);
+            $templateProcessor->setValue('tahun_ajaran', $schoolAcademicYear->year . ' Semester ' . $schoolAcademicYear->academicYear->name);
+
+            // 3. Buat tabel untuk nilai
+            $tablePhpWord = new PhpWord();
+            $section = $tablePhpWord->addSection();
+
+            // Gaya
+            $headerStyle = ['bold' => true, 'bgColor' => 'F2F2F2', 'size' => 10];
+            $bodyStyle = ['size' => 10];
+
+            $wordTable = $section->addTable([
+                'borderSize' => 6,
+                'borderColor' => '000000',
+                'cellMargin' => 50,
+                'alignment' => 'center',
+                'width' => 10000,
+                'unit' => 'pct',
+            ]);
+
+            // Header tabel
+            $wordTable->addRow();
+            $wordTable->addCell(2000)->addText('Mata Pelajaran', $headerStyle, ['alignment' => 'center']);
+            $wordTable->addCell(3000)->addText('Nama Penilaian', $headerStyle, ['alignment' => 'center']);
+            $wordTable->addCell(1500)->addText('Identitas', $headerStyle, ['alignment' => 'center']);
+            $wordTable->addCell(1500)->addText('Tipe', $headerStyle, ['alignment' => 'center']);
+            $wordTable->addCell(1000)->addText('Nilai', $headerStyle, ['alignment' => 'center']);
+            $wordTable->addCell(2000)->addText('Keterangan', $headerStyle, ['alignment' => 'center']);
+
+            // Data tabel
+            foreach ($summatives as $summative) {
+                $wordTable->addRow();
+                $wordTable->addCell(2000)->addText($summative['subject'], $bodyStyle);
+                $wordTable->addCell(3000)->addText($summative['name'], $bodyStyle);
+                $wordTable->addCell(1500)->addText($summative['identifier'] ?: '-', $bodyStyle, ['alignment' => 'center']);
+                $wordTable->addCell(1500)->addText($summative['type'], $bodyStyle, ['alignment' => 'center']);
+                $wordTable->addCell(1000)->addText($summative['student_value'] !== null ? (string) $summative['student_value'] : '-', $bodyStyle, ['alignment' => 'center']);
+                $wordTable->addCell(2000)->addText($summative['description'] ?: '-', $bodyStyle);
+            }
+
+            // 4. Proses tabel ke XML
+            $tempTableFile = tempnam(sys_get_temp_dir(), 'phpword_student_table');
+            $xmlWriter = IOFactory::createWriter($tablePhpWord, 'Word2007');
+            $xmlWriter->save($tempTableFile);
+
+            $zip = new \ZipArchive();
+            if ($zip->open($tempTableFile) === true) {
+                $fullXml = $zip->getFromName('word/document.xml');
+                $zip->close();
+                unlink($tempTableFile);
+            } else {
+                Log::error('Gagal membuka file Word sementara sebagai zip.');
+                throw new \Exception('Gagal memproses XML tabel untuk injeksi.');
+            }
+
+            if (!$fullXml) {
+                Log::error('Gagal membaca word/document.xml dari file zip.');
+                throw new \Exception('Gagal memproses XML tabel untuk injeksi.');
+            }
+
+            // Ekstraksi konten body
+            $tableXml = '';
+            if (preg_match('/<w:body(.*?)>(.*)<\/w:body>/s', $fullXml, $matches)) {
+                $bodyContent = $matches[2];
+                $tableXml = preg_replace('/<w:sectPr\s*.*?\s*\/w:sectPr>/s', '', $bodyContent);
+                $tableXml = preg_replace('/<w:lastRenderedPageBreak\s*\/>/', '', $tableXml);
+                $tableXml = trim($tableXml);
+            } else {
+                Log::error('Gagal mengekstrak body XML dari document.xml.');
+                throw new \Exception('Gagal memproses XML tabel untuk injeksi.');
+            }
+
+            // Set placeholder dengan XML tabel
+            $templateProcessor->setValue('tabel_nilai', $tableXml);
+
+            // 5. Simpan dan download
+            $filename = 'nilai-sumatif-' . str_replace(' ', '_', $classroomStudent->student->name) . '-' . str_replace(' ', '_', $classroom->name) . '.docx';
+            $tempPath = storage_path('app/temp');
+            File::ensureDirectoryExists($tempPath);
+            $tempFilePath = $tempPath . '/' . uniqid('nilai_sumatif_siswa_', true) . '.docx';
+            $templateProcessor->saveAs($tempFilePath);
+
+            Log::info('Dokumen siswa berhasil disimpan.', [
+                'tempFilePath' => $tempFilePath,
+                'filename' => $filename
+            ]);
+
+            return response()
+                ->download($tempFilePath, $filename)
+                ->deleteFileAfterSend(true);
+
+        } catch (\Exception $e) {
+            Log::error('Gagal membuat dokumen Word siswa!', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Create simple template for student summatives if template doesn't exist.
+     */
+    private function createSimpleStudentTemplate($templatePath)
+    {
+        $phpWord = new PhpWord();
+        $section = $phpWord->addSection();
+
+        // Header
+        $section->addText('REKAP NILAI SUMATIF SISWA', ['bold' => true, 'size' => 16], ['alignment' => 'center']);
+        $section->addTextBreak();
+
+        // Student info table
+        $infoTable = $section->addTable(['borderSize' => 6, 'borderColor' => '000000', 'cellMargin' => 50]);
+
+        $infoTable->addRow();
+        $infoTable->addCell(2000)->addText('Nama Siswa:', ['bold' => true]);
+        $infoTable->addCell(6000)->addText('${nama_siswa}');
+
+        $infoTable->addRow();
+        $infoTable->addCell(2000)->addText('NISN:', ['bold' => true]);
+        $infoTable->addCell(6000)->addText('${nisn}');
+
+        $infoTable->addRow();
+        $infoTable->addCell(2000)->addText('Kelas:', ['bold' => true]);
+        $infoTable->addCell(6000)->addText('${nama_kelas}');
+
+        $infoTable->addRow();
+        $infoTable->addCell(2000)->addText('Tahun Ajaran:', ['bold' => true]);
+        $infoTable->addCell(6000)->addText('${tahun_ajaran}');
+
+        $section->addTextBreak();
+
+        // Placeholder for scores table
+        $section->addText('${tabel_nilai}');
+
+        $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
+        $objWriter->save($templatePath);
     }
 }

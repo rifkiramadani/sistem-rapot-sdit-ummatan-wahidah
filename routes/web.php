@@ -113,6 +113,8 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
                 // Route::put('/{classroomStudent}', [ClassroomStudentController::class, 'update'])->name('update');
                 Route::delete('/{classroomStudent}', [ClassroomStudentController::class, 'destroy'])->name('destroy');
                 Route::post('/bulk-destroy', [ClassroomStudentController::class, 'bulkDestroy'])->name('bulk-destroy');
+                Route::get('/{classroomStudent}/summatives', [ClassroomStudentController::class, 'summatives'])->name('summatives');
+                Route::get('/{classroomStudent}/summatives/export-word', [ClassroomStudentController::class, 'exportSummativesWord'])->name('summatives.export-word');
             });
 
             Route::prefix('/{classroom}/subjects')->name('subjects.')->group(function () {
