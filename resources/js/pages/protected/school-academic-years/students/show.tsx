@@ -47,7 +47,7 @@ export default function Show({ schoolAcademicYear, student }: ShowProps) {
                         <div className="flex items-center justify-between">
                             <Button variant="outline" size="sm">
                                 <BookMarked className="mr-2 h-4 w-4" />
-                                Lihat Sumatif (Segera)
+                                Lihat Mata Pelajaran (Segera)
                             </Button>
                             <Link
                                 href={route('protected.school-academic-years.students.edit', {

@@ -10,7 +10,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { type AcademicYear } from '@/types/models/academic-years';
 import { format } from 'date-fns';
-import { Eye, Pencil } from 'lucide-react';
+import { Eye, LayoutDashboard, Pencil } from 'lucide-react';
 import { SchoolAcademicYear } from '@/types/models/school-academic-years';
 
 export default function Show({ academicYear, schoolAcademicYear }: { academicYear: AcademicYear, schoolAcademicYear: SchoolAcademicYear }) {
@@ -33,20 +33,16 @@ export default function Show({ academicYear, schoolAcademicYear }: { academicYea
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() =>
-                                        router.get(
-                                            route('protected.schools.academic-years.show', {
-                                                school: schoolAcademicYear.school_id,
-                                                schoolAcademicYear: schoolAcademicYear.id,
-                                            }),
-                                        )
-                                    }
+                                <Link
+                                    href={route('protected.school-academic-years.dashboard.index', {
+                                        schoolAcademicYear: schoolAcademicYear.id,
+                                    })}
                                 >
-                                    <Eye className="h-4 w-4" />
-                                </Button>
+                                    <Button variant="outline" size="sm">
+                                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                                        Dashboard
+                                    </Button>
+                                </Link>
                             </div>
                             <div className="flex gap-2">
                                 <Link href={route('protected.academic-years.edit', academicYear.id)}>

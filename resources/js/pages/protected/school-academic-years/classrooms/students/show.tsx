@@ -73,13 +73,9 @@ export default function Show({ schoolAcademicYear, classroom, classroomStudent }
                                         Edit Profil Siswa
                                     </Button>
                                 </Link>
-                                {/* <Button variant="outline" size="sm">
-                                    <BookMarked className="mr-2 h-4 w-4" />
-                                    Lihat Sumatif (Segera)
-                                </Button> */}
                                 <Button variant="outline" size="sm">
                                     <BookCopy className="mr-2 h-4 w-4" />
-                                    Lihat Mata Pelajaran // sumatif (Segera)
+                                    Lihat sumatif (Segera)
                                 </Button>
                             </div>
                         </div>

@@ -19,14 +19,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TableMeta } from '@/types';
-import { AcademicYear, AcademicYearsPaginated } from '@/types/models/academic-years.d';
+import { SchoolAcademicYear, SchoolAcademicYearsPaginated } from '@/types/models/school-academic-years';
 import { router } from '@inertiajs/react';
 import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { Eye, Settings2, Trash2 } from 'lucide-react';
 import { AcademicYearsTableFilters } from '../../schools/academic-years/_components/academic-years-table-filters';
 
-export const columns: ColumnDef<AcademicYear>[] = [
+export const columns: ColumnDef<SchoolAcademicYear>[] = [
     {
         id: 'select',
         header: ({ table }) => (
@@ -53,24 +53,25 @@ export const columns: ColumnDef<AcademicYear>[] = [
         enableHiding: false,
     },
     {
-        accessorKey: 'name',
+        accessorKey: 'academic_year.name',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+        cell: ({ row }) => row.original.academic_year.name,
     },
     {
-        accessorKey: 'start',
+        accessorKey: 'academic_year.start',
         header: ({ column }) => <DataTableColumnHeader column={column} title="Start Year" />,
         // Custom cell to format the date
         cell: ({ row }) => {
-            const date = new Date(row.original.start);
+            const date = new Date(row.original.academic_year.start);
             return format(date, 'yyyy'); // Format to display only the year
         },
     },
     {
-        accessorKey: 'end',
+        accessorKey: 'academic_year.end',
         header: ({ column }) => <DataTableColumnHeader column={column} title="End Year" />,
         // Custom cell to format the date
         cell: ({ row }) => {
-            const date = new Date(row.original.end);
+            const date = new Date(row.original.academic_year.end);
             return format(date, 'yyyy'); // Format to display only the year
         },
     },
@@ -78,7 +79,8 @@ export const columns: ColumnDef<AcademicYear>[] = [
         id: 'actions',
         header: 'Aksi',
         cell: ({ row }) => {
-            const academicYear = row.original;
+            const schoolAcademicYear = row.original;
+            const academicYear = schoolAcademicYear.academic_year;
 
             return (
                 <div className="flex gap-2">
@@ -136,10 +138,10 @@ export const columns: ColumnDef<AcademicYear>[] = [
 ];
 
 interface AcademicYearsTableProps {
-    academicYears: AcademicYearsPaginated;
+    schoolAcademicYears: SchoolAcademicYearsPaginated;
 }
-export function AcademicYearsTable({ academicYears }: AcademicYearsTableProps) {
-    const handleBulkDelete = (table: TanstackTable<AcademicYear>) => {
+export function AcademicYearsTable({ schoolAcademicYears }: AcademicYearsTableProps) {
+    const handleBulkDelete = (table: TanstackTable<SchoolAcademicYear>) => {
         const selectedIds = Object.keys(table.getState().rowSelection);
 
         // Kirim ID ke backend
@@ -158,7 +160,7 @@ export function AcademicYearsTable({ academicYears }: AcademicYearsTableProps) {
     };
     return (
         <>
-            <DataTable columns={columns} data={academicYears.data} meta={{ from: academicYears.from }}>
+            <DataTable columns={columns} data={schoolAcademicYears.data} meta={{ from: schoolAcademicYears.from }}>
                 {(table) => {
                     const selectedRowCount = Object.keys(table.getState().rowSelection).length;
                     return (
@@ -177,7 +179,7 @@ export function AcademicYearsTable({ academicYears }: AcademicYearsTableProps) {
                     );
                 }}
             </DataTable>
-            <InertiaPagination paginateItems={academicYears} />
+            <InertiaPagination paginateItems={schoolAcademicYears} />
         </>
     );
 }

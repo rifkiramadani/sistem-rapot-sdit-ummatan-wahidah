@@ -2,7 +2,7 @@
 
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { AcademicYearsPaginated } from '@/types/models/academic-years';
+import { SchoolAcademicYearsPaginated } from '@/types/models/school-academic-years';
 import { Head, Link } from '@inertiajs/react';
 import { AcademicYearsTable } from './_components/academic-years-table';
 import { Button } from '@/components/ui/button';
@@ -16,9 +16,9 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 interface IndexProps {
-    academicYears: AcademicYearsPaginated;
+    schoolAcademicYears: SchoolAcademicYearsPaginated;
 }
-export default function Index({ academicYears }: IndexProps) {
+export default function Index({ schoolAcademicYears }: IndexProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Academic Years" />
@@ -30,7 +30,7 @@ export default function Index({ academicYears }: IndexProps) {
                             Tambah
                         </Button>
                     </Link>
-                    <AcademicYearsTable academicYears={academicYears} />
+                    <AcademicYearsTable schoolAcademicYears={schoolAcademicYears} />
                 </div>
             </div>
         </AppLayout>

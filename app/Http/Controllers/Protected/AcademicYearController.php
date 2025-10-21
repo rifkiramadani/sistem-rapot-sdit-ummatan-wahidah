@@ -101,7 +101,6 @@ class AcademicYearController extends Controller
         $schoolAcademicYear = $academicYear->schoolAcademicYears()
             ->where('school_id', $schoolId)
             ->first();
-        dd($schoolAcademicYear);
 
         return Inertia::render('protected/academic-years/show', [
             'academicYear' => $academicYear,
