@@ -32,7 +32,7 @@ class ClassroomStudentController extends Controller
      */
     public function index(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Gate::authorize('view', $classroom);
+        Gate::authorize('viewAny', ClassroomStudent::class);
 
         $request->validate([
             'per_page' => ['sometimes', 'string', Rule::in(PerPageEnum::values())],
@@ -41,6 +41,22 @@ class ClassroomStudentController extends Controller
             'filter' => 'sometimes|array',
             'filter.q' => 'sometimes|string|nullable',
         ]);
+
+        // Check if current user is a teacher - they should only see their classroom students
+        $user = $request->user();
+        $isTeacher = $user && $user->role && $user->role->name === \App\Enums\RoleEnum::TEACHER->value;
+
+        // Teachers can only access their own classrooms
+        if ($isTeacher) {
+            $teacherRecord = $user->teacher()
+                                 ->where('school_academic_year_id', $schoolAcademicYear->id)
+                                 ->first();
+
+            if (!$teacherRecord || $teacherRecord->id !== $classroom->teacher_id) {
+                // Teacher is not assigned to this classroom
+                abort(403, 'You are not authorized to access this classroom.');
+            }
+        }
 
         // [UBAH] Gunakan QueryBuilder
         $classroomStudents = QueryBuilder::for(
@@ -56,12 +72,13 @@ class ClassroomStudentController extends Controller
             'schoolAcademicYear' => $schoolAcademicYear,
             'classroom' => $classroom,
             'classroomStudents' => $classroomStudents,
+            'isTeacher' => $isTeacher,
         ]);
     }
 
     public function show(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
     {
-        // Gate::authorize('view', $classroomStudent);
+        Gate::authorize('view', $classroomStudent);
 
         // Muat semua relasi dari siswa yang terkait
         $classroomStudent->load(['student.parent', 'student.guardian', 'classroom.teacher']);
@@ -78,7 +95,7 @@ class ClassroomStudentController extends Controller
      */
     public function create(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Gate::authorize('update', $classroom);
+        Gate::authorize('create', ClassroomStudent::class);
 
         // 1. Ambil ID siswa yang sudah ada di kelas ini via relasi `classroomStudents`
         $existingStudentIds = $classroom->classroomStudents()->pluck('student_id');
@@ -101,7 +118,7 @@ class ClassroomStudentController extends Controller
      */
     public function store(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Gate::authorize('update', $classroom);
+        Gate::authorize('create', ClassroomStudent::class);
 
         $validated = $request->validate([
             'student_id' => [
@@ -173,7 +190,7 @@ class ClassroomStudentController extends Controller
 
     public function destroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
     {
-        // Gate::authorize('delete', $classroomStudent);
+        Gate::authorize('delete', $classroomStudent);
 
         $classroomStudent->delete();
 
@@ -186,7 +203,7 @@ class ClassroomStudentController extends Controller
      */
     public function summatives(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
     {
-        // Gate::authorize('view', $classroomStudent);
+        Gate::authorize('viewSummatives', $classroomStudent);
         $schoolAcademicYear->load('academicYear');
         // Load relasi yang dibutuhkan
         $classroomStudent->load(['student', 'classroom']);
@@ -248,7 +265,7 @@ class ClassroomStudentController extends Controller
      */
     public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Gate::authorize('bulkDelete', ClassroomStudent::class);
+        Gate::authorize('bulkDelete', ClassroomStudent::class);
 
         $request->validate([
             'ids'   => ['required', 'array'],
@@ -275,6 +292,8 @@ class ClassroomStudentController extends Controller
      */
     public function exportSummativesWord(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
     {
+        Gate::authorize('exportDocuments', $classroomStudent);
+
         try {
             Log::info('Memulai ekspor Word nilai sumatif siswa.', [
                 'classroomStudentId' => $classroomStudent->id,
@@ -503,6 +522,8 @@ class ClassroomStudentController extends Controller
      */
     public function exportReportCover(SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
     {
+        Gate::authorize('exportDocuments', $classroomStudent);
+
         try {
             Log::info('Memulai ekspor Sampul Rapor.', [
                 'classroomStudentId' => $classroomStudent->id,
@@ -703,6 +724,8 @@ class ClassroomStudentController extends Controller
      */
     public function exportTransferCertificate(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
     {
+        Gate::authorize('exportDocuments', $classroomStudent);
+
         try {
             Log::info('Memulai ekspor Surat Keterangan Pindah Sekolah.', [
                 'classroomStudentId' => $classroomStudent->id,
@@ -863,6 +886,8 @@ class ClassroomStudentController extends Controller
      */
     public function exportReportCard(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
     {
+        Gate::authorize('exportDocuments', $classroomStudent);
+
         try {
             Log::info('Memulai ekspor Rapor Akhir.', [
                 'classroomStudentId' => $classroomStudent->id,
@@ -1026,6 +1051,8 @@ class ClassroomStudentController extends Controller
      */
     public function exportSts(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomStudent $classroomStudent)
     {
+        Gate::authorize('exportDocuments', $classroomStudent);
+
         try {
             Log::info('Memulai ekspor Data STS.', [
                 'classroomStudentId' => $classroomStudent->id,

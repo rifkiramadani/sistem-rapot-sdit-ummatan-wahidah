@@ -68,7 +68,7 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear, classroom: Cl
                             <Eye className="h-4 w-4" />
                         </Button>
                     </TableTooltipAction>
-                    <TableTooltipAction info="Edit">
+                    {/* <TableTooltipAction info="Edit">
                         <Button
                             variant="outline"
                             size="icon"
@@ -84,7 +84,7 @@ export const getColumns = (schoolAcademicYear: SchoolAcademicYear, classroom: Cl
                         >
                             <Settings2 className="h-4 w-4" />
                         </Button>
-                    </TableTooltipAction>
+                    </TableTooltipAction> */}
                     <AlertDialog>
                         <TableTooltipAction info="Hapus dari Kelas">
                             <AlertDialogTrigger asChild>

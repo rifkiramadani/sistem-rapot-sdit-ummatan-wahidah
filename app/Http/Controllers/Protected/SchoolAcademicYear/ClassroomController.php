@@ -31,7 +31,27 @@ class ClassroomController extends Controller
             'filter.q' => 'sometimes|string|nullable',
         ]);
 
-        $classrooms = QueryBuilder::for($schoolAcademicYear->classrooms()->with('teacher'))
+        // Check if current user is a teacher and filter their classrooms
+        $user = $request->user();
+        $isTeacher = $user && $user->role && $user->role->name === \App\Enums\RoleEnum::TEACHER->value;
+
+        $classroomsQuery = $schoolAcademicYear->classrooms()->with('teacher');
+
+        if ($isTeacher) {
+            // Filter to show only classrooms where this user is the teacher
+            $teacherRecord = $user->teacher()
+                                 ->where('school_academic_year_id', $schoolAcademicYear->id)
+                                 ->first();
+
+            if ($teacherRecord) {
+                $classroomsQuery->where('teacher_id', $teacherRecord->id);
+            } else {
+                // If teacher is not registered in this academic year, return empty result
+                $classroomsQuery->whereRaw('1 = 0');
+            }
+        }
+
+        $classrooms = QueryBuilder::for($classroomsQuery)
             ->through([
                 Filter::class, // Akan otomatis memanggil scopeQ()
                 Sort::class,
@@ -41,6 +61,7 @@ class ClassroomController extends Controller
         return Inertia::render('protected/school-academic-years/classrooms/index', [
             'schoolAcademicYear' => $schoolAcademicYear,
             'classrooms' => $classrooms,
+            'isTeacher' => $isTeacher,
         ]);
     }
 
