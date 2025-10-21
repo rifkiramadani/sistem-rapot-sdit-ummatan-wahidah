@@ -12,11 +12,18 @@ import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface LoginPageProps {
     roles: string[];
     canResetPassword: boolean;
     status?: string;
+    schoolAcademicYears: Array<{
+        id: string;
+        academic_year: {
+            name: string;
+        };
+    }>;
 }
 
 // PERBAIKAN: Perluas PageProps untuk mengatasi error TypeScript dan mendapatkan user object
@@ -32,22 +39,29 @@ interface SharedData extends LoginPageProps {
     }
 }
 
-// Tambahkan field 'role' ke dalam type LoginForm
+// Tambahkan field 'role' dan 'school_academic_year_id' ke dalam type LoginForm
 type LoginForm = {
     email: string;
     password: string;
     remember: boolean;
     role: 'admin' | 'guru' | 'superadmin';
+    school_academic_year_id?: string;
 };
 
 interface LoginProps {
     status?: string;
     canResetPassword: boolean;
+    schoolAcademicYears: Array<{
+        id: string;
+        academic_year: {
+            name: string;
+        };
+    }>;
 }
 
-export default function Login({ status, canResetPassword }: LoginProps) {
+export default function Login({ status, canResetPassword, schoolAcademicYears }: LoginProps) {
     //  AMBIL app.env DARI usePage
-    const { props: { app, auth } } = usePage<SharedData>(); // Menggunakan SharedData yang diperluas
+    const { props: { app, auth, flash } } = usePage<SharedData & { flash: { error?: string } }>(); // Menggunakan SharedData yang diperluas
     const isDevelopment = app.env !== 'production';
 
     // TAMBAHKAN clearErrors
@@ -56,6 +70,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
         password: '',
         remember: false,
         role: 'admin',
+        school_academic_year_id: '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -68,19 +83,27 @@ export default function Login({ status, canResetPassword }: LoginProps) {
             onSuccess: () => {
                 // Ketika otentikasi berhasil, redirect akan terjadi.
                 clearErrors(); // Bersihkan semua error
-                reset('password');
+                reset('password', 'school_academic_year_id');
             },
 
             onError: (errors) => {
                 // Jika ada error (baik role, email, atau password salah)
-                reset('password');
+                reset('password', 'school_academic_year_id');
             },
 
             onFinish: () => {
                 // Memastikan password direset setelah form submission selesai
-                reset('password');
+                reset('password', 'school_academic_year_id');
             },
         });
+    };
+
+    // Handle role change to clear school academic year when switching away from teacher
+    const handleRoleChange = (value: 'admin' | 'guru' | 'superadmin') => {
+        setData('role', value);
+        if (value !== 'guru') {
+            setData('school_academic_year_id', '');
+        }
     };
 
     return (
@@ -108,6 +131,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             Masukkan email, password, dan pilih peran untuk masuk.
                         </p>
                         {status && <div className="mt-2 text-sm font-medium text-green-600">{status}</div>}
+                        {flash?.error && <div className="mt-2 text-sm font-medium text-red-600">{flash.error}</div>}
                     </div>
                     <form className="flex w-full flex-col gap-y-4" onSubmit={submit}>
 
@@ -116,7 +140,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             <Label htmlFor="role">Masuk Sebagai</Label>
                             <Tabs
                                 value={data.role}
-                                onValueChange={(value) => setData('role', value as 'admin' | 'guru' | 'superadmin')}
+                                onValueChange={(value) => handleRoleChange(value as 'admin' | 'guru' | 'superadmin')}
                                 className="w-full"
                             >
                                 {/* PENTING: Mengubah grid-cols untuk mengakomodasi 3 opsi saat dev */}
@@ -153,6 +177,30 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             <InputError message={auth.user ? undefined : errors.role} />
                         </div>
                         {/* END FIELD PEMILIHAN ROLE BARU */}
+
+                        {/* SCHOOL ACADEMIC YEAR SELECTION FOR TEACHERS */}
+                        {data.role === 'guru' && (
+                            <div className="flex w-full flex-col gap-2">
+                                <Label htmlFor="school_academic_year_id">Tahun Ajaran</Label>
+                                <Select
+                                    value={data.school_academic_year_id}
+                                    onValueChange={(value) => setData('school_academic_year_id', value)}
+                                    disabled={processing}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Pilih tahun ajaran" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {schoolAcademicYears.map((year) => (
+                                            <SelectItem key={year.id} value={year.id}>
+                                                {year.academic_year.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.school_academic_year_id} />
+                            </div>
+                        )}
 
                         <div className="flex w-full flex-col gap-2">
                             <Label htmlFor="email">Email</Label>

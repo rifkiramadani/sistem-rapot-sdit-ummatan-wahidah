@@ -6,6 +6,7 @@ use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
+use App\Models\SchoolAcademicYear;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -56,6 +57,24 @@ class HandleInertiaRequests extends Middleware
             'app' => [
                 'env' => app()->environment(), // Membagikan 'local', 'production', dll.
             ],
+            'currentSchoolAcademicYear' => function () use ($request) {
+                // Check if we're on a school academic year route
+                $schoolAcademicYear = $request->route('schoolAcademicYear');
+
+                if ($schoolAcademicYear) {
+                    // Load the academic year relationship
+                    $schoolAcademicYear->load('academicYear');
+
+                    return [
+                        'id' => $schoolAcademicYear->id,
+                        'academic_year' => [
+                            'name' => $schoolAcademicYear->academicYear->name,
+                        ],
+                    ];
+                }
+
+                return null;
+            },
         ];
     }
 }

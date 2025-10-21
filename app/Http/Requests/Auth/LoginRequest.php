@@ -32,10 +32,25 @@ class LoginRequest extends FormRequest
             $validRoles[] = 'superadmin';
         }
 
-        return [
+        $rules = [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
             'role' => ['required', 'string', Rule::in($validRoles)],
+        ];
+
+        // Add school_academic_year_id validation for teacher role
+        if ($this->input('role') === 'guru') {
+            $rules['school_academic_year_id'] = ['required', 'ulid', 'exists:school_academic_years,id'];
+        }
+
+        return $rules;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'school_academic_year_id.required' => 'Tahun ajaran harus dipilih untuk login sebagai guru.',
+            'school_academic_year_id.exists' => 'Tahun ajaran yang dipilih tidak valid.',
         ];
     }
 
