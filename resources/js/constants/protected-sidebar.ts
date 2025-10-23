@@ -9,12 +9,12 @@ export const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'School',
+        title: 'Info Sekolah',
         href: route('protected.schools.detail'),
         icon: School,
     },
     {
-        title: 'Academic Years',
+        title: 'Tahun Ajaran',
         href: route('protected.academic-years.index'),
         icon: CalendarRange,
     },
