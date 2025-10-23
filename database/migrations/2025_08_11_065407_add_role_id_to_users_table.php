@@ -13,14 +13,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Add the foreign key column after the 'id' column.
-            // It's nullable in case a user might not have a role.
-            // It's constrained to the 'roles' table.
-            // If a role is deleted, this user's role_id will be set to null.
-            $table->foreignIdFor(Role::class)
-                ->after('id')
-                ->nullable()
-                ->constrained()
+            // pakai char(26) agar sesuai dengan ULID di tabel roles
+            $table->char('role_id', 26)->nullable()->after('id');
+
+            // tambahkan constraint foreign key
+            $table->foreign('role_id')
+                ->references('id')
+                ->on('roles')
                 ->onDelete('set null');
         });
     }

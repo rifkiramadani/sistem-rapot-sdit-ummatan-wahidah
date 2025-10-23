@@ -115,7 +115,7 @@ const Welcome = () => {
                                 <main className="flex justify-center w-full max-w-[335px] flex-col-reverse lg:max-w-4xl lg:flex-row">
                                     <ul className="flex justify-center gap-3 text-sm leading-normal">
                                         {auth.user ? (
-                                            <li>
+                                            <li className="mb-3">
                                                 <Link href={route('protected.dashboard.index')}>
                                                     <Button className='hover:bg-gray-700 hover:text-white'>
                                                         Kembali Ke Dashboard

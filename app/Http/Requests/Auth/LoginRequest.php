@@ -70,13 +70,26 @@ class LoginRequest extends FormRequest
         // 2. Jika otentikasi berhasil, periksa role.
         $user = Auth::user();
 
+        // PERBAIKAN: Tambahkan pengecekan jika user tidak memiliki role
+        if (!$user->role) {
+            Auth::logout();
+            $this->session()->invalidate();
+            $this->session()->regenerateToken();
+
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'role' => 'Akun Anda tidak memiliki peran yang valid. Silakan hubungi administrator.',
+            ]);
+        }
+
         // AMBIL ROLE DARI REQUEST (FORM LOGIN)
         // (e.g., 'guru')
         $roleFromRequest = $this->input('role');
 
         // AMBIL ROLE ASLI PENGGUNA DARI DATABASE
         // (e.g., 'teacher')
-        $actualRoleInDb = $user->role->name; // <-- INI PERBAIKANNYA
+        $actualRoleInDb = $user->role->name; // Sekarang aman karena sudah dicek null
 
         // 3. LOGIKA KONVERSI: Mapping nilai role dari Frontend (request)
         //    ke nilai standar di database (RoleEnum)

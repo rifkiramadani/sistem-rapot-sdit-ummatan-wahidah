@@ -37,6 +37,18 @@ class DatabaseSeeder extends Seeder
             $this->command->info('✅ Super admin user created (superadmin@example.com / password)');
         }
 
+        // PERBAIKAN: Tambahkan user admin
+        $adminRole = Role::where('name', RoleEnum::ADMIN->value)->first();
+        if ($adminRole) {
+            User::factory()->create([
+                'name' => 'Admin Sekolah',
+                'email' => 'admin@example.com',
+                'password' => Hash::make('password'),
+                'role_id' => $adminRole->id,
+            ]);
+            $this->command->info('✅ Admin user created (admin@example.com / password)');
+        }
+
         // Step 2: Create school structure and academic years
         $this->call([
             SchoolAcademicYearSeeder::class,
@@ -101,6 +113,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('');
         $this->command->info('🔑 Login Credentials:');
         $this->command->info('   Super Admin: superadmin@example.com / password');
+        $this->command->info('   Admin: admin@example.com / password');  // PERBAIKAN: Ditambahkan
         $this->command->info('   Principal: kepsek@ummatanwahidah.sch.id / password');
     }
 }
