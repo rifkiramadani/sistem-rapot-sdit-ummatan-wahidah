@@ -124,7 +124,7 @@ const Welcome = () => {
                                             </li>
                                         ) : (
                                             <>
-                                                <li className="w-full sm:w-auto">
+                                                    <li className="w-full sm:w-auto mb-3">
                                                     <Link href={route('login')} className="w-full block">
                                                         <Button className='w-full bg-[#773DCE] text-white hover:bg-[#3D138C] hover:text-white dark:hover:bg-[#3D138C] dark:hover:text-white py-2 px-15'>
                                                             Masuk
