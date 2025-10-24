@@ -39,12 +39,12 @@ interface SharedData extends LoginPageProps {
     }
 }
 
-// Tambahkan field 'role' dan 'school_academic_year_id' ke dalam type LoginForm
+// TAMBAHAN: Update type LoginForm untuk include 'kepsek'
 type LoginForm = {
     email: string;
     password: string;
     remember: boolean;
-    role: 'admin' | 'guru' | 'superadmin';
+    role: 'admin' | 'guru' | 'kepsek' | 'superadmin';
     school_academic_year_id?: string;
 };
 
@@ -98,10 +98,10 @@ export default function Login({ status, canResetPassword, schoolAcademicYears }:
         });
     };
 
-    // Handle role change to clear school academic year when switching away from teacher
-    const handleRoleChange = (value: 'admin' | 'guru' | 'superadmin') => {
+    // TAMBAHAN: Update handleRoleChange untuk include 'kepsek'
+    const handleRoleChange = (value: 'admin' | 'guru' | 'kepsek' | 'superadmin') => {
         setData('role', value);
-        if (value !== 'guru') {
+        if (!['guru', 'kepsek'].includes(value)) {
             setData('school_academic_year_id', '');
         }
     };
@@ -124,7 +124,7 @@ export default function Login({ status, canResetPassword, schoolAcademicYears }:
                         className="w-40 h-40 object-contain mt-5"
                     />
                 </a>
-                <Card className="min-w-sm border-muted bg-background flex w-full max-w-sm flex-col items-center gap-y-4 rounded-md border px-6 py-8 shadow-md">
+                <Card className="min-w-sm border-muted bg-background flex w-full max-w-2xl flex-col items-center gap-y-4 rounded-md border px-6 py-8 shadow-md">
                     <div className="text-center">
                         <h1 className="text-xl font-semibold">Silahkan Masuk</h1>
                         <p className="text-sm text-muted-foreground">
@@ -140,13 +140,13 @@ export default function Login({ status, canResetPassword, schoolAcademicYears }:
                             <Label htmlFor="role">Masuk Sebagai</Label>
                             <Tabs
                                 value={data.role}
-                                onValueChange={(value) => handleRoleChange(value as 'admin' | 'guru' | 'superadmin')}
+                                onValueChange={(value) => handleRoleChange(value as 'admin' | 'guru' | 'kepsek' | 'superadmin')}
                                 className="w-full"
                             >
-                                {/* PENTING: Mengubah grid-cols untuk mengakomodasi 3 opsi saat dev */}
+                                {/* TAMBAHAN: Update grid-cols untuk 4 opsi (admin, guru, kepsek, superadmin di dev) */}
                                 <TabsList
                                     className={`grid w-full
-                                        ${isDevelopment ? 'grid-cols-3' : 'grid-cols-2'}
+                                        ${isDevelopment ? 'grid-cols-4' : 'grid-cols-3'}
                                         h-10`}
                                 >
                                     <TabsTrigger
@@ -161,6 +161,12 @@ export default function Login({ status, canResetPassword, schoolAcademicYears }:
                                         value="guru"
                                     >
                                         Guru
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        className='text-sm'
+                                        value="kepsek"
+                                    >
+                                        Kepala Sekolah
                                     </TabsTrigger>
                                     {/*  KONDISIONAL UNTUK SUPER ADMIN */}
                                     {isDevelopment && (
@@ -178,8 +184,8 @@ export default function Login({ status, canResetPassword, schoolAcademicYears }:
                         </div>
                         {/* END FIELD PEMILIHAN ROLE BARU */}
 
-                        {/* SCHOOL ACADEMIC YEAR SELECTION FOR TEACHERS */}
-                        {data.role === 'guru' && (
+                        {/* SCHOOL ACADEMIC YEAR SELECTION FOR TEACHERS AND PRINCIPALS */}
+                        {['guru', 'kepsek'].includes(data.role) && (
                             <div className="flex w-full flex-col gap-2">
                                 <Label htmlFor="school_academic_year_id">Tahun Ajaran</Label>
                                 <Select

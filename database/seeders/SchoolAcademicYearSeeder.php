@@ -80,7 +80,7 @@ class SchoolAcademicYearSeeder extends Seeder
         }
 
         $principalUser = User::create([
-            'name' => 'Ahmad Wijaya, S.Pd.',
+            'name' => 'Alfera Zelfiani, S.Pd.I',
             'email' => 'kepsek@ummatanwahidah.sch.id',
             'password' => Hash::make('password'),
             'role_id' => $principalRole->id,

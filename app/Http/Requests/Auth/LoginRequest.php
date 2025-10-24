@@ -25,6 +25,7 @@ class LoginRequest extends FormRequest
         $validRoles = [
             'admin',
             'guru', // Nilai yang dikirim oleh TabsTrigger di frontend
+            'kepsek', // TAMBAHAN: Untuk principal
         ];
 
         // Wrap the "Super Admin" option in a conditional statement (Backend Validation)
@@ -38,8 +39,8 @@ class LoginRequest extends FormRequest
             'role' => ['required', 'string', Rule::in($validRoles)],
         ];
 
-        // Add school_academic_year_id validation for teacher role
-        if ($this->input('role') === 'guru') {
+        // Add school_academic_year_id validation for teacher and principal roles
+        if (in_array($this->input('role'), ['guru', 'kepsek'])) {
             $rules['school_academic_year_id'] = ['required', 'ulid', 'exists:school_academic_years,id'];
         }
 
@@ -49,7 +50,7 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'school_academic_year_id.required' => 'Tahun ajaran harus dipilih untuk login sebagai guru.',
+            'school_academic_year_id.required' => 'Tahun ajaran harus dipilih untuk login sebagai guru atau kepala sekolah.',
             'school_academic_year_id.exists' => 'Tahun ajaran yang dipilih tidak valid.',
         ];
     }
@@ -84,11 +85,11 @@ class LoginRequest extends FormRequest
         }
 
         // AMBIL ROLE DARI REQUEST (FORM LOGIN)
-        // (e.g., 'guru')
+        // (e.g., 'guru' atau 'kepsek')
         $roleFromRequest = $this->input('role');
 
         // AMBIL ROLE ASLI PENGGUNA DARI DATABASE
-        // (e.g., 'teacher')
+        // (e.g., 'teacher' atau 'principal')
         $actualRoleInDb = $user->role->name; // Sekarang aman karena sudah dicek null
 
         // 3. LOGIKA KONVERSI: Mapping nilai role dari Frontend (request)
@@ -96,16 +97,13 @@ class LoginRequest extends FormRequest
         $expectedRoleInDb = match ($roleFromRequest) {
             'admin'      => RoleEnum::ADMIN->value,      // 'admin' -> 'admin'
             'guru'       => RoleEnum::TEACHER->value,    // 'guru' -> 'teacher'
+            'kepsek'     => RoleEnum::PRINCIPAL->value,  // TAMBAHAN: 'kepsek' -> 'principal'
             'superadmin' => RoleEnum::SUPERADMIN->value, // 'superadmin' -> 'superadmin'
-            // Tambahkan case lain jika ada, e.g., 'kepsek' => RoleEnum::PRINCIPAL->value
             default      => null,
         };
 
         // 4. Bandingkan string role asli di DB dengan string role yang diharapkan dari form
-        //    Contoh: $actualRoleInDb ('teacher') !== $expectedRoleInDb ('teacher') -> false (cocok)
-        //    Contoh: $actualRoleInDb ('admin')   !== $expectedRoleInDb ('teacher') -> true (tidak cocok)
         if ($actualRoleInDb !== $expectedRoleInDb) {
-
             // Logout, invalidasi sesi, dan regenerate token saat role salah
             Auth::logout();
             $this->session()->invalidate();
@@ -114,7 +112,6 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                // Kembalikan error ke field 'role'
                 'role' => 'Peran yang Anda pilih tidak cocok dengan akun ini.',
             ]);
         }

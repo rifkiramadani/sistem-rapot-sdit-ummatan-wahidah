@@ -9,7 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Log; //IMPORT FACADE LOG DITAMBAHKAN
+use Illuminate\Support\Facades\Log; // IMPORT FACADE LOG DITAMBAHKAN
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,15 +34,15 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        //BARIS LOGGING BARU DARI CONTROLLER
-        Log::info("Login attempt received {Email: $request->email` | Role Selected: $request->role | Academic Year: " . ($request->school_academic_year_id ?? 'N/A') . "}");
+        // BARIS LOGGING BARU DARI CONTROLLER
+        Log::info("Login attempt received {Email: {$request->email} | Role Selected: {$request->role} | Academic Year: " . ($request->school_academic_year_id ?? 'N/A') . "}");
 
-        // Additional validation for teacher role
-        if ($request->role === 'guru') {
+        // Additional validation for teacher and principal roles
+        if (in_array($request->role, ['guru', 'kepsek'])) {
             $request->validate([
                 'school_academic_year_id' => ['required', 'ulid', 'exists:school_academic_years,id'],
             ], [
-                'school_academic_year_id.required' => 'Tahun ajaran harus dipilih untuk login sebagai guru.',
+                'school_academic_year_id.required' => 'Tahun ajaran harus dipilih untuk login sebagai guru atau kepala sekolah.',
                 'school_academic_year_id.exists' => 'Tahun ajaran yang dipilih tidak valid.',
             ]);
         }
@@ -50,16 +50,21 @@ class AuthenticatedSessionController extends Controller
         // Lakukan otentikasi dan pengecekan role yang kini ada di LoginRequest.php
         $request->authenticate();
 
-        // Additional validation: Check if teacher is associated with the selected academic year
-        if ($request->role === 'guru') {
-            $user = Auth::user();
+        // PERBAIKAN: Tambahkan logging untuk debug role dan user setelah authenticate
+        $user = Auth::user();
+        Log::info("User authenticated: ID {$user->id}, Role: " . ($user->role ? $user->role->name : 'NULL') . ", Teacher exists: " . ($user->teacher ? 'Yes' : 'No'));
+
+        // Additional validation: Check if teacher/principal is associated with the selected academic year
+        if (in_array($request->role, ['guru', 'kepsek'])) {
             $teacherExists = $user->teacher()
                 ->where('school_academic_year_id', $request->school_academic_year_id)
                 ->exists();
 
+            Log::info("Teacher/Principal validation: Exists in year {$request->school_academic_year_id}: " . ($teacherExists ? 'Yes' : 'No'));
+
             if (!$teacherExists) {
                 // Store the error message before logging out
-                $errorMessage = 'Anda tidak terdaftar sebagai guru pada tahun ajaran yang dipilih. Silakan hubungi administrator.';
+                $errorMessage = 'Anda tidak terdaftar pada tahun ajaran yang dipilih. Silakan hubungi administrator.';
 
                 Auth::guard('web')->logout();
 
@@ -77,8 +82,8 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Redirect teachers to their selected academic year dashboard
-        if ($request->role === 'guru' && $request->school_academic_year_id) {
+        // Redirect teachers and principals to their selected academic year dashboard
+        if (in_array($request->role, ['guru', 'kepsek']) && $request->school_academic_year_id) {
             return redirect()->intended(route('protected.school-academic-years.dashboard.index', [
                 'schoolAcademicYear' => $request->school_academic_year_id
             ], absolute: false));
