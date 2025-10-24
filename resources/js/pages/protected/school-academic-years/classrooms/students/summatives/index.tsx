@@ -89,7 +89,7 @@ export default function Index({ schoolAcademicYear, classroom, classroomStudent,
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        <Button
+                        {/* <Button
                             asChild
                             variant="outline"
                             size="sm"
@@ -104,7 +104,7 @@ export default function Index({ schoolAcademicYear, classroom, classroomStudent,
                                 <Download className="mr-2 h-4 w-4" />
                                 Export Word
                             </Link>
-                        </Button>
+                        </Button> */}
                         <div className="flex items-center gap-2">
                             <User className="h-4 w-4" />
                             <Badge variant="secondary">{schoolAcademicYear.academic_year.name}</Badge>

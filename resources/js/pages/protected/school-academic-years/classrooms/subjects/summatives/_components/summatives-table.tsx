@@ -39,11 +39,11 @@ export const getColumns = (
                 const summative = row.original;
                 return (
                     <div className="flex gap-2">
-                        <TableTooltipAction info="Lihat Nilai">
+                        {/* <TableTooltipAction info="Lihat Nilai">
                             <Button variant="outline" size="icon" onClick={() => alert('Fitur Lihat Nilai akan segera hadir!')}>
                                 <Eye className="h-4 w-4" />
                             </Button>
-                        </TableTooltipAction>
+                        </TableTooltipAction> */}
                         <TableTooltipAction info="Edit">
                             <Button variant="outline" size="icon" onClick={() =>
                                 router.get(
