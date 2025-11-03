@@ -147,6 +147,9 @@ Route::prefix('protected')->name('protected.')->middleware(['auth'])->group(func
                     Route::get('/values', [SummativeController::class, 'values'])->name('values');
                     Route::post('update-value', [SummativeController::class, 'updateValue'])
                         ->name('update-value');
+                    // ✅ Tambahkan ini:
+                    Route::delete('/{summative}', [SummativeController::class, 'destroy'])->name('destroy');
+                    Route::post('/bulk-destroy', [SummativeController::class, 'bulkDestroy'])->name('bulk-destroy');
                 });
             });
         });

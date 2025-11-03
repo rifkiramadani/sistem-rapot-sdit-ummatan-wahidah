@@ -1,23 +1,33 @@
+// resources/js/Pages/protected/school-academic-years/classrooms/subjects/summatives/_components/summatives-table.tsx
+
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
 import TableTooltipAction from '@/components/table-tooltip-action';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TableMeta } from '@/types';
 import { ClassroomSubject } from '@/types/models/classroom-subjects';
 import { Classroom } from '@/types/models/classrooms';
 import { SchoolAcademicYear } from '@/types/models/school-academic-years';
 import { Summative, SummativesPaginated } from '@/types/models/summatives';
-import { ColumnDef, Table as TanstackTable, flexRender, getCoreRowModel, useReactTable, RowSelectionState } from '@tanstack/react-table';
-import { Eye, Pencil, Trash2, Trophy } from 'lucide-react';
-import React, { FC, ReactNode, useState } from 'react';
+import { ColumnDef, Table as TanstackTable } from '@tanstack/react-table';
+import { Pencil, Trash2 } from 'lucide-react';
 import { SummativesTableFilters } from './summatives-table-filters';
 import { BulkDeleteAlertDialog } from '@/components/bulk-delete-alert-dialog';
 import InertiaPagination from '@/components/inertia-pagination';
 import { DataTable } from '@/components/data-table';
 import { router } from '@inertiajs/react';
 
-// --- Komponen Utama ---
 
 export const getColumns = (
     schoolAcademicYear: SchoolAcademicYear,
@@ -26,7 +36,6 @@ export const getColumns = (
     isTeacher: boolean = false,
 ): ColumnDef<Summative>[] => {
     const baseColumns: ColumnDef<Summative>[] = [
-        // { id: 'no', header: 'No.', cell: ({ row, table }) => ((table.options.meta as TableMeta)?.from ?? 0) + row.index + 1 },
         { accessorKey: 'name', header: ({ column }) => <DataTableColumnHeader column={column} title="Nama Sumatif" /> },
         { accessorKey: 'identifier', header: ({ column }) => <DataTableColumnHeader column={column} title="Identifier" /> },
         { accessorFn: (row) => row.summative_type?.name ?? 'N/A', id: 'summative_type', header: 'Jenis' },
@@ -39,11 +48,7 @@ export const getColumns = (
                 const summative = row.original;
                 return (
                     <div className="flex gap-2">
-                        {/* <TableTooltipAction info="Lihat Nilai">
-                            <Button variant="outline" size="icon" onClick={() => alert('Fitur Lihat Nilai akan segera hadir!')}>
-                                <Eye className="h-4 w-4" />
-                            </Button>
-                        </TableTooltipAction> */}
+                        {/* Tombol Edit */}
                         <TableTooltipAction info="Edit">
                             <Button variant="outline" size="icon" onClick={() =>
                                 router.get(
@@ -58,13 +63,78 @@ export const getColumns = (
                                 <Pencil className="h-4 w-4" />
                             </Button>
                         </TableTooltipAction>
+
+                        {/* TOMBOL HAPUS TUNGGAL */}
+                        <AlertDialog>
+                            <TableTooltipAction info="Hapus Sumatif">
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="icon">
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                            </TableTooltipAction>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Hapus Sumatif: {summative.name}?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Tindakan ini akan menghapus data sumatif ini dan <strong>semua nilai siswa yang terkait</strong>.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        className="bg-destructive text-white hover:bg-destructive/80 hover:text-white"
+                                        onClick={() => {
+                                            // Build the URL first (debug-friendly)
+                                            const url = route(
+                                                'protected.school-academic-years.classrooms.subjects.summatives.destroy',
+                                                {
+                                                    schoolAcademicYear: schoolAcademicYear.id,
+                                                    classroom: classroom.id,
+                                                    classroomSubject: classroomSubject.id,
+                                                    summative: summative.id,
+                                                }
+                                            );
+
+                                            // Optional: console.log supaya bisa cek di DevTools apakah URL sudah benar
+                                            // (hapus atau comment out setelah berhasil)
+                                            // eslint-disable-next-line no-console
+                                            console.log('DELETE URL:', url);
+
+                                            // Gunakan POST dengan _method = DELETE (method spoofing)
+                                            router.post(
+                                                url,
+                                                { _method: 'DELETE' },
+                                                {
+                                                    preserveScroll: true,
+                                                    onBefore: () => {
+                                                        // Optional: disable UI atau set loading state jika perlu
+                                                    },
+                                                    onSuccess: () => {
+                                                        // Reload atau gunakan Inertia.visit untuk partial reload
+                                                        window.location.reload();
+                                                    },
+                                                    onError: (errors) => {
+                                                        // Optional: tampilkan error di console atau toast
+                                                        // eslint-disable-next-line no-console
+                                                        console.error('Gagal menghapus summative:', errors);
+                                                    },
+                                                }
+                                            );
+                                        }}
+                                    >
+                                        Ya, Hapus
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                        {/* AKHIR TOMBOL HAPUS TUNGGAL */}
                     </div>
                 );
             },
         },
     ];
 
-    // Always include select column for all users (teachers can manage their summatives)
     return [
         {
             id: 'select',
@@ -93,9 +163,9 @@ export function SummativesTable({ summatives, schoolAcademicYear, classroom, cla
         const selectedIds = Object.keys(table.getState().rowSelection);
         router.post(
             route('protected.school-academic-years.classrooms.subjects.summatives.bulk-destroy', {
-                schoolAcademicYear,
-                classroom,
-                classroomSubject
+                schoolAcademicYear: schoolAcademicYear.id,
+                classroom: classroom.id,
+                classroomSubject: classroomSubject.id
             }),
             { ids: selectedIds },
             { onSuccess: () => table.resetRowSelection(), preserveScroll: true },

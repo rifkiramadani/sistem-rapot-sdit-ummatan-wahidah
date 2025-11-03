@@ -38,6 +38,19 @@ class ClassroomSubject extends Model
             ->logOnly($this->fillable);
     }
 
+    /**
+     * LOGIKA CASCADE DELETE: Hapus semua Summative terkait.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function (ClassroomSubject $classroomSubject) {
+            // Memanggil delete() pada Summative akan memicu event deleting di Summative.php
+            $classroomSubject->summatives()->delete();
+        });
+    }
+
     public function scopeQ(Builder $query, string $search): Builder
     {
         return $query->whereHas('subject', function (Builder $subQuery) use ($search) {
@@ -46,9 +59,6 @@ class ClassroomSubject extends Model
         });
     }
 
-    /**
-     * Scope untuk menangani sorting berdasarkan nama mata pelajaran.
-     */
     public function scopeSort(Builder $query, string $sortBy, string $sortDirection): Builder
     {
         return $query->select('classroom_subjects.*')
@@ -56,17 +66,11 @@ class ClassroomSubject extends Model
             ->orderBy('subjects.' . $sortBy, $sortDirection);
     }
 
-    /**
-     * Mendapatkan data kelas yang terkait.
-     */
     public function classroom(): BelongsTo
     {
         return $this->belongsTo(Classroom::class);
     }
 
-    /**
-     * Mendapatkan data mata pelajaran yang terkait.
-     */
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class);
@@ -76,7 +80,6 @@ class ClassroomSubject extends Model
     {
         return $this->hasMany(Summative::class);
     }
-
     /**
      * Check if the given user has access to this classroom subject record
      */

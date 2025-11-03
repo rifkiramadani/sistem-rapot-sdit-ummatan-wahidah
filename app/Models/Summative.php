@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\SummativeType; // Diperlukan untuk relasi summativeType()
 
 class Summative extends Model
 {
@@ -23,6 +24,19 @@ class Summative extends Model
         'improvement',
     ];
 
+    /**
+     * LOGIKA CASCADE DELETE: Hapus semua StudentSummative terkait.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function (Summative $summative) {
+            // Jika StudentSummative menggunakan Soft Deletes, gunakan forceDelete()
+            $summative->studentSummatives()->delete();
+        });
+    }
+
     public function scopeQ(Builder $query, string $search): Builder
     {
         $searchLower = strtolower($search);
@@ -36,16 +50,13 @@ class Summative extends Model
         });
     }
 
-    /**
-     * Mendapatkan mata pelajaran (subject) dari sumatif ini.
-     */
-    public function classroomSubject(): BelongsTo // <-- Diubah
+    public function classroomSubject(): BelongsTo
     {
         return $this->belongsTo(ClassroomSubject::class);
     }
 
     /**
-     * Mendapatkan jenis sumatif (summative type) dari sumatif ini.
+     * FIX: Relasi summativeType.
      */
     public function summativeType(): BelongsTo
     {

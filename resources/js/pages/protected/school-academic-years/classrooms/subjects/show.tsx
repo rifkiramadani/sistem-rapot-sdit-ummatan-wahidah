@@ -1,3 +1,4 @@
+// resources/js/Pages/protected/school-academic-years/classrooms/subjects/show.tsx
 import { Head, Link } from '@inertiajs/react';
 
 import DetailItem from '@/components/detail-item';
@@ -17,12 +18,16 @@ interface ShowProps {
     classroom: Classroom;
     classroomSubject: ClassroomSubject & {
         subject: Subject;
+        // Properti hitungan dari backend (loadCount('summatives'))
+        summatives_count: number;
     };
 }
 
 export default function Show({ schoolAcademicYear, classroom, classroomSubject }: ShowProps) {
-    // Ekstrak data mata pelajaran agar lebih mudah diakses
     const subject = classroomSubject.subject;
+
+    // Tombol Nilai Sumatif harus nonaktif jika belum ada summatives
+    const isSummativeValueDisabled = (classroomSubject.summatives_count ?? 0) === 0;
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dasbor', href: route('protected.school-academic-years.dashboard.index', { schoolAcademicYear }) },
@@ -40,18 +45,7 @@ export default function Show({ schoolAcademicYear, classroom, classroomSubject }
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                {/* <Link
-                                    href={route('protected.school-academic-years.subject.edit', {
-                                        schoolAcademicYear: schoolAcademicYear.id,
-                                        subject: subject.id,
-                                    })}
-                                >
-                                    <Button variant="outline" size="sm">
-                                        <Pencil className="mr-2 h-4 w-4" />
-                                        Edit Mata Pelajaran
-                                    </Button>
-                                </Link> */}
-
+                                {/* Tombol Data Sumatif */}
                                 <Link
                                     href={route('protected.school-academic-years.classrooms.subjects.summatives.index', {
                                         schoolAcademicYear: schoolAcademicYear.id,
@@ -65,31 +59,30 @@ export default function Show({ schoolAcademicYear, classroom, classroomSubject }
                                     </Button>
                                 </Link>
 
-                                <Link
-                                    href={route('protected.school-academic-years.classrooms.subjects.summatives.values', {
-                                        schoolAcademicYear: schoolAcademicYear.id,
-                                        classroom: classroom.id,
-                                        classroomSubject: classroomSubject.id,
-                                    })}
-                                >
-                                    <Button variant="outline" size="sm">
+                                {/* Tombol Nilai Sumatif: jika disabled -> render button disabled (tanpa Link),
+                                    jika enabled -> bungkus dengan Link seperti semula */}
+                                {isSummativeValueDisabled ? (
+                                    <Button variant="outline" size="sm" disabled>
                                         <BookMarked className="mr-2 h-4 w-4" />
                                         Nilai Sumatif
                                     </Button>
-                                </Link>
+                                ) : (
+                                        <Link
+                                            href={route('protected.school-academic-years.classrooms.subjects.summatives.values', {
+                                                schoolAcademicYear: schoolAcademicYear.id,
+                                                classroom: classroom.id,
+                                                classroomSubject: classroomSubject.id,
+                                            })}
+                                        >
+                                            <Button variant="outline" size="sm">
+                                                <BookMarked className="mr-2 h-4 w-4" />
+                                                Nilai Sumatif
+                                            </Button>
+                                        </Link>
+                                )}
                             </div>
-                            {/* <Link
-                                href={route('protected.school-academic-years.classrooms.subjects.edit', {
-                                    schoolAcademicYear,
-                                    classroom,
-                                    classroomSubject: classroomSubject.id,
-                                })}
-                            >
-                                <Button variant="outline" size="sm">
-                                    <Pencil className="mr-2 h-4 w-4" />
-                                    Ganti Mata Pelajaran
-                                </Button>
-                            </Link> */}
+
+                            {/* Kamu bisa tambahkan tombol lain di sini */}
                         </div>
                     </CardHeader>
                     <CardContent>

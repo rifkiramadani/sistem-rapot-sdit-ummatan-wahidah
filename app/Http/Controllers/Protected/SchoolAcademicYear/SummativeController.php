@@ -677,12 +677,12 @@ class SummativeController extends Controller
             abort(403);
         }
 
+        // Penghapusan tunggal: Memicu event deleting di model Summative
         $summative->delete();
 
         return redirect()->route('protected.school-academic-years.classrooms.subjects.summatives.index', [$schoolAcademicYear, $classroom, $classroomSubject])
             ->with('success', 'Data sumatif berhasil dihapus.');
     }
-
 
     public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
     {
@@ -696,6 +696,8 @@ class SummativeController extends Controller
         LogBatch::startBatch();
 
         DB::transaction(function () use ($request, $classroomSubject) {
+            // KRUSIAL: Mengambil koleksi model dan menghapus satu per satu
+            // untuk memicu event deleting pada setiap Summative.
             Summative::where('classroom_subject_id', $classroomSubject->id)
                 ->whereIn('id', $request->input('ids'))
                 ->get()

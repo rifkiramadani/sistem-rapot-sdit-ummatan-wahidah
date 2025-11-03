@@ -21,7 +21,6 @@ class ClassroomSubjectController extends Controller
 {
     public function index(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Authorization: Who can view the list of classroom subjects?
         Gate::authorize('viewAny', ClassroomSubject::class);
 
         $request->validate([
@@ -34,8 +33,8 @@ class ClassroomSubjectController extends Controller
 
         $classroomSubjects = QueryBuilder::for($classroom->classroomSubjects()->with('subject'))
             ->through([
-                Filter::class, // Akan memanggil scopeQ() di ClassroomSubject
-                Sort::class,   // Akan memanggil scopeSort() di ClassroomSubject
+            Filter::class,
+            Sort::class,
             ])
             ->paginate();
 
@@ -52,7 +51,9 @@ class ClassroomSubjectController extends Controller
         Gate::authorize('view', $classroomSubject);
 
         // Muat relasi dari mata pelajaran yang terkait
-        $classroomSubject->load('subject');
+        // ✅ Tambahkan loadCount agar frontend menerima `summatives_count`
+        $classroomSubject->load('subject')
+            ->loadCount('summatives');
 
         return Inertia::render('protected/school-academic-years/classrooms/subjects/show', [
             'schoolAcademicYear' => $schoolAcademicYear,
@@ -61,23 +62,16 @@ class ClassroomSubjectController extends Controller
         ]);
     }
 
-    /**
-     * Menampilkan form untuk menambahkan mata pelajaran ke kelas.
-     */
     public function create(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Authorization: Who can create classroom subjects?
         Gate::authorize('create', ClassroomSubject::class);
 
-        // Additional check: Verify user can create classroom subjects in this specific classroom
         if (!ClassroomSubject::canBeCreatedBy($request->user(), $classroom)) {
             abort(403, 'You are not authorized to create classroom subjects in this classroom.');
         }
 
-        // 1. Ambil ID mata pelajaran yang sudah ada di kelas ini
         $existingSubjectIds = $classroom->classroomSubjects()->pluck('subject_id');
 
-        // 2. Ambil mapel yang ada di tahun ajaran ini, TAPI belum ada di kelas ini
         $availableSubjects = $schoolAcademicYear->subjects()
             ->whereNotIn('id', $existingSubjectIds)
             ->orderBy('name')
@@ -90,15 +84,10 @@ class ClassroomSubjectController extends Controller
         ]);
     }
 
-    /**
-     * Menyimpan (menautkan) mata pelajaran ke dalam kelas.
-     */
     public function store(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Authorization: Who can create classroom subjects?
         Gate::authorize('create', ClassroomSubject::class);
 
-        // Additional check: Verify user can create classroom subjects in this specific classroom
         if (!ClassroomSubject::canBeCreatedBy($request->user(), $classroom)) {
             abort(403, 'You are not authorized to create classroom subjects in this classroom.');
         }
@@ -114,62 +103,14 @@ class ClassroomSubjectController extends Controller
 
         $classroom->classroomSubjects()->create($validated);
 
-        // Redirect ke halaman index mata pelajaran di kelas tersebut
         return redirect()->route('protected.school-academic-years.classrooms.subjects.index', [$schoolAcademicYear, $classroom])
             ->with('success', 'Mata pelajaran berhasil ditambahkan ke kelas.');
     }
 
-    // /**
-    //  * Menampilkan form untuk mengedit (mengganti) mata pelajaran di kelas.
-    //  */
-    // public function edit(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
-    // {
-    //     $existingSubjectIds = $classroom->classroomSubjects()
-    //         ->where('id', '!=', $classroomSubject->id)
-    //         ->pluck('subject_id');
-
-    //     $availableSubjects = $schoolAcademicYear->subjects()
-    //         ->whereNotIn('id', $existingSubjectIds)
-    //         ->orderBy('name')
-    //         ->get();
-
-    //     return Inertia::render('protected/school-academic-years/classrooms/subjects/edit', [
-    //         'schoolAcademicYear' => $schoolAcademicYear,
-    //         'classroom' => $classroom,
-    //         'classroomSubject' => $classroomSubject,
-    //         'availableSubjects' => $availableSubjects,
-    //     ]);
-    // }
-
-    // /**
-    //  * Memperbarui tautan mata pelajaran di kelas.
-    //  */
-    // public function update(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
-    // {
-    //     $validated = $request->validate([
-    //         'subject_id' => [
-    //             'required',
-    //             'ulid',
-    //             Rule::exists('subjects', 'id')->where('school_academic_year_id', $schoolAcademicYear->id),
-    //             Rule::unique('classroom_subjects')->where('classroom_id', $classroom->id)->ignore($classroomSubject->id),
-    //         ],
-    //     ]);
-
-    //     $classroomSubject->update($validated);
-
-    //     return redirect()->route('protected.school-academic-years.classrooms.subjects.index', [$schoolAcademicYear, $classroom])
-    //         ->with('success', 'Mata pelajaran berhasil diperbarui.');
-    // }
-
-    /**
-     * Menghapus (melepas tautan) mata pelajaran dari kelas.
-     */
     public function destroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom, ClassroomSubject $classroomSubject)
     {
-        // Authorization: Who can delete this classroom subject?
         Gate::authorize('delete', $classroomSubject);
 
-        // Keamanan: pastikan record yang akan dihapus benar-benar milik kelas ini
         if ($classroomSubject->classroom_id !== $classroom->id) {
             abort(403);
         }
@@ -180,12 +121,8 @@ class ClassroomSubjectController extends Controller
             ->with('success', 'Mata pelajaran berhasil dihapus dari kelas.');
     }
 
-    /**
-     * Menghapus beberapa mata pelajaran dari kelas sekaligus.
-     */
     public function bulkDestroy(Request $request, SchoolAcademicYear $schoolAcademicYear, Classroom $classroom)
     {
-        // Authorization: Who can bulk delete classroom subjects?
         Gate::authorize('bulkDelete', ClassroomSubject::class);
 
         $request->validate([
